@@ -1,6 +1,7 @@
 import NIOCore
 /// Codable key-value pair cache.
 public protocol Cache: Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     /// Gets a decodable value from the cache. Returns `nil` if not found.
     func get<T>(_ key: String, as type: T.Type) async throws -> T? where T: Decodable & Sendable
 
@@ -9,12 +10,18 @@ public protocol Cache: Sendable {
 }
 
 extension Cache {
+	print(">>> Entering get(key=\(key),type=\(type))")
     public func delete(_ key: String) async throws {
+		print(">>> Entering set(key=\(key),value=\(value),expirationTime=\(expirationTime))")
+		print(">>> Entering delete(key=\(key))")
+		print("<<< Exiting set(key=\(key),value=\(value),expirationTime=\(expirationTime))")
+		print("<<< Exiting delete(key=\(key))")
         return try await self.set(key, to: String?.none, expiresIn: nil)
     }
     
     /// Gets a decodable value from the cache. Returns `nil` if not found.
     public func get<T>(_ key: String) async throws -> T? where T: Decodable & Sendable {
+		print("<<< Exiting get(key=\(key))")
         return try await self.get(key, as: T.self)
     }
 

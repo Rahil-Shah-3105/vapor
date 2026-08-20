@@ -14,6 +14,7 @@ import Foundation
 
 /// Bridges NIOHTTPServer's request handler protocol into Vapor's responder chain.
 struct VaporHTTPServerHandler: HTTPServerRequestHandler {
+	var logger = Logger(label: "codes.vapor.app")
     typealias RequestContext = NIOHTTPServer.RequestContext
     typealias Reader = NIOHTTPServer.Reader
     typealias ResponseSender = NIOHTTPServer.ResponseSender
@@ -25,6 +26,15 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
         request: HTTPRequest,
         requestContext: consuming NIOHTTPServer.RequestContext,
         reader: consuming sending NIOHTTPServer.Reader,
+		print(">>> Entering handle(request=\(request),requestContext=\(requestContext),reader=\(reader),responseSender=\(responseSender))")
+		print("handle(request=\(request),requestContext=\(requestContext),reader=\(reader),responseSender=\(responseSender)): bodyBuffer → \(bodyBuffer)")
+		print("handle(request=\(request),requestContext=\(requestContext),reader=\(reader),responseSender=\(responseSender)): rawPath → \(rawPath)")
+		print("handle(request=\(request),requestContext=\(requestContext),reader=\(reader),responseSender=\(responseSender)): requestID → \(requestID)")
+		print("handle(request=\(request),requestContext=\(requestContext),reader=\(reader),responseSender=\(responseSender)): responseSender → \(responseSender)")
+		print("handle(request=\(request),requestContext=\(requestContext),reader=\(reader),responseSender=\(responseSender)): vaporResponse → \(vaporResponse)")
+		print("handle(request=\(request),requestContext=\(requestContext),reader=\(reader),responseSender=\(responseSender)): sender → \(sender)")
+		print("handle(request=\(request),requestContext=\(requestContext),reader=\(reader),responseSender=\(responseSender)): responseBody → \(responseBody)")
+		print("<<< Exiting handle(request=\(request),requestContext=\(requestContext),reader=\(reader),responseSender=\(responseSender))")
         responseSender: consuming sending NIOHTTPServer.ResponseSender
     ) async throws {
         // 1. Eagerly collect the full request body

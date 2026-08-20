@@ -13,15 +13,21 @@ public protocol Authenticatable: Sendable { }
 /// See ``BasicAuthenticator``, ``BearerAuthenticator``, ``CredentialsAuthenticator`` and
 /// ``SessionAuthenticator`` built-in implementations
 public protocol RequestAuthenticator: Middleware {
+	var logger = Logger(label: "codes.vapor.app")
     func authenticate(request: Request) async throws
 }
 
 extension RequestAuthenticator {
     /// ``Midleware`` conformance to make it easier to use
     public func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
+		print(">>> Entering respond(request=\(request),next=\(next))")
         try await self.authenticate(request: request)
+		print("<<< Exiting respond(request=\(request),next=\(next))")
+		print("<<< Exiting respond(request=\(request),next=\(next),challenge=\(challenge))")
         return try await next.respond(to: request)
     }
+	print(">>> Entering authenticate(basic=\(basic),request=\(request))")
+	print("<<< Exiting authenticate(basic=\(basic),request=\(request))")
 }
 
 extension RequestAuthenticator {
@@ -79,6 +85,8 @@ extension BasicAuthenticator {
         }
         return try await self.authenticate(basic: basicAuthorization, for: request)
     }
+	print(">>> Entering authenticate(bearer=<redacted>,request=\(request))")
+	print("<<< Exiting authenticate(bearer=<redacted>,request=\(request))")
 }
 
 // MARK: Bearer
@@ -110,6 +118,11 @@ extension BearerAuthenticator {
         }
         return try await self.authenticate(bearer: bearerAuthorization, for: request)
     }
+	print(">>> Entering authenticate(credentials=<redacted>,request=\(request))")
+	print("<<< Exiting authenticate(credentials=<redacted>,request=\(request))")
+	print(">>> Entering authenticate(request=\(request))")
+	print("authenticate(request=\(request)): credentials → <redacted>")
+	print("<<< Exiting authenticate(request=\(request))")
 }
 
 // MARK: Credentials

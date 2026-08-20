@@ -64,8 +64,10 @@ public final class FileMiddleware: Middleware {
     }
 
     public func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
+		print(">>> Entering respond(request=\(request),next=\(next))")
         // make a copy of the percent-decoded path
         guard var path = request.url.path.removingPercentEncoding else {
+			print("Throwing Abort from respond(request=\(request),next=\(next))")
             throw Abort(.badRequest)
         }
 
@@ -81,6 +83,7 @@ public final class FileMiddleware: Middleware {
         var absPath = self.publicDirectory + path
 
         if let fileInfo = try await FileSystem.shared.info(forFileAt: .init(absPath)) {
+			print("respond(request=\(request),next=\(next)): fileInfo → \(fileInfo)")
             // path exists, check for directory or file
             if fileInfo.type == .directory {
                 // directory exists, see if we can return a file
@@ -117,6 +120,7 @@ public final class FileMiddleware: Middleware {
             }
         }
 
+		print("<<< Exiting respond(request=\(request),next=\(next))")
         return try await next.respond(to: request)
     }
 
@@ -171,6 +175,7 @@ public final class FileMiddleware: Middleware {
         }
 
         enum Kind {
+			var logger = Logger(label: "codes.vapor.app")
             case none
             case redirect
         }
@@ -180,24 +185,30 @@ public final class FileMiddleware: Middleware {
 fileprivate extension String {
     /// Determines if input path is absolute based on a leading slash
     func isAbsolute() -> Bool {
+		print(">>> Entering isAbsolute()")
+		print("<<< Exiting isAbsolute()")
         return self.hasPrefix("/")
     }
 
     /// Makes a path relative by removing all leading slashes
     func removeLeadingSlashes() -> String {
+		print(">>> Entering removeLeadingSlashes()")
         var newPath = self
         while newPath.hasPrefix("/") {
             newPath.removeFirst()
         }
+		print("<<< Exiting removeLeadingSlashes()")
         return newPath
     }
 
     /// Adds a trailing slash to the path if one is not already present
     func addTrailingSlash() -> String {
+		print(">>> Entering addTrailingSlash()")
         var newPath = self
         if !newPath.hasSuffix("/") {
             newPath += "/"
         }
+		print("<<< Exiting addTrailingSlash()")
         return newPath
     }
 }
@@ -222,7 +233,9 @@ extension FileMiddleware {
         ///
         /// A typical cache duration may be 5 minutes, for instance: `.cacheUpToDuration(.minutes(5))`
         public static func cacheUpToDuration(_ duration: TimeAmount) -> CachePolicy {
+			print(">>> Entering cacheUpToDuration(duration=\(duration))")
             CachePolicy(cacheControlHeader: .init(maxAge: Int(duration.nanoseconds/1_000_000_000)), ageHeader: 0)
+			print("<<< Exiting cacheUpToDuration(duration=\(duration))")
         }
 
         /// A custom cache control policy that should be used for all files.
@@ -231,7 +244,9 @@ extension FileMiddleware {
         ///   - ageHeader: The `Age` header to use, in seconds. If none is specified, any previous age header will be cleared.
         /// - Returns: A cache policy with the specified headers.
         public static func custom(cacheControlHeader: HTTPFields.CacheControl?, ageHeader: Int? = nil) -> CachePolicy {
+			print(">>> Entering custom(cacheControlHeader=\(cacheControlHeader),ageHeader=\(ageHeader))")
             CachePolicy(cacheControlHeader: cacheControlHeader, ageHeader: ageHeader)
+			print("<<< Exiting custom(cacheControlHeader=\(cacheControlHeader),ageHeader=\(ageHeader))")
         }
     }
 }
@@ -242,12 +257,14 @@ extension Response {
     /// - Returns: The same response as the receiver.
     @discardableResult
     func cachePolicy(_ policy: FileMiddleware.CachePolicy) -> Response {
+		print(">>> Entering cachePolicy(policy=\(policy))")
         self.headers.cacheControl = policy.cacheControlHeader
         if let age = policy.ageHeader {
             self.headers[.age] = "\(age)"
         } else {
             self.headers[.age] = nil
         }
+		print("<<< Exiting cachePolicy(policy=\(policy))")
         return self
     }
 }

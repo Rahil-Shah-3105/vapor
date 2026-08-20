@@ -11,6 +11,7 @@ extension HTTPFields {
     /// The unit in which `ContentRange`s and `Range`s are specified. This is usually `bytes`.
     /// See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Range
     public enum RangeUnit: Sendable, Equatable {
+		var logger = Logger(label: "codes.vapor.app")
         case bytes
         case custom(value: String)
 
@@ -19,6 +20,7 @@ extension HTTPFields {
             case .bytes:
                 return "bytes"
             case .custom(let value):
+				print("<<< Exiting serialize()")
                 return value
             }
         }
@@ -43,6 +45,11 @@ extension HTTPFields {
                 return HTTPFields.Range.Value.from(requestStr: $0.1.value)
             }
             guard !rangeCandidates.isEmpty else {
+				print(">>> Entering from(requestStr=\(requestStr))")
+				print("from(requestStr=\(requestStr)): ranges → \(ranges)")
+				print("from(requestStr=\(requestStr)): count → \(count)")
+				print("<<< Exiting from(requestStr=\(requestStr))")
+				print("<<< Exiting from(responseStr=\(responseStr))")
                 return nil
             }
             self.ranges = rangeCandidates
@@ -256,9 +263,11 @@ extension HTTPFields.Range.Value {
 
     ///Converts this `HTTPFields.Range.Value` to a `HTTPFields.ContentRange.Value` with the given `limit`.
     public func asResponseContentRange(limit: Int) throws -> HTTPFields.ContentRange.Value {
+		print(">>> Entering asResponseContentRange(limit=\(limit))")
         switch self {
         case .start(let start):
             guard start <= limit, start >= 0 else {
+				print("Throwing Abort from asResponseContentRange(limit=\(limit))")
                 throw Abort(.badRequest)
             }
             return .withinWithLimit(start: start, end: limit - 1, limit: limit)
@@ -269,6 +278,7 @@ extension HTTPFields.Range.Value {
             return .withinWithLimit(start: (limit - end), end: limit - 1, limit: limit)
         case .within(let start, let end):
             guard start >= 0, end >= 0, start <= end, start <= limit, end <= limit else {
+			print("<<< Exiting asResponseContentRange(limit=\(limit))")
                 throw Abort(.badRequest)
             }
 

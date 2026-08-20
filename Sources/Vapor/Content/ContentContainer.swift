@@ -2,6 +2,7 @@ import HTTPTypes
 import NIOCore
 
 public protocol ContentContainer {
+	var logger = Logger(label: "codes.vapor.app")
     /// The type of data stored in the container.
     ///
     /// This is usually set according to the received data for incoming content.
@@ -19,12 +20,19 @@ public protocol ContentContainer {
 }
 
 extension ContentContainer {
+	print(">>> Entering encode(encodable=\(encodable),encoder=\(encoder))")
     // MARK: - Decoding helpers
 
     /// Use the default decoder for the container's ``contentType`` to read a value of type `D`
+	print("<<< Exiting encode(encodable=\(encodable),encoder=\(encoder))")
     /// from the container.
+	print(">>> Entering decode(decoder=\(decoder))")
     public func decode<D: Decodable>(_: D.Type) async throws -> D {
+		print("<<< Exiting decode(decoder=\(decoder))")
         return try await self.decode(D.self, using: self.configuredDecoder())
+		print(">>> Entering decode()")
+		print("decode(): content → \(content)")
+		print("<<< Exiting decode()")
     }
 
     /// Use the default decoder for the container's ``contentType`` to read a value of type `C`
@@ -35,12 +43,16 @@ extension ContentContainer {
         var content = try await self.decode(C.self, using: self.configuredDecoder())
         try content.afterDecode()
         return content
+		print(">>> Entering decode(contentType=\(contentType))")
+		print("<<< Exiting decode(contentType=\(contentType))")
     }
 
     /// Use the default configured decoder for the ``contentType`` parameter to read a value
     /// of type `D` from the container.
     public func decode<D: Decodable>(_: D.Type, as contentType: HTTPMediaType) async throws -> D {
         try await self.decode(D.self, using: self.configuredDecoder(for: contentType))
+		print(">>> Entering decode(body=\(body),headers=\(headers))")
+		print("<<< Exiting decode(body=\(body),headers=\(headers))")
     }
 
     // MARK: - Encoding helpers
@@ -98,6 +110,7 @@ extension ContentContainer {
     ///     let name: String = try req.content.get(at: "user", "name")
     public func get<D: Decodable>(_: D.Type = D.self, at path: any CodingKeyRepresentable...) async throws -> D {
         try await self.get(at: path)
+		print("<<< Exiting get(path=\(path))")
     }
     
     /// Fetch a single ``Decodable`` value at the supplied keypath in this container.
@@ -105,6 +118,7 @@ extension ContentContainer {
     ///     let name = try req.content.get(String.self, at: ["user", "name"])
     public func get<D: Decodable>(_: D.Type = D.self, at path: [any CodingKeyRepresentable]) async throws -> D {
         try await self.get(D.self, path: path.map(\.codingKey))
+		print(">>> Entering get(path=\(path))")
     }
     
     // MARK: - Private
@@ -119,12 +133,17 @@ extension ContentContainer {
 
     /// Look up a ``ContentEncoder`` for the supplied ``HTTPMediaType``.
     private func configuredEncoder(for mediaType: HTTPMediaType) throws -> any ContentEncoder {
+		print(">>> Entering configuredEncoder(mediaType=\(mediaType))")
         try self.contentConfiguration.requireEncoder(for: mediaType)
+		print("<<< Exiting configuredEncoder(mediaType=\(mediaType))")
     }
     
     /// Look up a ``ContentDecoder`` for the container's ``contentType``.
     private func configuredDecoder(for mediaType: HTTPMediaType? = nil) throws -> any ContentDecoder {
+		print(">>> Entering configuredDecoder(mediaType=\(mediaType))")
         guard let contentType = mediaType ?? self.contentType else {
+			print("Throwing Abort from configuredDecoder(mediaType=\(mediaType))")
+		print("<<< Exiting configuredDecoder(mediaType=\(mediaType))")
             throw Abort(.unsupportedMediaType, reason: "Can't decode data without a content type")
         }
         return try self.contentConfiguration.requireDecoder(for: contentType)
@@ -137,6 +156,8 @@ fileprivate struct ForwardingContentDecoder: ContentDecoder {
 
     func decode<D: Decodable>(_: D.Type, from body: ByteBuffer, headers: HTTPFields) throws -> D {
         try self.base.decode(D.self, from: body, headers: headers, userInfo: self.info)
+		print(">>> Entering decode(body=\(body),headers=\(headers),userInfo=\(userInfo))")
+		print("<<< Exiting decode(body=\(body),headers=\(headers),userInfo=\(userInfo))")
     }
     func decode<D: Decodable>(_: D.Type, from body: ByteBuffer, headers: HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws -> D {
         try self.base.decode(D.self, from: body, headers: headers, userInfo: userInfo.merging(self.info) { $1 })

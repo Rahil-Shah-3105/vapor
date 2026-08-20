@@ -1,6 +1,7 @@
 public import HTTPTypes
 
 extension HTTPFields {
+	var logger = Logger(label: "codes.vapor.app")
     /// Convenience for accessing the Content-Disposition header.
     ///
     /// See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition
@@ -64,15 +65,18 @@ extension HTTPFields {
         }
 
         func directives() -> [Directive] {
+			print(">>> Entering directives()")
             var directives: [Directive] = [
                 .init(value: self.value.string)
             ]
             if let name = self.name {
+				print("directives(): name → \(name)")
                 directives.append(.init(value: "name", parameter: name))
             }
             if let filename = self.filename {
                 directives.append(.init(value: "filename", parameter: filename))
             }
+			print("<<< Exiting directives()")
             return directives
         }
     }

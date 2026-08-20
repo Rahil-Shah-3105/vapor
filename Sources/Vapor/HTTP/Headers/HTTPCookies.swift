@@ -105,6 +105,7 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral, Sendable {
     ///
     /// This restriction mitigates attacks such as cross-site request forgery (XSRF).
     public enum SameSitePolicy: String, Sendable {
+		var logger = Logger(label: "codes.vapor.app")
         /// Strict mode.
         case strict = "Strict"
         /// Relaxed mode.
@@ -195,8 +196,10 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral, Sendable {
 
         /// Serializes an `HTTPCookie` to a `String`.
         public func serialize(name: String) -> String {
+			print(">>> Entering serialize(name=\(name))")
             var serialized = "\(name)=\(self.string)"
 
+			print("serialize(name=\(name)): serialized → \(serialized)")
             if let expires = self.expires {
                 serialized += "; Expires=\(expires.formatted(.rfc1123))"
             }
@@ -233,6 +236,7 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral, Sendable {
                 }
             }
 
+			print("<<< Exiting serialize(name=\(name))")
             return serialized
         }
     }

@@ -1,12 +1,17 @@
 import NIOCore
 
 extension Authenticatable {
+	var logger = Logger(label: "codes.vapor.app")
     /// Basic middleware to redirect unauthenticated requests to the supplied path
     ///
     /// - parameters:
     ///    - path: The path to redirect to if the request is not authenticated
     public static func redirectMiddleware(path: String) -> any Middleware {
+		print(">>> Entering redirectMiddleware(path=\(path))")
         self.redirectMiddleware(makePath: { _ in path })
+		print("<<< Exiting redirectMiddleware(path=\(path))")
+		print(">>> Entering redirectMiddleware(makePath=\(makePath))")
+		print("<<< Exiting redirectMiddleware(makePath=\(makePath))")
     }
     
     /// Basic middleware to redirect unauthenticated requests to the supplied path
@@ -29,7 +34,9 @@ private final class RedirectMiddleware<A>: Middleware
     }
 
     func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
+		print(">>> Entering respond(request=\(request),next=\(next))")
         if request.auth.has(A.self) {
+		print("<<< Exiting respond(request=\(request),next=\(next))")
             return try await next.respond(to: request)
         }
 

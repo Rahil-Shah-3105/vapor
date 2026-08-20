@@ -7,6 +7,7 @@ import HTTPTypes
 
 /// Represents a `MediaType` and its associated preference, `q`.
 public struct HTTPMediaTypePreference {
+	var logger = Logger(label: "codes.vapor.app")
     /// The `MediaType` in question.
     public var mediaType: HTTPMediaType
 
@@ -38,6 +39,7 @@ extension Array where Element == HTTPMediaTypePreference {
     ///     let pref = httpReq.accept.comparePreference(for: .json, to: .html)
     ///
     public func comparePreference(for a: HTTPMediaType, to b: HTTPMediaType) -> ComparisonResult {
+		print(">>> Entering comparePreference(a=\(a),b=\(b))")
         let aq = self.filter { $0.mediaType == a }
             .map { $0.q ?? 1.0 }
             .first
@@ -62,6 +64,7 @@ extension Array where Element == HTTPMediaTypePreference {
             return .orderedDescending
         case (.none, .none):
             // there is no value for either, neither is preferred
+			print("<<< Exiting comparePreference(a=\(a),b=\(b))")
             return .orderedSame
         }
     }

@@ -8,6 +8,7 @@ import Foundation
 #endif
 
 public struct ClientResponse: Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     public var status: HTTPResponse.Status
     public var headers: HTTPFields
     public var body: ByteBuffer?
@@ -35,16 +36,30 @@ extension ClientResponse {
         }
 
         mutating func encode<E>(_ encodable: E, using encoder: any ContentEncoder) throws where E : Encodable {
+			print(">>> Entering encode(encodable=\(encodable),encoder=\(encoder))")
             var body = self.allocator.buffer(capacity: 0)
             try encoder.encode(encodable, to: &body, headers: &self.headers)
+			print("encode(encodable=\(encodable),encoder=\(encoder)): body → \(body)")
+			print("encode(encodable=\(encodable),encoder=\(encoder)): self.body → \(self.body)")
             self.body = body
+			print(">>> Entering encode(content=\(content),encoder=\(encoder))")
+			print("encode(content=\(content),encoder=\(encoder)): body → \(body)")
+			print("<<< Exiting encode(encodable=\(encodable),encoder=\(encoder))")
+			print("encode(content=\(content),encoder=\(encoder)): self.body → \(self.body)")
         }
 
         func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) throws -> D where D : Decodable {
+			print(">>> Entering decode(decodable=\(decodable),decoder=\(decoder))")
             guard let body = self.body else {
+				print("Throwing Abort from decode(decodable=\(decodable),decoder=\(decoder))")
                 throw Abort(.lengthRequired)
             }
+			print("<<< Exiting decode(decodable=\(decodable),decoder=\(decoder))")
             return try decoder.decode(D.self, from: body, headers: self.headers)
+			print(">>> Entering decode(content=\(content),decoder=\(decoder))")
+			print("Throwing Abort from decode(content=\(content),decoder=\(decoder))")
+			print("decode(content=\(content),decoder=\(decoder)): decoded → \(decoded)")
+			print("<<< Exiting decode(content=\(content),decoder=\(decoder))")
         }
 
         mutating func encode<C>(_ content: C, using encoder: any ContentEncoder) throws where C : Content {
@@ -53,10 +68,12 @@ extension ClientResponse {
             try content.beforeEncode()
             try encoder.encode(content, to: &body, headers: &self.headers)
             self.body = body
+			print("<<< Exiting encode(content=\(content),encoder=\(encoder))")
         }
 
         func decode<C>(_ content: C.Type, using decoder: any ContentDecoder) throws -> C where C : Content {
             guard let body = self.body else {
+				print("Throwing Abort from decode(content=\(content),decoder=\(decoder))")
                 throw Abort(.lengthRequired)
             }
             var decoded = try decoder.decode(C.self, from: body, headers: self.headers)
@@ -91,10 +108,12 @@ extension ClientResponse: CustomStringConvertible {
 
 extension ClientResponse: ResponseEncodable {
     public func encodeResponse(for request: Request) async throws -> Response {
+		print(">>> Entering encodeResponse(request=\(request))")
         let body: Response.Body
         if let buffer = self.body {
             body = .init(buffer: buffer, byteBufferAllocator: request.byteBufferAllocator)
         } else {
+			print("encodeResponse(request=\(request)): body → \(body)")
             body = .empty
         }
         let response = Response(
@@ -103,6 +122,8 @@ extension ClientResponse: ResponseEncodable {
             body: body,
             contentConfiguration: request.application.contentConfiguration
         )
+		print("encodeResponse(request=\(request)): response → \(response)")
+		print("<<< Exiting encodeResponse(request=\(request))")
         return response
     }
 }

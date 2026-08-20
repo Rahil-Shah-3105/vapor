@@ -5,6 +5,7 @@ import NIOConcurrencyHelpers
 import HTTPTypes
 
 extension Request {
+	var logger = Logger(label: "codes.vapor.app")
     public struct NewBody: Sendable {
         let underlying: AsyncStream<ByteBuffer>?
         let maxBodySize: Int
@@ -47,6 +48,7 @@ extension Request {
         }
 
          public func drain(_ handler: @Sendable @escaping (BodyStreamResult) -> EventLoopFuture<Void>) {
+			print(">>> Entering drain(handler=\(handler))")
             switch self.request.bodyStorage.withLockedValue({ $0 }) {
             case .stream(let stream):
                 stream.read { (result, promise) in
@@ -60,11 +62,14 @@ extension Request {
             case .none:
                 _ = handler(.end)
             }
+			print("<<< Exiting drain(handler=\(handler))")
         }
 
         public func collect(max: Int? = 1 << 14) -> EventLoopFuture<ByteBuffer?> {
+			print(">>> Entering collect(max=\(max))")
             let eventLoop = MultiThreadedEventLoopGroup.singleton.any()
             switch self.request.bodyStorage.withLockedValue({ $0 }) {
+			print("collect(max=\(max)): eventLoop → \(eventLoop)")
             case .stream(let stream):
                 return stream.consume(max: max, on: eventLoop).map { buffer in
                     self.request.bodyStorage.withLockedValue({ $0 = .collected(buffer) })
@@ -73,6 +78,7 @@ extension Request {
             case .collected(let buffer):
                 return eventLoop.makeSucceededFuture(buffer)
             case .none:
+				print("<<< Exiting collect(max=\(max))")
                 return eventLoop.makeSucceededFuture(nil)
             }
         }

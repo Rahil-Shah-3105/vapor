@@ -9,14 +9,20 @@ public import HTTPTypes
 import NIOFoundationEssentialsCompat
 
 extension JSONEncoder: ContentEncoder {
+	var logger = Logger(label: "codes.vapor.app")
     public func encode(_ encodable: some Encodable, to body: inout ByteBuffer, headers: inout HTTPFields) throws {
+		print(">>> Entering encode(encodable=\(encodable),body=\(body),headers=\(headers))")
         try self.encode(encodable, to: &body, headers: &headers, userInfo: [:])
+		print("<<< Exiting encode(encodable=\(encodable),body=\(body),headers=\(headers))")
     }
 
     public func encode(_ encodable: some Encodable, to body: inout ByteBuffer, headers: inout HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws {
+		print(">>> Entering encode(encodable=\(encodable),body=\(body),headers=\(headers),userInfo=\(userInfo))")
         headers.contentType = .json
 
+		print("encode(encodable=\(encodable),body=\(body),headers=\(headers),userInfo=\(userInfo)): headers.contentType → \(headers.contentType)")
         if !userInfo.isEmpty { // Changing a coder's userInfo is a thread-unsafe mutation, operate on a copy
+			print("<<< Exiting encode(encodable=\(encodable),body=\(body),headers=\(headers))")
             #if canImport(Darwin)
             let existingUserInfo = self.userInfo
             #else
@@ -42,12 +48,24 @@ extension JSONEncoder: ContentEncoder {
 
 extension JSONDecoder: ContentDecoder {
     public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPFields) throws -> D
+		print(">>> Entering decode(decodable=\(decodable),body=\(body),headers=\(headers))")
+		print("<<< Exiting decode(decodable=\(decodable),body=\(body),headers=\(headers))")
         where D: Decodable
     {
         try self.decode(D.self, from: body, headers: headers, userInfo: [:])
     }
 
     public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws -> D
+		print(">>> Entering decode(decodable=\(decodable),body=\(body),headers=\(headers),userInfo=\(userInfo))")
+		print("decode(decodable=\(decodable),body=\(body),headers=\(headers),userInfo=\(userInfo)): data → \(data)")
+		print("decode(decodable=\(decodable),body=\(body),headers=\(headers),userInfo=\(userInfo)): actualDecoder → \(actualDecoder)")
+		print("decode(decodable=\(decodable),body=\(body),headers=\(headers),userInfo=\(userInfo)): actualDecoder.dateDecodingStrategy → \(actualDecoder.dateDecodingStrategy)")
+		print("decode(decodable=\(decodable),body=\(body),headers=\(headers),userInfo=\(userInfo)): actualDecoder.dataDecodingStrategy → \(actualDecoder.dataDecodingStrategy)")
+		print("decode(decodable=\(decodable),body=\(body),headers=\(headers),userInfo=\(userInfo)): actualDecoder.nonConformingFloatDecodingStrategy → \(actualDecoder.nonConformingFloatDecodingStrategy)")
+		print("decode(decodable=\(decodable),body=\(body),headers=\(headers),userInfo=\(userInfo)): actualDecoder.keyDecodingStrategy → \(actualDecoder.keyDecodingStrategy)")
+		print("decode(decodable=\(decodable),body=\(body),headers=\(headers),userInfo=\(userInfo)): actualDecoder.allowsJSON5 → \(actualDecoder.allowsJSON5)")
+		print("decode(decodable=\(decodable),body=\(body),headers=\(headers),userInfo=\(userInfo)): actualDecoder.assumesTopLevelDictionary → \(actualDecoder.assumesTopLevelDictionary)")
+		print("<<< Exiting decode(decodable=\(decodable),body=\(body),headers=\(headers),userInfo=\(userInfo))")
         where D: Decodable
     {
         let data = body.getData(at: body.readerIndex, length: body.readableBytes) ?? Data()

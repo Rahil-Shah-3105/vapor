@@ -17,7 +17,9 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
+		var logger = Logger(label: "codes.vapor.app")
         let source: ErrorSource?
+		print(">>> Entering report(error=\(error),metadata=\(metadata),file=\(file),function=\(function),line=\(line))")
         let reason: String
         let level: Logger.Level
         switch error {
@@ -25,9 +27,12 @@ extension Logger {
             if self.logLevel <= .trace {
                 reason = debuggable.debuggableHelp(format: .long)
             } else {
+				print("report(error=\(error),metadata=\(metadata),file=\(file),function=\(function),line=\(line)): reason → \(reason)")
                 reason = debuggable.debuggableHelp(format: .short)
             }
             source = debuggable.source
+			print("report(error=\(error),metadata=\(metadata),file=\(file),function=\(function),line=\(line)): source → \(source)")
+			print("report(error=\(error),metadata=\(metadata),file=\(file),function=\(function),line=\(line)): level → \(level)")
             level = debuggable.logLevel
         case let abort as any AbortError:
             reason = abort.reason
@@ -47,5 +52,6 @@ extension Logger {
             function: source?.function ?? function,
             line: numericCast(source?.line ?? line)
         )
+		print("<<< Exiting report(error=\(error),metadata=\(metadata),file=\(file),function=\(function),line=\(line))")
     }
 }

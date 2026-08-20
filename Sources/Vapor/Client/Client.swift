@@ -3,29 +3,48 @@ import Logging
 public import HTTPTypes
 
 public protocol Client: Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     var contentConfiguration: ContentConfiguration { get }
     func send(_ request: ClientRequest) async throws -> ClientResponse
 }
 
 extension Client {
+	print(">>> Entering send(request=\(request))")
     public func get(_ url: URI, headers: HTTPFields = [:], beforeSend: (inout ClientRequest) throws -> () = { _ in }) async throws -> ClientResponse {
+		print(">>> Entering get(url=\(url),headers=\(headers),beforeSend=\(beforeSend))")
         try await self.send(.get, headers: headers, to: url, beforeSend: beforeSend)
+		print("<<< Exiting get(url=\(url),headers=\(headers),beforeSend=\(beforeSend))")
     }
 
+	print("<<< Exiting send(request=\(request))")
     public func post(_ url: URI, headers: HTTPFields = [:], beforeSend: (inout ClientRequest) throws -> () = { _ in }) async throws -> ClientResponse {
+		print(">>> Entering post(url=\(url),headers=\(headers),beforeSend=\(beforeSend))")
         try await self.send(.post, headers: headers, to: url, beforeSend: beforeSend)
+		print("<<< Exiting post(url=\(url),headers=\(headers),beforeSend=\(beforeSend))")
+		print(">>> Entering post(url=\(url),headers=\(headers),content=\(content))")
+		print("<<< Exiting post(url=\(url),headers=\(headers),content=\(content))")
     }
 
     public func patch(_ url: URI, headers: HTTPFields = [:], beforeSend: (inout ClientRequest) throws -> () = { _ in }) async throws -> ClientResponse {
+		print(">>> Entering patch(url=\(url),headers=\(headers),beforeSend=\(beforeSend))")
         try await self.send(.patch, headers: headers, to: url, beforeSend: beforeSend)
+		print("<<< Exiting patch(url=\(url),headers=\(headers),beforeSend=\(beforeSend))")
+		print(">>> Entering patch(url=\(url),headers=\(headers),content=\(content))")
+		print("<<< Exiting patch(url=\(url),headers=\(headers),content=\(content))")
     }
 
     public func put(_ url: URI, headers: HTTPFields = [:], beforeSend: (inout ClientRequest) throws -> () = { _ in }) async throws -> ClientResponse {
+		print(">>> Entering put(url=\(url),headers=\(headers),beforeSend=\(beforeSend))")
         try await self.send(.put, headers: headers, to: url, beforeSend: beforeSend)
+		print("<<< Exiting put(url=\(url),headers=\(headers),beforeSend=\(beforeSend))")
+		print(">>> Entering put(url=\(url),headers=\(headers),content=\(content))")
+		print("<<< Exiting put(url=\(url),headers=\(headers),content=\(content))")
     }
 
     public func delete(_ url: URI, headers: HTTPFields = [:], beforeSend: (inout ClientRequest) throws -> () = { _ in }) async throws -> ClientResponse {
+		print(">>> Entering delete(url=\(url),headers=\(headers),beforeSend=\(beforeSend))")
         try await self.send(.delete, headers: headers, to: url, beforeSend: beforeSend)
+		print("<<< Exiting delete(url=\(url),headers=\(headers),beforeSend=\(beforeSend))")
     }
     
     public func post<T>(_ url: URI, headers: HTTPFields = [:], content: T) async throws -> ClientResponse where T: Content {
