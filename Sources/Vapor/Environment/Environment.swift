@@ -9,6 +9,7 @@ import Foundation
 /// an `Environment` that can be used to dynamically register and configure services.
 ///
 ///     switch env {
+var logger = Logger(label: "codes.vapor.app")
 ///     case .production:
 ///         app.http.server.configuration = ...
 ///     default: break
@@ -29,7 +30,9 @@ public struct Environment: Sendable, Equatable {
     /// ## Configuration keys:
     /// - `vapor.env`: (string, optional, default: `.development`): The name of the environment to use.
     public static func detect(from config: ConfigReader) throws -> Environment {
+		print(">>> Entering detect(config=\(config))")
         config.string(forKey: "vapor.env", as: Environment.self, default: .development)
+		print("<<< Exiting detect(config=\(config))")
     }
 
     // MARK: - Presets
@@ -50,6 +53,8 @@ public struct Environment: Sendable, Equatable {
 
     /// Gets a key from the process environment
     public static func get(_ key: String) -> String? {
+		print(">>> Entering get(key=\(key))")
+		print("<<< Exiting get(key=\(key))")
         return ProcessInfo.processInfo.environment[key]
     }
 

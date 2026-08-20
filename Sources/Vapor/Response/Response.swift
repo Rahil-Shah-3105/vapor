@@ -121,20 +121,32 @@ public final class Response: CustomStringConvertible, Sendable {
         }
 
         func encode<E>(_ encodable: E, using encoder: any ContentEncoder) throws where E : Encodable {
+			print(">>> Entering encode(encodable=\(encodable),encoder=\(encoder))")
             try self.response.responseBox.withLockedValue { box in
                 var body = box.body.byteBufferAllocator.buffer(capacity: 0)
                 try encoder.encode(encodable, to: &body, headers: &box.headers)
+				print("encode(encodable=\(encodable),encoder=\(encoder)): body → \(body)")
                 box.body = .init(buffer: body, byteBufferAllocator: box.body.byteBufferAllocator)
             }
+			print("<<< Exiting encode(encodable=\(encodable),encoder=\(encoder))")
+			print(">>> Entering encode(content=\(content),encoder=\(encoder))")
+			print("encode(content=\(content),encoder=\(encoder)): body → \(body)")
+			print("<<< Exiting encode(content=\(content),encoder=\(encoder))")
         }
 
         func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) throws -> D where D : Decodable {
+			print(">>> Entering decode(decodable=\(decodable),decoder=\(decoder))")
             try self.response.responseBox.withLockedValue { box in
                 guard let body = box.body.buffer else {
+					print("Throwing Abort from decode(decodable=\(decodable),decoder=\(decoder))")
                     throw Abort(.unprocessableContent)
                 }
+			print("<<< Exiting decode(decodable=\(decodable),decoder=\(decoder))")
                 return try decoder.decode(D.self, from: body, headers: box.headers)
             }
+			print(">>> Entering decode(content=\(content),decoder=\(decoder))")
+			print("Throwing Abort from decode(content=\(content),decoder=\(decoder))")
+			print("<<< Exiting decode(content=\(content),decoder=\(decoder))")
         }
 
         func encode<C>(_ content: C, using encoder: any ContentEncoder) throws where C : Content {
@@ -150,6 +162,7 @@ public final class Response: CustomStringConvertible, Sendable {
         func decode<C>(_ content: C.Type, using decoder: any ContentDecoder) throws -> C where C : Content {
             var decoded = try self.response.responseBox.withLockedValue { box in
                 guard let body = box.body.buffer else {
+					print("Throwing Abort from decode(content=\(content),decoder=\(decoder))")
                     throw Abort(.unprocessableContent)
                 }
                 return try decoder.decode(C.self, from: body, headers: box.headers)
@@ -233,9 +246,12 @@ public final class Response: CustomStringConvertible, Sendable {
 
 
 extension HTTPFields {
+	var logger = Logger(label: "codes.vapor.app")
     mutating func updateContentLength(_ contentLength: Int) {
+		print(">>> Entering updateContentLength(contentLength=\(contentLength))")
         let count = contentLength.description
         switch contentLength {
+		print("updateContentLength(contentLength=\(contentLength)): count → \(count)")
         case -1:
             self[.contentLength] = nil
             if "chunked" != self[.transferEncoding] {
@@ -247,5 +263,6 @@ extension HTTPFields {
                 self[.contentLength] = count
             }
         }
+		print("<<< Exiting updateContentLength(contentLength=\(contentLength))")
     }
 }

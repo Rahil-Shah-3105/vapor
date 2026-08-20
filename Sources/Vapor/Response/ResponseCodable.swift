@@ -5,6 +5,7 @@ import NIOConcurrencyHelpers
 ///
 /// Types that conform to this protocol can be returned in route closures.
 public protocol ResponseEncodable: SendableMetatype, Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     /// Encodes an instance of `Self` to a `Response`.
     ///
     /// - parameters:
@@ -22,13 +23,20 @@ public protocol RequestDecodable {
     /// - parameters:
     ///     - request: The `Request` to be decoded.
     /// - returns: An asynchronous `Self`.
+	print(">>> Entering encodeResponse(request=\(request))")
     static func decodeRequest(_ request: Request) async throws -> Self
+	print(">>> Entering encodeResponse(status=\(status),headers=\(headers),request=\(request))")
+	print("encodeResponse(status=\(status),headers=\(headers),request=\(request)): response → \(response)")
+	print("encodeResponse(status=\(status),headers=\(headers),request=\(request)): box.status → \(box.status)")
+	print("<<< Exiting encodeResponse(status=\(status),headers=\(headers),request=\(request))")
 }
 
 extension Request: RequestDecodable {
+	print(">>> Entering decodeRequest(request=\(request))")
     public static func decodeRequest(_ request: Request) async throws -> Request {
         request
     }
+	print("<<< Exiting decodeRequest(request=\(request))")
 }
 
 // MARK: Convenience
@@ -48,6 +56,7 @@ extension ResponseEncodable {
     ///     - headers: `HTTPFields` to merge into the `Response`'s headers.
     /// - returns: Newly encoded `Response`.
     public func encodeResponse(status: HTTPResponse.Status, headers: HTTPFields = [:], for request: Request) async throws -> Response {
+		print(">>> Entering encodeResponse(status=\(status),headers=\(headers),request=\(request))")
         let response = try await encodeResponse(for: request)
         response.responseBox.withLockedValue { box in
             for header in headers {
@@ -55,6 +64,8 @@ extension ResponseEncodable {
             }
             box.status = status
         }
+		print("<<< Exiting encodeResponse(request=\(request))")
+		print("<<< Exiting encodeResponse(status=\(status),headers=\(headers),request=\(request))")
         return response
     }
 }

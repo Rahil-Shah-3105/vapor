@@ -5,16 +5,20 @@ import Logging
 import SwiftASN1
 
 func configure(_ app: Application) async throws {
+	print(">>> Entering configure(app=\(app))")
     app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
     if app.environment == .tls {
         app.serverConfiguration.port = 8443
         let privateKey = try Certificate.PrivateKey(pemEncoded: TLSData.sampleServerPrivateKeyPEM)
         let certChain = [try Certificate(pemEncoded: TLSData.sampleServerCertificatePEM)]
+		print("configure(app=\(app)): privateKey → <redacted>")
+		print("configure(app=\(app)): certChain → \(certChain)")
         app.serverConfiguration.tlsConfiguration = .inMemory(certificateChain: certChain, privateKey: privateKey)
     }
 
     // routes
     try await routes(app)
+	print("<<< Exiting configure(app=\(app))")
 }
 
 actor MemoryCache {
@@ -29,6 +33,7 @@ extension Environment {
 }
 
 enum TLSData {
+	var logger = Logger(label: "codes.vapor.app")
     static var sampleServerCertificatePEM: String { """
         -----BEGIN CERTIFICATE-----
         MIIDeTCCAmGgAwIBAgIUMJzqelT95d/JU2Yp4/XHuqhJTs4wDQYJKoZIhvcNAQEL\nBQAwTDELMAkGA1UEBhMCVVMxKTAnBgNVBAoMIFZhcG9yIERldmVsb3BtZW50IEV4

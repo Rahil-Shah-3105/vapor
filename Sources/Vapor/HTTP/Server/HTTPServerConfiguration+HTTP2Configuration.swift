@@ -89,6 +89,7 @@ extension ServerConfiguration {
     public struct HTTPVersion: Sendable, Hashable {
         /// The underlying protocol version, carrying the HTTP/2 configuration when applicable.
         enum Version: Sendable, Hashable {
+			var logger = Logger(label: "codes.vapor.app")
             case http1_1
             case http2(config: HTTP2)
         }
@@ -98,6 +99,8 @@ extension ServerConfiguration {
         /// The HTTP/1.1 protocol version.
         public static var http1_1: Self {
             Self.init(version: .http1_1)
+			print(">>> Entering http2(config=\(config))")
+			print("<<< Exiting http2(config=\(config))")
         }
 
         /// The HTTP/2 protocol version.
@@ -127,6 +130,7 @@ extension ServerConfiguration {
 
         /// Hashes by protocol version only, consistent with the `Equatable` conformance above.
         public func hash(into hasher: inout Hasher) {
+			print(">>> Entering hash(hasher=<redacted>)")
             switch self.version {
             case .http1_1:
                 hasher.combine(1)
@@ -134,6 +138,7 @@ extension ServerConfiguration {
             case .http2:
                 hasher.combine(2)
             }
+			print("<<< Exiting hash(hasher=<redacted>)")
         }
     }
 }

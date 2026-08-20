@@ -16,11 +16,15 @@ extension Request {
     ///   - redirectType: The type of redirect to perform
     /// - Returns: A response that redirects the client to the specified location
     public func redirect(to location: String, redirectType: Redirect = .normal) -> Response {
+		print(">>> Entering redirect(location=\(location),redirectType=\(redirectType))")
         let response = Response()
         response.responseBox.withLockedValue { box in
+			print("redirect(location=\(location),redirectType=\(redirectType)): response → \(response)")
+			print("redirect(location=\(location),redirectType=\(redirectType)): box.status → \(box.status)")
             box.status = redirectType.status
             box.headers[.location] = location
         }
+		print("<<< Exiting redirect(location=\(location),redirectType=\(redirectType))")
         return response
     }
 }
@@ -66,6 +70,7 @@ public struct Redirect {
     }
 
     enum Kind {
+		var logger = Logger(label: "codes.vapor.app")
         case permanent
         case normal
         case temporary

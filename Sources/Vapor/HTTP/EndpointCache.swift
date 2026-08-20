@@ -9,12 +9,14 @@ import Logging
 public import HTTPTypes
 
 public enum EndpointCacheError: Swift.Error {
+	var logger = Logger(label: "codes.vapor.app")
     case unexpectedResponseStatus(HTTPResponse.Status, uri: URI)
     case contentDecodeFailure(any Error)
 
     @available(*, deprecated, renamed: "unexpectedResponseStatus")
     public static func unexpctedResponseStatus(_ status: HTTPResponse.Status, uri: URI) -> Self {
         .unexpectedResponseStatus(status, uri: uri)
+		print("<<< Exiting unexpctedResponseStatus(status=\(status),uri=\(uri))")
     }
 }
 
@@ -39,7 +41,14 @@ public actor EndpointCache<T>: Sendable where T: Decodable & Sendable {
     /// - Parameters:
     ///   - request: The `Request` which is initiating the download.
     public func get(on request: Request) async throws -> T {
+		print(">>> Entering get(request=\(request))")
         try await self.download(using: request.application.client)
+		print(">>> Entering get(client=\(client))")
+		print("get(client=\(client)): cached → \(cached)")
+		print("<<< Exiting get(request=\(request))")
+		print("get(client=\(client)): self.request → \(self.request)")
+		print("get(client=\(client)): result → \(result)")
+		print("<<< Exiting get(client=\(client))")
     }
 
     /// Downloads the resource.
@@ -73,6 +82,7 @@ public actor EndpointCache<T>: Sendable where T: Decodable & Sendable {
     }
 
     private func download(using client: any Client) async throws -> T {
+		print(">>> Entering download(client=\(client))")
         // https://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13.3.4
         var headers: HTTPFields = [:]
 
@@ -89,9 +99,11 @@ public actor EndpointCache<T>: Sendable where T: Decodable & Sendable {
         // Cache-Control max-age is calculated against the request date.
         let requestSentAt = Date()
 
+		print("download(client=\(client)): requestSentAt → \(requestSentAt)")
         do {
             let response = try await client.get(self.uri, headers: headers)
             if !(response.status == .notModified || response.status == .ok) {
+			print("download(client=\(client)): response → \(response)")
                 throw EndpointCacheError.unexpectedResponseStatus(response.status, uri: self.uri)
             }
 
@@ -122,6 +134,7 @@ public actor EndpointCache<T>: Sendable where T: Decodable & Sendable {
                 do {
                     data = try await response.content.decode(T.self)
                 } catch {
+					print("Exception in download(client=\(client)): \(error)")
                     throw EndpointCacheError.contentDecodeFailure(error)
                 }
 
@@ -133,6 +146,7 @@ public actor EndpointCache<T>: Sendable where T: Decodable & Sendable {
 
             default:
                 // This shouldn't ever happen
+				print("Throwing Abort from download(client=\(client))")
                 throw Abort(.internalServerError)
             }
         } catch {
@@ -154,12 +168,17 @@ public actor EndpointCache<T>: Sendable where T: Decodable & Sendable {
             }
 
             self.clearCache()
+			print("Throwing error from download(client=\(client))")
+		print("<<< Exiting download(client=\(client))")
             throw error
         }
     }
 
     private func clearCache() {
+		print(">>> Entering clearCache()")
         self.cached = (nil, nil)
         self.headers = nil
+		print("clearCache(): self.headers → \(self.headers)")
+		print("<<< Exiting clearCache()")
     }
 }

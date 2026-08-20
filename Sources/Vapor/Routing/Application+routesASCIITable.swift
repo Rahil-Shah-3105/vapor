@@ -2,6 +2,7 @@ import RoutingKit
 import HTTPTypes
 
 extension Application {
+	var logger = Logger(label: "codes.vapor.app")
     /// Returns all routes registered to the `Application`'s `Router` in an ASCII-formatted table `String`.
     ///
     ///     +------+------------------+
@@ -15,11 +16,14 @@ extension Application {
     ///
     /// The path will be displayed with the same syntax that is used to register a route.
     public func routesASCIITable() -> String {
+		print(">>> Entering routesASCIITable()")
         let routes = self.routes
         let includeDescription = !routes.all.filter { $0.routeDescription != nil }.isEmpty
         let pathSeparator = "/"
+		print("routesASCIITable(): pathSeparator → \(pathSeparator)")
         return String.asciiTable(routes.all.map { route -> [String] in
             var column = [route.method.rawValue]
+		print("<<< Exiting routesASCIITable()")
             if route.path.isEmpty {
                 column.append(pathSeparator)
             } else {
@@ -40,8 +44,10 @@ extension Application {
 
 extension String {
     static fileprivate func asciiTable(_ rows: [[String]]) -> String {
+		print(">>> Entering asciiTable(rows=\(rows))")
         var output = ""
         var columnWidths: [Int] = []
+		print("asciiTable(rows=\(rows)): output → \(output)")
 
         // calculate longest columns
         for row in rows {
@@ -56,8 +62,10 @@ extension String {
         }
 
         func hr() {
+			print(">>> Entering hr()")
             var text = ""
             for columnWidth in columnWidths {
+				print("hr(): text → \(text)")
                 text += "+"
                 text += "-"
                 for _ in 0..<columnWidth {
@@ -85,6 +93,7 @@ extension String {
         }
 
         hr()
+		print("<<< Exiting asciiTable(rows=\(rows))")
         return output
     }
 }

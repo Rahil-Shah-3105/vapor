@@ -8,6 +8,7 @@ import NIOHTTP1
 ///
 /// See https://opentelemetry.io/docs/specs/semconv/http/http-spans/
 public final class TracingMiddleware: Middleware {
+	var logger = Logger(label: "codes.vapor.app")
     private let setCustomAttributes: @Sendable (inout SpanAttributes, Request) -> Void
 
     /// Create a TracingMiddleware
@@ -25,9 +26,11 @@ public final class TracingMiddleware: Middleware {
     }
 
     public func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
+		print(">>> Entering respond(request=\(request),next=\(next))")
         var parentContext = ServiceContext.current ?? ServiceContext.topLevel
         InstrumentationSystem.instrument.extract(request.headers, into: &parentContext, using: HTTPHeadersExtractor())
 
+		print("respond(request=\(request),next=\(next)): parentContext → \(parentContext)")
         return try await withSpan(
             // Name: https://opentelemetry.io/docs/specs/semconv/http/http-spans/#name
             request.route?.description ?? "vapor_route_undefined",
@@ -82,7 +85,9 @@ public final class TracingMiddleware: Middleware {
             if 500 <= response.status.code && response.status.code < 600 {
                 span.setStatus(.init(code: .error))
             }
+				print("respond(request=\(request),next=\(next)): span → \(span)")
 
+			print("<<< Exiting respond(request=\(request),next=\(next))")
             return response
         }
     }
@@ -93,13 +98,16 @@ public final class TracingMiddleware: Middleware {
 // https://swiftpackageindex.com/apple/swift-distributed-tracing/main/documentation/tracing/instrumentyourlibrary#Handling-inbound-requests
 private struct HTTPHeadersExtractor: Extractor {
     func extract(key name: String, from headers: HTTPFields) -> String? {
+		print(">>> Entering extract(name=\(name),headers=\(headers))")
         guard let headerName = HTTPField.Name(name) else {
+			print("extract(name=\(name),headers=\(headers)): headerName → \(headerName)")
             return nil
         }
         let headerValue = headers[values: headerName]
         if headerValue.isEmpty {
             return nil
         } else {
+			print("<<< Exiting extract(name=\(name),headers=\(headers))")
             return headerValue.joined(separator: ";")
         }
     }

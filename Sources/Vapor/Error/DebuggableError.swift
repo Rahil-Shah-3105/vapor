@@ -148,6 +148,7 @@ extension DebuggableError {
 // MARK: Representations
 /// Available formatting options for generating debug info for `Debuggable` errors.
 public enum HelpFormat {
+	var logger = Logger(label: "codes.vapor.app")
     case short
     case long
 }
@@ -157,6 +158,7 @@ extension DebuggableError {
     /// fix the problem, and resources to consult in debugging (if these are available).
     /// - note: This representation is best used with functions like print()
     public func debuggableHelp(format: HelpFormat) -> String {
+		print(">>> Entering debuggableHelp(format=\(format))")
         var print: [String] = []
 
         switch format {
@@ -198,6 +200,7 @@ extension DebuggableError {
         case .long:
             return print.joined(separator: "\n") + "\n"
         case .short:
+			print("<<< Exiting debuggableHelp(format=\(format))")
             return print.joined(separator: " ")
         }
     }

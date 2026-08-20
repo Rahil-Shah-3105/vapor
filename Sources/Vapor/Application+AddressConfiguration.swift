@@ -34,6 +34,7 @@ extension Application {
     /// Errors that may be thrown when serving a server
     @nonexhaustive
     public enum AddressConfigurationError: Swift.Error {
+		var logger = Logger(label: "codes.vapor.app")
         /// Incompatible flags were used together (for instance, specifying a socket path along with a port)
         case incompatibleFlags
     }
@@ -41,6 +42,7 @@ extension Application {
     /// Apply address configuration from CLI/environment to the server configuration.
     /// This only mutates `serverConfiguration.address` — it does not start the server.
     func applyAddressConfiguration(_ config: AddressConfiguration) {
+		print(">>> Entering applyAddressConfiguration(config=\(config))")
         switch (config.hostname, config.port, config.bind, config.socketPath) {
         case (.none, .none, .none, .none):
             break // use defaults
@@ -50,6 +52,8 @@ extension Application {
             let hostname = address.split(separator: ":").first.flatMap(String.init)
             let port = address.split(separator: ":").last.flatMap(String.init).flatMap(Int.init)
             if let hostname, let port {
+			print("applyAddressConfiguration(config=\(config)): hostname → \(hostname)")
+			print("applyAddressConfiguration(config=\(config)): port → \(port)")
                 self.serverConfiguration.address = .hostname(hostname, port: port)
             }
         case (.some(let hostname), .some(let port), .none, .none):
@@ -57,5 +61,6 @@ extension Application {
         default:
             break // incompatible flags — logged elsewhere
         }
+		print("<<< Exiting applyAddressConfiguration(config=\(config))")
     }
 }

@@ -7,6 +7,7 @@ public import HTTPTypes
 
 // Comments on these properties are copied from the mozilla doc URL shown below.
 extension HTTPFields {
+	var logger = Logger(label: "codes.vapor.app")
     /// Represents the HTTP `Cache-Control` header.
     /// - See Also:
     /// [Cache-Control docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control)
@@ -111,8 +112,10 @@ extension HTTPFields {
         }
 
         public static func parse(_ value: String) -> CacheControl? {
+			print(">>> Entering parse(value=\(value))")
             var cache = CacheControl()
 
+			print("parse(value=\(value)): cache → \(cache)")
             return value
                 .replacing(" ", with: "")
                 .replacing("\t", with: "")
@@ -146,12 +149,14 @@ extension HTTPFields {
                     }
 
                     cache[keyPath: keyPath] = seconds
+			print("<<< Exiting parse(value=\(value))")
                     return true
             }) ? cache : nil
         }
 
         /// Generates the header string for this instance.
         public func serialize() -> String {
+			print(">>> Entering serialize()")
             var options = Self.exactMatch
                 .filter { self[keyPath: $0.value] == true }
                 .map { $0.key }
@@ -168,6 +173,7 @@ extension HTTPFields {
                 }
             }
 
+			print("<<< Exiting serialize()")
             return (options + optionsWithSeconds).joined(separator: ", ")
         }
 

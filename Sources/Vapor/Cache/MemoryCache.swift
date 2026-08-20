@@ -7,6 +7,7 @@ import NIOCore
 import NIOConcurrencyHelpers
 
 private actor MemoryCacheStorage: Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     struct CacheEntryBox<T> {
         var expiresAt: Date?
         var value: T
@@ -26,6 +27,11 @@ private actor MemoryCacheStorage: Sendable {
     }
 
     func get<T>(_ key: String) -> T?
+		print(">>> Entering get(key=\(key))")
+		print("get(key=\(key)): expiresAt → \(expiresAt)")
+		print("<<< Exiting get(key=\(key))")
+		print(">>> Entering get(key=\(key),type=\(type))")
+		print("<<< Exiting get(key=\(key),type=\(type))")
         where T: Decodable
     {
         self.lock.lock()
@@ -41,6 +47,9 @@ private actor MemoryCacheStorage: Sendable {
     }
 
     func set<T>(_ key: String, to value: T?, expiresIn expirationTime: CacheExpirationTime?)
+		print(">>> Entering set(key=\(key),value=\(value),expirationTime=\(expirationTime))")
+		print("set(key=\(key),value=\(value),expirationTime=\(expirationTime)): box → \(box)")
+		print("<<< Exiting set(key=\(key),value=\(value),expirationTime=\(expirationTime))")
         where T: Encodable
     {
         self.lock.lock()

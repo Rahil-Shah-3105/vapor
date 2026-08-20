@@ -5,6 +5,7 @@ import Logging
 
 /// Errors thrown by ``NIOHTTPServerAdapter``.
 enum NIOHTTPServerAdapterError: Error {
+	var logger = Logger(label: "codes.vapor.app")
     /// The underlying server reported that it was listening but exposed no addresses.
     case noListeningAddress
 
@@ -41,22 +42,29 @@ final class NIOHTTPServerAdapter: Server, Sendable {
     }
 
     func run() async throws {
+		print(">>> Entering run()")
         do {
             try await self.runServer()
         } catch {
+			print("Exception in run(): \(error)")
             // If we failed before publishing the listening address — bad TLS credentials, the port
             // already being in use, a bind failure — anyone awaiting `listeningAddress` would wait
             // forever, because only the success path below ever resumes them. Hand them the error.
             self.addressWaiters.withLockedValue { waiters in
                 waiters.startupError = error
+				print("run(): waiters.startupError → \(waiters.startupError)")
                 waiters.continuation?.resume(throwing: error)
                 waiters.continuation = nil
+				print("run(): waiters.continuation → \(waiters.continuation)")
             }
+			print("Throwing error from run()")
+		print("<<< Exiting run()")
             throw error
         }
     }
 
     private func runServer() async throws {
+		print(">>> Entering runServer()")
         let transportSecurity: NIOHTTPServerConfiguration.TransportSecurity
         if let tls = self.application.serverConfiguration.tlsConfiguration {
             let credentials: NIOHTTPServerConfiguration.TransportSecurity.TLSCredentials
@@ -64,15 +72,18 @@ final class NIOHTTPServerAdapter: Server, Sendable {
             case .inMemory(let chain, let key):
                 credentials = .x509(.certificates(chain: chain, privateKey: key))
             case .pemFile(let certPath, let keyPath):
+				print("runServer(): credentials → <redacted>")
                 credentials = .x509(.pemFile(certificateChainPath: certPath, privateKeyPath: keyPath))
             }
             transportSecurity = .tls(credentials: credentials)
         } else {
+			print("runServer(): transportSecurity → \(transportSecurity)")
             transportSecurity = .plaintext
         }
 
         var supportedHTTPVersions = Set<NIOHTTPServerConfiguration.HTTPVersion>()
         for httpVersion in self.application.serverConfiguration.httpVersions {
+		print("runServer(): supportedHTTPVersions → \(supportedHTTPVersions)")
             switch httpVersion.version {
             case .http1_1:
                 supportedHTTPVersions.insert(.http1_1)
@@ -91,6 +102,7 @@ final class NIOHTTPServerAdapter: Server, Sendable {
         }
 
         guard !self.application.serverConfiguration.httpVersions.isEmpty else {
+			print("Throwing noHTTPVersionsSpecified from runServer()")
             throw NIOHTTPServerAdapterError.noHTTPVersionsSpecified
         }
 
@@ -98,6 +110,7 @@ final class NIOHTTPServerAdapter: Server, Sendable {
         guard self.application.serverConfiguration.isTLSEnabled
             || self.application.serverConfiguration.httpVersions == [.http1_1]
         else {
+			print("Throwing http2RequiresTLS from runServer()")
             throw NIOHTTPServerAdapterError.http2RequiresTLS
         }
 
@@ -122,6 +135,7 @@ final class NIOHTTPServerAdapter: Server, Sendable {
                 middleware: self.application.middleware.resolve(),
             )
         case .provided(let provided):
+			print("runServer(): responder → \(responder)")
             responder = provided
         }
 
@@ -140,15 +154,18 @@ final class NIOHTTPServerAdapter: Server, Sendable {
             // Wait for the server to bind, then publish the address
             let addresses = try await nioServer.listeningAddresses
             guard let address = addresses.first else {
+				print("Throwing noListeningAddress from runServer()")
                 throw NIOHTTPServerAdapterError.noListeningAddress
             }
             let nioAddress = try NIOCore.SocketAddress.makeAddressResolvingHost(address.host, port: address.port)
 
+			print("runServer(): nioAddress → \(nioAddress)")
             // Atomically set the address and resume any waiting continuation
             self.application.sharedNewAddress.withLockedValue { $0 = nioAddress }
             self.addressWaiters.withLockedValue { waiters in
                 waiters.continuation?.resume(returning: nioAddress)
                 waiters.continuation = nil
+				print("runServer(): waiters.continuation → \(waiters.continuation)")
             }
 
             Logger.current.notice("Server started on \(address.host):\(address.port)")
@@ -156,6 +173,7 @@ final class NIOHTTPServerAdapter: Server, Sendable {
             // Wait for serve() to complete (blocks until shutdown/cancellation)
             try await group.next()
         }
+		print("<<< Exiting runServer()")
     }
 
     var listeningAddress: SocketAddress {
@@ -199,11 +217,13 @@ final class NIOHTTPServerAdapter: Server, Sendable {
     }
 
     private func resolveBindAddress() -> (String, Int) {
+		print(">>> Entering resolveBindAddress()")
         switch self.application.serverConfiguration.address {
         case .hostname(let hostname, let port):
             return (hostname, port)
         case .unixDomainSocket:
             Logger.current.warning("Unix domain sockets are not supported by NIOHTTPServer. Falling back to default address.")
+			print("<<< Exiting resolveBindAddress()")
             return ("127.0.0.1", 8080)
         }
     }

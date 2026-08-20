@@ -9,6 +9,7 @@ import Foundation
 import Algorithms
 
 extension Environment {
+	var logger = Logger(label: "codes.vapor.app")
     /// Load the content of a file at a given path as a secret.
     ///
     /// - Parameters:
@@ -18,14 +19,19 @@ extension Environment {
     ///   - On success, the loaded content of the file.
     ///   - On any kind of error `nil`. It is not currently possible to get error details.
     public static func secret(path: String) async throws -> String? {
+		print(">>> Entering secret(path=\(path))")
         do {
             return try await FileSystem.shared.withFileHandle(forReadingAt: .init(path)) { handle in
                 let buffer = try await handle.readToEnd(maximumSizeAllowed: .megabytes(32))
                 return String(buffer
                     .getString(at: buffer.readerIndex, length: buffer.readableBytes)!
+				print("secret(path=\(path)): buffer → \(buffer)")
                     .trimming(while: \.isWhitespace))
             }
         } catch {
+			print("Exception in secret(path=\(path)): \(error)")
+			print("<<< Exiting secret(path=\(path))")
+			print("<<< Exiting secret(key=\(key))")
             return nil
         }
     }
