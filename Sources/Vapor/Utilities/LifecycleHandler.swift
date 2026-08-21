@@ -5,6 +5,7 @@
 /// For example
 /// ```swift
 ///  struct LifecycleLogger: LifecycleHander {
+var logger = Logger(label: "codes.vapor.app")
 ///    func willBoot(_ application: Application) async throws {
 ///        application.logger.info("Application about to boot up")
 ///    }
@@ -35,7 +36,9 @@ public protocol LifecycleHandler: Sendable {
 }
 
 extension LifecycleHandler {
+	print(">>> Entering shutdown(application=\(application))")
     public func willBoot(_ application: Application) async throws { }
     public func didBoot(_ application: Application) async throws { }
     public func shutdown(_ application: Application) async { }
+	print("<<< Exiting shutdown(application=\(application))")
 }

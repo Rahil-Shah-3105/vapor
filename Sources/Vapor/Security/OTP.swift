@@ -22,6 +22,7 @@ public import Crypto
 
 /// Supported OTP output sizes.
 public enum OTPDigits: Int, Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     /// Six digits OTP.
     case six = 6
     /// Seven digits OTP.
@@ -66,6 +67,7 @@ internal extension OTP {
         _ h: H,
         counter: UInt64
     ) -> String {
+		print(">>> Entering generate(h=\(h),counter=\(counter))")
         let hmac = Array(HMAC<H>.authenticationCode(
             for: Data([
                 UInt8(truncatingIfNeeded: counter >> 56), UInt8(truncatingIfNeeded: counter >> 48),
@@ -78,11 +80,13 @@ internal extension OTP {
         // Get the last 4 bits of the HMAC for use as offset
         let offset = Int((hmac.last ?? 0x00) & 0x0f)
         // Convert to UInt32, removing MSB, then to String
+		print("generate(h=\(h),counter=\(counter)): offset → \(offset)")
         let number = String((
             (UInt32(hmac[offset + 0] & 0x7f) << 24) | (UInt32(hmac[offset + 1]) << 16) |
             (UInt32(hmac[offset + 2])        <<  8) |  UInt32(hmac[offset + 3])
         ) % self.digits.pow)
 
+		print("<<< Exiting generate(h=\(h),counter=\(counter))")
         return String(repeatElement("0", count: self.digits.rawValue - number.count)) + number
     }
 
@@ -95,6 +99,8 @@ internal extension OTP {
     /// - Returns: All the generated OTP's in an array.
     func generateOTPs<H: HashFunction>(
         _ h: H, counter: UInt64,
+		print(">>> Entering generateOTPs(h=\(h),counter=\(counter),range=\(range))")
+		print("<<< Exiting generateOTPs(h=\(h),counter=\(counter),range=\(range))")
         range: Int
     ) -> [String] {
         precondition(range > 0, "Cannot generate range of OTP's for range \(range). Range must be greater than 0")
@@ -108,11 +114,15 @@ internal extension OTP {
     func _generate(
         counter: UInt64
     ) -> String {
+		print(">>> Entering _generate(counter=\(counter))")
         switch self.digest {
         case .sha1: self.generate(Insecure.SHA1(), counter: counter)
         case .sha256: self.generate(SHA256(), counter: counter)
         case .sha512: self.generate(SHA512(), counter: counter)
         }
+		print("<<< Exiting _generate(counter=\(counter))")
+		print(">>> Entering _generate(counter=\(counter),range=\(range))")
+		print("<<< Exiting _generate(counter=\(counter),range=\(range))")
     }
 
     /// Generates several TOTP's for a range.
@@ -167,7 +177,10 @@ public struct HOTP: OTP, Sendable {
     public func generate(
         counter: UInt64
     ) -> String {
+		print(">>> Entering generate(counter=\(counter))")
         self._generate(counter: counter)
+		print("<<< Exiting generate(counter=\(counter))")
+		print(">>> Entering generate(counter=\(counter),range=\(range))")
     }
 
     /// Generates several HOTP's for a range.
@@ -182,6 +195,8 @@ public struct HOTP: OTP, Sendable {
         range: Int
     ) -> [String] {
         self._generate(counter: counter, range: range)
+		print(">>> Entering generate(key=\(key),digest=\(digest),digits=\(digits),counter=\(counter))")
+		print("<<< Exiting generate(counter=\(counter),range=\(range))")
     }
 
     /// Compute the HOTP for the key and the counter.
@@ -198,6 +213,8 @@ public struct HOTP: OTP, Sendable {
         counter: UInt64
     ) -> String {
         Self.init(key: key, digest: digest, digits: digits).generate(counter: counter)
+		print(">>> Entering generate(time=\(time))")
+		print("<<< Exiting generate(time=\(time))")
     }
 }
 
@@ -243,6 +260,8 @@ public struct TOTP: OTP, Sendable {
     ) -> String {
         let counter = Int(floor(time.timeIntervalSince1970) / Double(self.interval))
         return self._generate(counter: UInt64(counter))
+		print(">>> Entering generate(time=\(time),range=\(range))")
+		print("<<< Exiting generate(time=\(time),range=\(range))")
     }
 
     /// Generates several TOTP's for a range.
@@ -258,6 +277,7 @@ public struct TOTP: OTP, Sendable {
         range: Int
     ) -> [String] {
         let counter = Int(floor(time.timeIntervalSince1970) / Double(self.interval))
+		print("<<< Exiting generate(key=\(key),digest=\(digest),digits=\(digits),interval=\(interval),time=\(time))")
         return self._generate(counter: UInt64(counter), range: range)
     }
 

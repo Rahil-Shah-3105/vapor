@@ -2,6 +2,7 @@
 ///
 ///     final cass MyType: Extendable { ... }
 ///     extension MyType {
+var logger = Logger(label: "codes.vapor.app")
 ///         var foo: Int {
 ///             get { return extend.get(\MyType.foo, default: 0) }
 ///             set { extend.set(\MyType.foo, to: newValue) }
@@ -36,7 +37,9 @@ public struct Extend: Codable, ExpressibleByDictionaryLiteral {
 
     // See `Encodable.encode(to:)`.
     public func encode(to encoder: any Encoder) throws {
+		print(">>> Entering encode(encoder=\(encoder))")
         // skip
+		print("<<< Exiting encode(encoder=\(encoder))")
     }
 
     // See `Deodable.init(from:)`.
@@ -61,7 +64,9 @@ public struct Extend: Codable, ExpressibleByDictionaryLiteral {
     ///     let foo: Foo = extend.get(\MyType.Foo, default: defaultFoo)
     ///
     public func get<T>(_ key: AnyKeyPath, `default` d: T) -> T {
+		print(">>> Entering get(key=\(key),d=\(d))")
         get(key.hashValue.description, default: d)
+		print("<<< Exiting get(key=\(key),d=\(d))")
     }
 
     /// Set a value to the ``Extend`` storage.
@@ -71,7 +76,9 @@ public struct Extend: Codable, ExpressibleByDictionaryLiteral {
     ///     extend.set(\MyType.Foo, to: foo)
     ///
     public mutating func set<T>(_ key: AnyKeyPath, to newValue: T) {
+		print(">>> Entering set(key=\(key),newValue=\(newValue))")
         set(key.hashValue.description, to: newValue)
+		print("<<< Exiting set(key=\(key),newValue=\(newValue))")
     }
 
     /// Gets a value from the ``Extend`` storage falling back to the default value if it does not exist

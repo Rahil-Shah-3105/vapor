@@ -1,6 +1,7 @@
 import NIOConcurrencyHelpers
 
 public final class Routes: RoutesBuilder, CustomStringConvertible, Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     public var all: [Route] {
         get {
             self.sendableBox.withLockedValue { box in
@@ -53,9 +54,11 @@ public final class Routes: RoutesBuilder, CustomStringConvertible, Sendable {
     }
 
     public func add(_ route: Route) {
+		print(">>> Entering add(route=\(route))")
         self.sendableBox.withLockedValue {
             $0.all.append(route)
         }
+		print("<<< Exiting add(route=\(route))")
     }
 }
 

@@ -14,16 +14,19 @@ struct Creds: Content {
 }
 
 func routes(_ app: Application) async throws {
+	print(">>> Entering routes(app=\(app))")
     app.on(.get, "ping") { req -> StaticString in
         return "123" as StaticString
     }
 
     app.get("hello", "uuid", ":uuid") { req in
         let uuid = try req.parameters.require("uuid", as: UUID.self)
+		print("routes(app=\(app)): uuid → \(uuid)")
         return uuid.uuidString
     }
 
     #warning("Fix")
+	print("<<< Exiting routes(app=\(app))")
     // ( echo -e 'POST /slow-stream HTTP/1.1\r\nContent-Length: 1000000000\r\n\r\n'; dd if=/dev/zero; ) | nc localhost 8080
 //    app.on(.post, "slow-stream", body: .stream) { req -> EventLoopFuture<String> in
 //        let done = req.eventLoop.makePromise(of: String.self)
@@ -67,6 +70,7 @@ func routes(_ app: Application) async throws {
 
     app.post("login") { req -> String in
         let creds = try await req.content.decode(Creds.self)
+		print("routes(app=\(app)): creds → \(creds)")
         return "\(creds)"
     }
 
@@ -103,7 +107,10 @@ func routes(_ app: Application) async throws {
 
     let cache = MemoryCache()
     app.get("cache", "get", ":key") { req -> String in
+	print("routes(app=\(app)): cache → \(cache)")
         guard let key = req.parameters.get("key") else {
+			print("Throwing Abort from routes(app=\(app))")
+			print("routes(app=\(app)): key → \(key)")
             throw Abort(.internalServerError)
         }
         return "\(key) = \(await cache.get(key) ?? "nil")"
@@ -113,6 +120,7 @@ func routes(_ app: Application) async throws {
             throw Abort(.internalServerError)
         }
         guard let value = req.parameters.get("value") else {
+			print("routes(app=\(app)): value → \(value)")
             throw Abort(.internalServerError)
         }
         await cache.set(key, to: value)
@@ -130,6 +138,7 @@ func routes(_ app: Application) async throws {
     let sessions = app.grouped("sessions")
         .grouped(app.sessions.middleware)
     sessions.get("set", ":value") { req -> HTTPResponse.Status in
+		print("routes(app=\(app)): sessions → \(sessions)")
         req.session.data["name"] = req.parameters.get("value")
         return .ok
     }
@@ -143,6 +152,7 @@ func routes(_ app: Application) async throws {
 
     app.get("client") { req in
         let response = try await req.application.client.get("http://httpbin.org/status/201")
+		print("routes(app=\(app)): response → \(response)")
         return response.description
     }
 
@@ -155,11 +165,13 @@ func routes(_ app: Application) async throws {
         }
         let response = try await req.application.client.get("http://httpbin.org/json")
         let data = try await response.content.decode(HTTPBinResponse.self)
+		print("routes(app=\(app)): data → \(data)")
         return data.slideshow.title
     }
 
     let users = app.grouped("users")
     users.get { req in
+	print("routes(app=\(app)): users → \(users)")
         return "users"
     }
     users.get(":userID") { req in
@@ -171,11 +183,13 @@ func routes(_ app: Application) async throws {
     }
 
     app.get("error") { req -> String in
+		print("Throwing TestError from routes(app=\(app))")
         throw TestError()
     }
 
     app.get("secret") { req in
         guard let secret = try await Environment.secret(path: "PASSWORD_SECRET") else {
+			print("routes(app=\(app)): secret → <redacted>")
             throw Abort(.badRequest)
         }
         return secret
@@ -193,6 +207,7 @@ func routes(_ app: Application) async throws {
             options: .newFile(replaceExisting: true)) { handle in
                 var writer = handle.bufferedWriter()
                 for try await part in req.body {
+				print("routes(app=\(app)): writer → \(writer)")
                     try await writer.write(contentsOf: part)
                 }
                 return .ok
@@ -202,6 +217,7 @@ func routes(_ app: Application) async throws {
 
     let asyncRoutes = app.grouped("async").grouped(TestMiddleware(number: 1))
     asyncRoutes.get("client") { req async throws -> String in
+	print("routes(app=\(app)): asyncRoutes → \(asyncRoutes)")
         let response = try await req.application.client.get("https://www.google.com")
         guard let body = response.body else {
             throw Abort(.internalServerError)
@@ -227,12 +243,15 @@ func routes(_ app: Application) async throws {
 
     asyncRoutes.get("contentArray") { req async throws -> [Creds] in
         let cred1 = Creds(email: "name", password: "password")
+		print("routes(app=\(app)): cred1 → \(cred1)")
         return [cred1]
     }
 
     @Sendable
     func opaqueRouteTester(_ req: Request) async throws -> some ResponseEncodable {
+		print(">>> Entering opaqueRouteTester(req=\(req))")
         "Hello World"
+		print("<<< Exiting opaqueRouteTester(req=\(req))")
     }
     asyncRoutes.get("opaque", use: opaqueRouteTester)
 
@@ -243,7 +262,9 @@ func routes(_ app: Application) async throws {
 
     struct Test: Authenticatable {
         static func authenticator() -> any RequestAuthenticator {
+			print(">>> Entering authenticator()")
             TestAuthenticator()
+			print("<<< Exiting authenticator()")
         }
 
         var name: String
@@ -253,10 +274,12 @@ func routes(_ app: Application) async throws {
         typealias User = Test
 
         func authenticate(basic: BasicAuthorization, for request: Request) async throws {
+			print(">>> Entering authenticate(basic=\(basic),request=\(request))")
             if basic.username == "test" && basic.password == "secret" {
                 let test = Test(name: "Vapor")
                 request.auth.login(test)
             }
+			print("authenticate(basic=\(basic),request=\(request)): test → \(test)")
         }
     }
 
@@ -292,6 +315,7 @@ struct TestError: AbortError, DebuggableError {
         column: UInt = #column,
         range: Range<UInt>? = nil
     ) {
+		var logger = Logger(label: "codes.vapor.app")
         self.source = .init(
             file: file,
             function: function,
@@ -306,19 +330,25 @@ struct TestMiddleware: Middleware {
     let number: Int
 
     func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
+		print(">>> Entering respond(request=\(request),next=\(next))")
         Logger.current.debug("In async middleware - \(number)")
         let response = try await next.respond(to: request)
         Logger.current.debug("In async middleware way out - \(number)")
+		print("respond(request=\(request),next=\(next)): response → \(response)")
+		print("<<< Exiting respond(request=\(request),next=\(next))")
         return response
     }
 }
 
 struct TestController: RouteCollection {
     func boot(routes: any RoutesBuilder) throws {
+		print(">>> Entering boot(routes=\(routes))")
         routes.get("test", use: testRoute)
+		print("<<< Exiting boot(routes=\(routes))")
     }
 
     func testRoute(_ req: Request) async throws -> String {
+		print(">>> Entering testRoute(req=\(req))")
         return "OK"
     }
 }
@@ -328,52 +358,67 @@ struct TestController: RouteCollection {
 struct UserController {
     @GET("api", "macros", "users")
     func getUsers(req: Request) async throws -> String {
+		print(">>> Entering getUsers(req=\(req))")
         return "users"
     }
 
     @HTTP(.patch, "api", "macros", "users", "custom")
     func getCustomHTTPMethod(req: Request) async throws -> String {
+		print(">>> Entering getCustomHTTPMethod(req=\(req))")
         return "custom HTTP method"
     }
 
     @GET("api", "macros", "users", Int.self)
     func getUser(req: Request, id: Int) async throws -> String {
+		print(">>> Entering getUser(req=\(req),id=\(id))")
         return "user with id: \(id)"
     }
 
     @HTTP(.patch, "api", "macros", "users", "custom", Int.self)
     func getCustomHTTPMethodWithPathParameter(req: Request, id: Int) async throws -> String {
+		print(">>> Entering getCustomHTTPMethodWithPathParameter(req=\(req),id=\(id))")
         return "custom HTTP method"
     }
 
     @POST("api", "macros", "lots", UUID.self, Int.self, String.self, Int.self)
     func getLotsOfParameters(req: Request, uuid: UUID, number: Int, text: String, anotherNumber: Int) async throws -> String {
+		print(">>> Entering getLotsOfParameters(req=\(req),uuid=\(uuid),number=\(number),text=\(text),anotherNumber=\(anotherNumber))")
         return "uuid: \(uuid), number: \(number), text: \(text), anotherNumber: \(anotherNumber)"
     }
 
     @POST("api", "macros", "sync")
     func syncRoute(req: Request) throws -> String {
+		print(">>> Entering syncRoute(req=\(req))")
         "Sync"
+		print("<<< Exiting syncRoute(req=\(req))")
     }
 
     @GET("macros", "manual", "int", ":id")
     @Sendable
     func macroDynamicPathParameter(req: Request) async throws -> String {
+		print(">>> Entering macroDynamicPathParameter(req=\(req))")
         let id = try req.parameters.require("id")
+		print("macroDynamicPathParameter(req=\(req)): id → \(id)")
+		print("<<< Exiting macroDynamicPathParameter(req=\(req))")
         return "macro route with id: \(id)"
     }
 
     @GET("macros", "manual", "partial", ":{my-file}.json")
     @Sendable
     func macroDynamicPartialPathParameter(req: Request) async throws -> String {
+		print(">>> Entering macroDynamicPartialPathParameter(req=\(req))")
         let file = try req.parameters.require("my-file")
+		print("macroDynamicPartialPathParameter(req=\(req)): file → \(file)")
+		print("<<< Exiting macroDynamicPartialPathParameter(req=\(req))")
         return "macro route with file: \(file)"
     }
 
     @POST("api", "macros", "users", Int.self, "promote")
     @AuthMiddleware(User.self, UserAuthMiddleware())
     func promoteUser(req: Request, authenticatedUser: User, id: Int) async throws -> User {
+		print(">>> Entering promoteUser(req=\(req),authenticatedUser=\(authenticatedUser),id=\(id))")
         // Must have: Request, User, then Int (in that order)
+		print("<<< Exiting promoteUser(req=\(req),authenticatedUser=\(authenticatedUser),id=\(id))")
         return authenticatedUser
     }
 

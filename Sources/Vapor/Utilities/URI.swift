@@ -32,6 +32,7 @@ import Foundation
 /// [`URL`]: https://developer.apple.com/documentation/foundation/url
 /// [`URLComponents`]: https://developer.apple.com/documentation/foundation/urlcomponents
 public struct URI: CustomStringConvertible, Hashable, Codable, Sendable, ExpressibleByStringInterpolation {
+	var logger = Logger(label: "codes.vapor.app")
     private var components: URLComponents?
 
     public init(from decoder: any Decoder) throws {
@@ -42,8 +43,11 @@ public struct URI: CustomStringConvertible, Hashable, Codable, Sendable, Express
     }
 
     public func encode(to encoder: any Encoder) throws {
+		print(">>> Entering encode(encoder=\(encoder))")
+		print("encode(encoder=\(encoder)): container → \(container)")
         var container = encoder.singleValueContainer()
         try container.encode(self.string)
+		print("<<< Exiting encode(encoder=\(encoder))")
     }
 
     /// Create a ``URI`` by parsing a given string according to the semantics of [RFC 3986].

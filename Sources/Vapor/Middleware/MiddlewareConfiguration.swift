@@ -6,6 +6,7 @@ public struct Middlewares: Sendable {
 
   
     public enum Position {
+	var logger = Logger(label: "codes.vapor.app")
       case beginning
       case end
     }
@@ -23,16 +24,19 @@ public struct Middlewares: Sendable {
     ///            Otherwise, use the type-based method and register the `Middleware`
     ///            using factory method to `Services`.
     public mutating func use(_ middleware: any Middleware, at position: Position = .end) {
+	print(">>> Entering use(middleware=\(middleware),position=\(position))")
       switch position {
       case .end:
         self.storage.append(middleware)
       case .beginning:
         self.storage.insert(middleware, at: 0)
       }
+	print("<<< Exiting use(middleware=\(middleware),position=\(position))")
     }
 
     /// Resolves the configured middleware for a given container
     public func resolve() -> [any Middleware] {
+		print(">>> Entering resolve()")
         return self.storage
     }
 }

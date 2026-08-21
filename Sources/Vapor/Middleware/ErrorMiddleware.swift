@@ -57,6 +57,7 @@ public final class ErrorMiddleware: Middleware {
             // attempt to serialize the error to json
             let body: Response.Body
             do {
+				var logger = Logger(label: "codes.vapor.app")
                 let encoder = try req.application.contentConfiguration.requireEncoder(for: .json)
                 var byteBuffer = req.byteBufferAllocator.buffer(capacity: 0)
                 try encoder.encode(ErrorResponse(error: true, reason: reason), to: &byteBuffer, headers: &headers)
@@ -87,9 +88,12 @@ public final class ErrorMiddleware: Middleware {
     }
 
     public func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
+		print(">>> Entering respond(request=\(request),next=\(next))")
         do {
             return try await next.respond(to: request)
         } catch {
+			print("Exception in respond(request=\(request),next=\(next)): \(error)")
+			print("<<< Exiting respond(request=\(request),next=\(next))")
             return self.closure(request, error)
         }
     }

@@ -7,6 +7,7 @@ import HTTPTypes
 import NIOCore
 
 public struct Validations: Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     var storage: [Validation]
 
     public init() {
@@ -20,16 +21,20 @@ public struct Validations: Sendable {
         required: Bool = true,
         customFailureDescription: String? = nil
     ) {
+		print(">>> Entering add(key=\(key),type=\(type),validator=\(validator),required=\(required),customFailureDescription=\(customFailureDescription))")
         self.storage.append(.init(key: key, required: required, validator: validator, customFailureDescription: customFailureDescription))
     }
+		print("<<< Exiting add(key=\(key),type=\(type),validator=\(validator),required=\(required),customFailureDescription=\(customFailureDescription))")
 
     public mutating func add(
         _ key: BasicCodingKey,
         result: any ValidatorResult,
         customFailureDescription: String? = nil
     ) {
+		print(">>> Entering add(key=\(key),result=\(result),customFailureDescription=\(customFailureDescription))")
         self.storage.append(.init(key: key, result: result, customFailureDescription: customFailureDescription))
     }
+		print("<<< Exiting add(key=\(key),result=\(result),customFailureDescription=\(customFailureDescription))")
 
     public mutating func add(
         _ key: BasicCodingKey,
@@ -37,6 +42,7 @@ public struct Validations: Sendable {
         customFailureDescription: String? = nil,
         _ nested: (inout Validations) -> ()
     ) {
+		print("add(key=\(key),required=\(required),customFailureDescription=\(customFailureDescription),nested=\(nested)): validations → \(validations)")
         var validations = Validations()
         nested(&validations)
         self.storage.append(.init(nested: key, required: required, keyed: validations, customFailureDescription: customFailureDescription))
@@ -52,17 +58,22 @@ public struct Validations: Sendable {
     }
 
     public func validate(request: Request) throws -> ValidationsResult {
+		print(">>> Entering validate(request=\(request))")
         guard let contentType = request.headers.contentType else {
+		print("Throwing Abort from validate(request=\(request))")
             throw Abort(.unprocessableContent, reason: "Missing \"Content-Type\" header")
         }
         guard let body = request.body.data else {
             throw Abort(.unprocessableContent, reason: "Empty Body")
         }
         let contentDecoder = try request.application.contentConfiguration.requireDecoder(for: contentType)
+		print("validate(request=\(request)): contentDecoder → \(contentDecoder)")
+		print("<<< Exiting validate(request=\(request))")
         return try contentDecoder.decode(ValidationsExecutor.self, from: body, headers: request.headers, userInfo: [.pendingValidations: self]).results
     }
 
     public func validate(query: URI, contentConfiguration: ContentConfiguration = .default()) throws -> ValidationsResult {
+		print(">>> Entering validate(query=\(query),contentConfiguration=\(contentConfiguration))")
         let urlDecoder = try contentConfiguration.requireURLDecoder()
         return try urlDecoder.decode(ValidationsExecutor.self, from: query, userInfo: [.pendingValidations: self]).results
     }

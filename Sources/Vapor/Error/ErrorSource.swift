@@ -23,6 +23,7 @@ public struct ErrorSource: Sendable, Equatable {
         column: UInt,
         range: Range<UInt>? = nil
     ) {
+		var logger = Logger(label: "codes.vapor.app")
         self.file = file
         self.function = function
         self.line = line
@@ -38,6 +39,7 @@ extension ErrorSource {
         function: String = #function,
         line: UInt = #line,
         column: UInt = #column,
+		print(">>> Entering capture(file=\(file),function=\(function),line=\(line),column=\(column),range=\(range))")
         range: Range<UInt>? = nil
     ) -> Self {
         return self.init(

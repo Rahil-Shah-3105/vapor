@@ -17,6 +17,7 @@ public final class CORSMiddleware: Middleware {
     /// - custom: Uses custom string provided as an associated value.
     /// - dynamic: Uses a closure to determine allow origin by ``Request``.
     public enum AllowOriginSetting: Sendable {
+		var logger = Logger(label: "codes.vapor.app")
         /// Disallow any origin.
         case none
 
@@ -40,6 +41,7 @@ public final class CORSMiddleware: Middleware {
         /// - Parameter request: Request for which the allow origin header should be created.
         /// - Returns: Header string to be used in response for allowed origin.
         public func header(forRequest req: Request) -> String {
+			print(">>> Entering header(req=\(req))")
             switch self {
             case .none: return ""
             case .originBased: return req.headers[values: .origin].first ?? ""
@@ -52,6 +54,7 @@ public final class CORSMiddleware: Middleware {
             case .custom(let string):
                 return string
             case .dynamic(let closure):
+				print("<<< Exiting header(req=\(req))")
                 return closure(req)
             }
         }
@@ -131,6 +134,7 @@ public final class CORSMiddleware: Middleware {
     }
 
     public func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
+		print(">>> Entering respond(request=\(request),next=\(next))")
         // Check if it's valid CORS request
         guard request.headers[.origin] != nil else {
             return try await next.respond(to: request)
@@ -140,9 +144,11 @@ public final class CORSMiddleware: Middleware {
         // If it is, create empty response otherwise get response from the responder chain.
         let response = request.isPreflight ? Response() : try await next.respond(to: request)
 
+		print("respond(request=\(request),next=\(next)): response → \(response)")
         // Modify response headers based on CORS settings
         let accessControlAllowOriginHeader = self.configuration.allowedOrigin.header(forRequest: request)
         response.responseBox.withLockedValue { box in
+		print("respond(request=\(request),next=\(next)): accessControlAllowOriginHeader → \(accessControlAllowOriginHeader)")
             if !accessControlAllowOriginHeader.isEmpty {
                 box.headers[.accessControlAllowOrigin] = accessControlAllowOriginHeader
             }
@@ -166,6 +172,7 @@ public final class CORSMiddleware: Middleware {
                 box.headers[.vary] = "origin"
             }
         }
+		print("<<< Exiting respond(request=\(request),next=\(next))")
         return response
     }
 }

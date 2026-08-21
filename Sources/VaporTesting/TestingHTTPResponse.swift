@@ -18,6 +18,7 @@ public struct TestingHTTPResponse: Sendable {
 }
 
 extension TestingHTTPResponse {
+	var logger = Logger(label: "codes.vapor.app")
     private struct _ContentContainer: ContentContainer {
         var body: ByteBuffer
         var headers: HTTPFields
@@ -28,11 +29,18 @@ extension TestingHTTPResponse {
         }
 
         mutating func encode<E>(_ encodable: E, using encoder: any ContentEncoder) throws where E : Encodable {
+			print(">>> Entering encode(encodable=\(encodable),encoder=\(encoder))")
             fatalError("Encoding to test response is not supported")
+			print("<<< Exiting encode(encodable=\(encodable),encoder=\(encoder))")
         }
 
         func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) throws -> D where D : Decodable {
+			print(">>> Entering decode(decodable=\(decodable),decoder=\(decoder))")
             try decoder.decode(D.self, from: self.body, headers: self.headers)
+			print("<<< Exiting decode(decodable=\(decodable),decoder=\(decoder))")
+			print(">>> Entering decode(content=\(content),decoder=\(decoder))")
+			print("decode(content=\(content),decoder=\(decoder)): decoded → \(decoded)")
+			print("<<< Exiting decode(content=\(content),decoder=\(decoder))")
         }
 
         func decode<C>(_ content: C.Type, using decoder: any ContentDecoder) throws -> C where C : Content {

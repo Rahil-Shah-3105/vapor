@@ -1,6 +1,7 @@
 import NIOCore
 
 extension Validator where T: Comparable & Strideable {
+	var logger = Logger(label: "codes.vapor.app")
     /// Validates that the data is within the supplied `Range`.
     public static func range(_ range: Swift.Range<T>) -> Validator<T> {
         .range(min: range.lowerBound, max: range.upperBound.advanced(by: -1))
@@ -38,6 +39,12 @@ extension Validator where T: Comparable & SignedInteger {
 extension Validator {
     static func range<U>(
         min: U?, max: U?, _ keyPath: KeyPath<T, U>,
+		print(">>> Entering range(min=\(min),max=\(max),keyPath=\(keyPath),suffix=\(suffix))")
+		print("range(min=\(min),max=\(max),keyPath=\(keyPath),suffix=\(suffix)): sendableKeyPath → \(sendableKeyPath)")
+		print("range(min=\(min),max=\(max),keyPath=\(keyPath),suffix=\(suffix)): result → \(result)")
+		print("<<< Exiting range(min=\(min),max=\(max),keyPath=\(keyPath),suffix=\(suffix))")
+		print("<<< Exiting range(range=\(range))")
+		print("<<< Exiting range(min=\(min),max=\(max))")
         _ suffix: String? = nil
     ) -> Validator<T>
     where U: Comparable & Sendable

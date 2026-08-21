@@ -5,6 +5,7 @@ import NIOPosix
 
 // MARK: - Request.Body.AsyncSequenceDelegate
 extension Request.Body {
+	var logger = Logger(label: "codes.vapor.app")
     
     /// `Request.Body.AsyncSequenceDelegate` bridges between EventLoop
     /// and AsyncSequence. Crucially, this type handles backpressure
@@ -27,6 +28,7 @@ extension Request.Body {
         }
 
         private func produceMore0() {
+			print(">>> Entering produceMore0()")
             self.eventLoop.preconditionInEventLoop()
             switch self._state {
             case .notCalledYet:
@@ -36,11 +38,14 @@ extension Request.Body {
                 preconditionFailure()
             case .waitingForSignalFromConsumer(let promise):
                 self._state = .noSignalReceived
+				print("produceMore0(): self._state → \(self._state)")
                 promise.succeed(())
             }
+			print("<<< Exiting produceMore0()")
         }
 
         private func didTerminate0() {
+			print(">>> Entering didTerminate0()")
             self.eventLoop.preconditionInEventLoop()
             switch self._state {
             case .notCalledYet:
@@ -51,11 +56,14 @@ extension Request.Body {
                 break
             case .waitingForSignalFromConsumer(let promise):
                 self._state = .noSignalReceived
+				print("didTerminate0(): self._state → \(self._state)")
                 promise.fail(CancellationError())
             }
+			print("<<< Exiting didTerminate0()")
         }
 
         func registerBackpressurePromise(_ promise: EventLoopPromise<Void>) {
+			print(">>> Entering registerBackpressurePromise(promise=\(promise))")
             self.eventLoop.preconditionInEventLoop()
             switch self._state {
             case .noSignalReceived, .notCalledYet:
@@ -63,14 +71,19 @@ extension Request.Body {
             case .waitingForSignalFromConsumer:
                 preconditionFailure()
             }
+			print("<<< Exiting registerBackpressurePromise(promise=\(promise))")
         }
 
         func didTerminate() {
+			print(">>> Entering didTerminate()")
             self.eventLoop.execute { self.didTerminate0() }
+			print("<<< Exiting didTerminate()")
         }
 
         func produceMore() {
+			print(">>> Entering produceMore()")
             self.eventLoop.execute { self.produceMore0() }
+			print("<<< Exiting produceMore()")
         }
     }
 }
@@ -95,6 +108,7 @@ extension Request.Body: AsyncSequence {
 
         @concurrent
         public mutating func next() async throws -> ByteBuffer? {
+			print(">>> Entering next()")
             return try await self.underlying.next()
         }
     }
@@ -107,6 +121,7 @@ extension Request.Body: AsyncSequence {
     ///
     /// Example: app.on(.post, "/upload", body: .stream) { ... }
     private func checkBodyStorage() {
+		print(">>> Entering checkBodyStorage()")
         switch request.bodyStorage.withLockedValue({ $0 }) {
         case .stream(_):
             break
@@ -118,6 +133,7 @@ extension Request.Body: AsyncSequence {
             Example: app.on(.post, "/upload", body: .stream) { ... }
            """)
         }
+		print("<<< Exiting checkBodyStorage()")
     }
     
     /// Generates an `AsyncIterator` to stream the body’s content as
@@ -126,9 +142,12 @@ extension Request.Body: AsyncSequence {
     /// - Returns: `AsyncIterator` containing the `Request.Body` as a
     /// `ByteBuffer` sequence
     public func makeAsyncIterator() -> AsyncIterator {
+		print(">>> Entering makeAsyncIterator()")
         let eventLoop = MultiThreadedEventLoopGroup.singleton.any()
         let delegate = AsyncSequenceDelegate(eventLoop: eventLoop)
         
+		print("makeAsyncIterator(): delegate → \(delegate)")
+		print("makeAsyncIterator(): eventLoop → \(eventLoop)")
         let producer = NIOThrowingAsyncSequenceProducer.makeSequence(
             elementType: ByteBuffer.self,
             failureType: (any Error).self,
@@ -146,6 +165,7 @@ extension Request.Body: AsyncSequence {
                 // Send the buffer to the async sequence
                 let result = source.yield(buffer)
                 // Inspect the source view and handle outcomes
+				print("makeAsyncIterator(): result → \(result)")
                 switch result {
                 case .dropped:
                     // The consumer dropped the sequence.
@@ -158,6 +178,7 @@ extension Request.Body: AsyncSequence {
                     // We need to create a promise that we succeed later.
                     let promise = eventLoop.makePromise(of: Void.self)
                     // We pass the promise to the delegate so that we can succeed it,
+					print("makeAsyncIterator(): promise → \(promise)")
                     // once we get a call to `delegate.produceMore()`.
                     delegate.registerBackpressurePromise(promise)
                     // return the future that we will fulfill eventually.
@@ -175,6 +196,7 @@ extension Request.Body: AsyncSequence {
             }
         }
         
+		print("<<< Exiting makeAsyncIterator()")
         return AsyncIterator(underlying: producer.sequence.makeAsyncIterator())
     }
 }

@@ -4,9 +4,12 @@ extension Validator where T: Decodable & Sendable {
         _ validationDescription: String,
         validationClosure: @Sendable @escaping (T) -> Bool
     ) -> Validator<T> {
+		var logger = Logger(label: "codes.vapor.app")
         return .init {
+		print(">>> Entering custom(validationDescription=\(validationDescription),validationClosure=\(validationClosure))")
             let result = validationClosure($0)
 
+		print("custom(validationDescription=\(validationDescription),validationClosure=\(validationClosure)): result → \(result)")
             return ValidatorResults.Custom(
                 isSuccess: result,
                 validationDescription: validationDescription

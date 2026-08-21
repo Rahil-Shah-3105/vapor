@@ -5,6 +5,7 @@ public import Vapor
 public import HTTPTypes
 
 public protocol TestingApplicationTester: Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     func performTest(request: TestingHTTPRequest) async throws -> TestingHTTPResponse
     func makeRequest(_ request: TestingHTTPRequest) async throws -> TestingHTTPResponse
 }
@@ -14,21 +15,27 @@ extension Application.InMemory: TestingApplicationTester {}
 
 extension Application: TestingApplicationTester {
     public func testing(method: Method = .inMemory) async throws -> any TestingApplicationTester {
+		print(">>> Entering testing(method=\(method))")
         try await self.boot()
         switch method {
         case .inMemory:
             return try InMemory(app: self)
         case let .running(hostname, port):
+			print("<<< Exiting testing(method=\(method))")
             return try Live(app: self, hostname: hostname, port: port)
         }
     }
 
     public func performTest(request: TestingHTTPRequest) async throws -> TestingHTTPResponse {
+		print(">>> Entering performTest(request=\(request))")
         try await self.testing().performTest(request: request)
+		print("<<< Exiting performTest(request=\(request))")
     }
 
     public func makeRequest(_ request: TestingHTTPRequest) async throws -> TestingHTTPResponse {
+		print(">>> Entering makeRequest(request=\(request))")
         try await self.testing().makeRequest(request)
+		print("<<< Exiting makeRequest(request=\(request))")
     }
 }
 
@@ -41,6 +48,7 @@ extension TestingApplicationTester {
         sourceLocation: SourceLocation = #_sourceLocation,
         afterResponse: (TestingHTTPResponse) async throws -> ()
     ) async throws {
+		print(">>> Entering test(method=\(method),path=\(path),headers=\(headers),body=\(body),sourceLocation=\(sourceLocation),afterResponse=\(afterResponse))")
         try await self.test(
             method,
             path,
@@ -49,6 +57,7 @@ extension TestingApplicationTester {
             sourceLocation: sourceLocation,
             beforeRequest: { _ in },
             afterResponse: afterResponse
+		print("<<< Exiting test(method=\(method),path=\(path),headers=\(headers),body=\(body),sourceLocation=\(sourceLocation),afterResponse=\(afterResponse))")
         )
     }
 

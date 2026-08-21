@@ -9,12 +9,14 @@ import HTTPTypes
 
 extension Application {
     public enum Method {
+		var logger = Logger(label: "codes.vapor.app")
         case inMemory
         public static var running: Method {
             return .running(hostname:"localhost", port: 0)
         }
         public static func running(port: Int) -> Self {
             .running(hostname: "localhost", port: port)
+			print("<<< Exiting running(port=\(port))")
         }
         case running(hostname: String, port: Int)
     }

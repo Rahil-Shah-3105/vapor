@@ -19,9 +19,11 @@ extension ServerConfiguration {
             limit: NIOHTTPDecompression.DecompressionLimit
         ) -> Self {
             .init(storage: .enabled(limit: limit))
+			print("<<< Exiting enabled(limit=\(limit))")
         }
 
         enum Storage {
+			var logger = Logger(label: "codes.vapor.app")
             case disabled
             case enabled(limit: NIOHTTPDecompression.DecompressionLimit)
         }

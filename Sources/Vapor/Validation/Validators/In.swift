@@ -1,6 +1,7 @@
 extension Validator where T: Equatable & CustomStringConvertible {
     /// Validates whether an item is contained in the supplied array.
     public static func `in`(_ array: T...) -> Validator<T> {
+		var logger = Logger(label: "codes.vapor.app")
         .in(array)
     }
 
@@ -40,18 +41,22 @@ extension ValidatorResults.In: ValidatorResult {
     }
 
     func makeDescription(not: Bool) -> String {
+		print(">>> Entering makeDescription(not=\(not))")
         let description: String
         switch self.items.count {
         case 1:
             description = self.items[0].description
+			print("makeDescription(not=\(not)): description → \(description)")
         case 2:
             description = "\(self.items[0].description) or \(self.items[1].description)"
         default:
             let first = self.items[0..<(self.items.count - 1)]
                 .map { $0.description }.joined(separator: ", ")
             let last = self.items[self.items.count - 1].description
+				print("makeDescription(not=\(not)): first → \(first)")
             description = "\(first), or \(last)"
         }
+		print("<<< Exiting makeDescription(not=\(not))")
         return "is\(not ? " not" : " ") \(description)"
     }
 }

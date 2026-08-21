@@ -3,6 +3,7 @@ import NIOConcurrencyHelpers
 import HTTPTypes
 
 extension Request {
+	var logger = Logger(label: "codes.vapor.app")
     final class BodyStream: BodyStreamWriter, AsyncBodyStreamWriter {
         let eventLoop: any EventLoop
 
@@ -29,6 +30,7 @@ extension Request {
         }
 
         func read(_ handler: @escaping @Sendable (BodyStreamResult, EventLoopPromise<Void>?) -> ()) {
+			print(">>> Entering read(handler=\(handler))")
             if self.eventLoop.inEventLoop {
                 read0(handler)
             } else {
@@ -36,24 +38,32 @@ extension Request {
                     self.read0(handler)
                 }
             }
+			print("<<< Exiting read(handler=\(handler))")
         }
 
         func read0(_ handler: @escaping @Sendable (BodyStreamResult, EventLoopPromise<Void>?) -> ()) {
+			print(">>> Entering read0(handler=\(handler))")
             self.eventLoop.preconditionInEventLoop()
             self.handlerBuffer.value.handler = handler
             for (result, promise) in self.handlerBuffer.value.buffer {
                 handler(result, promise)
             }
             self.handlerBuffer.value.buffer = []
+			print("<<< Exiting read0(handler=\(handler))")
         }
 
         func write(_ result: BodyStreamResult) async throws {
+			print(">>> Entering write(result=\(result))")
             // Explicitly adds the ELF because Swift 5.6 fails to infer the return type
             try await self.eventLoop.flatSubmit { () -> EventLoopFuture<Void> in
                 let promise = self.eventLoop.makePromise(of: Void.self)
                 self.write0(result, promise: promise)
+				print("write(result=\(result)): promise → \(promise)")
                 return promise.futureResult
             }.get()
+			print("<<< Exiting write(result=\(result))")
+			print(">>> Entering write(chunk=\(chunk),promise=\(promise))")
+			print("<<< Exiting write(chunk=\(chunk),promise=\(promise))")
         }
 
         func write(_ chunk: BodyStreamResult, promise: EventLoopPromise<Void>?) {
@@ -68,6 +78,7 @@ extension Request {
         }
 
         private func write0(_ chunk: BodyStreamResult, promise: EventLoopPromise<Void>?) {
+			print(">>> Entering write0(chunk=\(chunk),promise=\(promise))")
             switch chunk {
             case .end, .error:
                 self.isClosed.withLockedValue { $0 = true }
@@ -85,14 +96,18 @@ extension Request {
             } else {
                 self.handlerBuffer.value.buffer.append((chunk, promise))
             }
+			print("<<< Exiting write0(chunk=\(chunk),promise=\(promise))")
         }
 
         func consume(max: Int?, on eventLoop: any EventLoop) -> EventLoopFuture<ByteBuffer> {
+			print(">>> Entering consume(max=\(max),eventLoop=\(eventLoop))")
             // See https://github.com/vapor/vapor/issues/2906
             return eventLoop.flatSubmit {
                 let promise = eventLoop.makePromise(of: ByteBuffer.self)
                 let data = NIOLoopBoundBox(self.allocator.buffer(capacity: 0), eventLoop: eventLoop)
                 self.read { chunk, next in
+					print("consume(max=\(max),eventLoop=\(eventLoop)): promise → \(promise)")
+					print("consume(max=\(max),eventLoop=\(eventLoop)): data → \(data)")
                     switch chunk {
                     case .buffer(var buffer):
                         if let max = max, data.value.readableBytes + buffer.readableBytes >= max {
@@ -106,6 +121,7 @@ extension Request {
                     next?.succeed(())
                 }
 
+				print("<<< Exiting consume(max=\(max),eventLoop=\(eventLoop))")
                 return promise.futureResult
             }
         }

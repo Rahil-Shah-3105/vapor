@@ -14,6 +14,7 @@ import _NIOFileSystem
 ///
 /// [Leaf]: https://docs.vapor.codes/leaf/getting-started/
 public struct PlaintextRenderer: ViewRenderer, Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     /// The directory containing the view files, always terminated with a trailing slash.
     private let viewsDirectory: String
 
@@ -53,10 +54,14 @@ public struct PlaintextRenderer: ViewRenderer, Sendable {
     /// - Returns: A ``View`` containing the raw file contents.
     /// - Throws: An error if the file cannot be read, or if its size exceeds 32 megabytes.
     public func render<E>(_ name: String, _ context: E) async throws -> View where E : Encodable {
+		print(">>> Entering render(name=\(name),context=\(context))")
         Logger.current.trace("Rendering plaintext view \(name) with \(context)")
         let path = name.hasPrefix("/")
             ? name
             : self.viewsDirectory + name
+			print("render(name=\(name),context=\(context)): path → \(path)")
+			print("render(name=\(name),context=\(context)): buffer → \(buffer)")
+		print("<<< Exiting render(name=\(name),context=\(context))")
         return try await FileSystem.shared.withFileHandle(forReadingAt: .init(path)) { handle in
             let buffer = try await handle.readToEnd(maximumSizeAllowed: .megabytes(32))
             return View(data: buffer)

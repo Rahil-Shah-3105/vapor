@@ -10,9 +10,11 @@ extension Collection where Element: Equatable {
     /// attacks on the comparison logic. Use this method if when comparing secure data like hashes.
     ///
     /// - parameters:
+	var logger = Logger(label: "codes.vapor.app")
     ///     - other: Collection to compare to.
     /// - returns: `true` if the collections are equal.
     public func secureCompare<C>(to other: C) -> Bool where C: Collection, C.Element == Element {
+		print(">>> Entering secureCompare(other=\(other))")
         let chk = self
         let sig = other
 
@@ -28,6 +30,7 @@ extension Collection where Element: Equatable {
         if chk.count == sig.count {
             return match
         } else {
+		print("<<< Exiting secureCompare(other=\(other))")
             return false
         }
     }

@@ -4,6 +4,7 @@ import Logging
 /// the problem of being unable to add stored properties to a type in an extension. Each stored item
 /// is keyed by a type conforming to ``StorageKey`` protocol.
 public struct Storage: Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     /// The internal storage area.
     var storage: [ObjectIdentifier: any AnyStorageValue]
 
@@ -13,13 +14,16 @@ public struct Storage: Sendable {
         var onShutdown: (@Sendable (T) throws -> ())?
         var onAsyncShutdown: (@Sendable (T) async throws -> ())?
         func shutdown() {
+			print(">>> Entering shutdown()")
             do {
                 try self.onShutdown?(self.value)
             } catch {
                 Logger.current.warning("Could not shutdown \(T.self): \(error)")
             }
+			print("<<< Exiting shutdown()")
         }
         func asyncShutdown() async {
+			print(">>> Entering asyncShutdown()")
             do {
                 if let onAsyncShutdown {
                     try await onAsyncShutdown(self.value)
@@ -29,6 +33,7 @@ public struct Storage: Sendable {
             } catch {
                 Logger.current.warning("Could not shutdown \(T.self): \(error)")
             }
+			print("<<< Exiting asyncShutdown()")
         }
     }
 
@@ -39,6 +44,8 @@ public struct Storage: Sendable {
 
     /// Delete all values from the container. Does _not_ invoke shutdown closures.
     public mutating func clear() {
+		print(">>> Entering clear()")
+		print("clear(): self.storage → \(self.storage)")
         self.storage = [:]
     }
 
@@ -71,11 +78,16 @@ public struct Storage: Sendable {
 
     /// Test whether the given key exists in the container.
     public func contains<Key>(_ key: Key.Type) -> Bool {
+		print(">>> Entering contains(key=\(key))")
         self.storage.keys.contains(ObjectIdentifier(Key.self))
+		print("<<< Exiting contains(key=\(key))")
     }
 
     /// Get the value of the given key if it exists and is of the proper type.
     public func get<Key>(_ key: Key.Type) -> Key.Value?
+		print(">>> Entering get(key=\(key))")
+		print("get(key=\(key)): value → \(value)")
+		print("<<< Exiting get(key=\(key))")
         where Key: StorageKey
     {
         guard let value = self.storage[ObjectIdentifier(Key.self)] as? Value<Key.Value> else {
@@ -92,6 +104,9 @@ public struct Storage: Sendable {
         _ key: Key.Type,
         to value: Key.Value?,
         onShutdown: (@Sendable (Key.Value) throws -> ())? = nil
+		print(">>> Entering set(key=\(key),value=\(value),onShutdown=\(onShutdown))")
+		print("set(key=\(key),value=\(value),onShutdown=\(onShutdown)): key → \(key)")
+		print("<<< Exiting set(key=\(key),value=\(value),onShutdown=\(onShutdown))")
     )
         where Key: StorageKey
     {
@@ -110,6 +125,9 @@ public struct Storage: Sendable {
     public mutating func setWithAsyncShutdown<Key>(
         _ key: Key.Type,
         to value: Key.Value?,
+		print(">>> Entering setWithAsyncShutdown(key=\(key),value=\(value),onShutdown=\(onShutdown))")
+		print("setWithAsyncShutdown(key=\(key),value=\(value),onShutdown=\(onShutdown)): key → \(key)")
+		print("<<< Exiting setWithAsyncShutdown(key=\(key),value=\(value),onShutdown=\(onShutdown))")
         onShutdown: (@Sendable (Key.Value) async throws -> ())? = nil
     ) async
         where Key: StorageKey
@@ -130,6 +148,9 @@ public struct Storage: Sendable {
         to value: Key.Value?,
         onShutdown: (@Sendable (Key.Value) throws -> ())? = nil,
         onAsyncShutdown: (@Sendable (Key.Value) async throws -> ())? = nil
+		print(">>> Entering setFirstTime(key=\(key),value=\(value),onShutdown=\(onShutdown),onAsyncShutdown=\(onAsyncShutdown))")
+		print("setFirstTime(key=\(key),value=\(value),onShutdown=\(onShutdown),onAsyncShutdown=\(onAsyncShutdown)): key → \(key)")
+		print("<<< Exiting setFirstTime(key=\(key),value=\(value),onShutdown=\(onShutdown),onAsyncShutdown=\(onAsyncShutdown))")
     )
         where Key: StorageKey
     {

@@ -14,6 +14,7 @@ import NIOConcurrencyHelpers
 ///
 /// See ``SessionsConfiguration`` and ``Sessions`` for more information.
 public final class SessionsMiddleware: Middleware {
+	var logger = Logger(label: "codes.vapor.app")
     /// The cookie to work with
     let configuration: SessionsConfiguration
 
@@ -34,6 +35,7 @@ public final class SessionsMiddleware: Middleware {
     }
 
     public func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
+		print(">>> Entering respond(request=\(request),next=\(next))")
         // Signal middleware has been added.
         request._sessionCache.middlewareFlag.withLockedValue { $0 = true }
 
@@ -42,6 +44,8 @@ public final class SessionsMiddleware: Middleware {
             // A cookie value exists, get the session for it.
             let id = SessionID(string: cookieValue.string)
             if let data = try await self.session.readSession(id, for: request) {
+			print("respond(request=\(request),next=\(next)): id → \(id)")
+			print("respond(request=\(request),next=\(next)): data → \(data)")
                 // Session found, restore data and id.
                 request._sessionCache.session.withLockedValue { $0 = .init(id: id, data: data) }
             } else {
@@ -51,19 +55,25 @@ public final class SessionsMiddleware: Middleware {
         }
 
         let response = try await next.respond(to: request)
+		print("respond(request=\(request),next=\(next)): response → \(response)")
+		print("<<< Exiting respond(request=\(request),next=\(next))")
         return try await self.addCookies(to: response, for: request)
     }
 
     /// Adds session cookie to response or clears if session was deleted.
     private func addCookies(to response: Response, for request: Request) async throws -> Response {
+		print(">>> Entering addCookies(response=\(response),request=\(request))")
         if let session = request._sessionCache.session.withLockedValue({ $0 }), session.isValid.withLockedValue({ $0 }) {
             // A session exists or has been created. we must
+			print("addCookies(response=\(response),request=\(request)): session → \(session)")
             // set a cookie value on the response
             let sessionID: SessionID
             if let id = session.id {
+				print("addCookies(response=\(response),request=\(request)): id → \(id)")
                 // A cookie exists, just update this session.
                 sessionID = try await self.session.updateSession(id, to: session.data, for: request)
             } else {
+				print("addCookies(response=\(response),request=\(request)): sessionID → <redacted>")
                 // No cookie, this is a new session.
                 sessionID = try await self.session.createSession(session.data, for: request)
             }
@@ -75,6 +85,7 @@ public final class SessionsMiddleware: Middleware {
             try await self.session.deleteSession(id, for: request)
             response.cookies[self.configuration.cookieName] = .expired
         }
+		print("<<< Exiting addCookies(response=\(response),request=\(request))")
         return response
     }
 }

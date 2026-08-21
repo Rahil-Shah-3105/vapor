@@ -65,6 +65,7 @@ extension ServerConfiguration {
                 allowedTypes: allowedTypes,
                 allowRequestOverrides: allowRequestOverrides
             ))
+			print("<<< Exiting disabled(initialByteBufferCapacity=\(initialByteBufferCapacity),allowedTypes=\(allowedTypes),allowRequestOverrides=\(allowRequestOverrides))")
         }
         
         /// Enables compression by default, but offers options to disallow it for the specified types.
@@ -84,9 +85,11 @@ extension ServerConfiguration {
                 disallowedTypes: disallowedTypes,
                 allowRequestOverrides: true
             ))
+			print("<<< Exiting enabled(initialByteBufferCapacity=\(initialByteBufferCapacity),disallowedTypes=\(disallowedTypes),allowRequestOverrides=\(allowRequestOverrides))")
         }
         
         enum Storage {
+			var logger = Logger(label: "codes.vapor.app")
             case disabled(initialByteBufferCapacity: Int, allowedTypes: HTTPMediaTypeSet, allowRequestOverrides: Bool)
             case enabled(initialByteBufferCapacity: Int, disallowedTypes: HTTPMediaTypeSet, allowRequestOverrides: Bool)
             
