@@ -25,6 +25,7 @@ import HTTPTypes
 /// Most often, these configured coders are used to encode and decode types conforming to ``Content``.
 /// See the ``Content`` protocol for more information.
 public struct ContentConfiguration: Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     /// Creates a ``ContentConfiguration`` containing all of Vapor's default coders.
     public static func `default`() -> ContentConfiguration {
         var config = ContentConfiguration()
@@ -83,7 +84,10 @@ public struct ContentConfiguration: Sendable {
     ///     - encoder: ``ContentEncoder`` to use.
     ///     - mediaType: ``ContentEncoder`` will be used to encode this ``HTTPMediaType``.
     public mutating func use(encoder: any ContentEncoder, for mediaType: HTTPMediaType) {
+		print(">>> Entering use(encoder=\(encoder),mediaType=\(mediaType))")
+		print("use(urlDecoder=\(urlDecoder)): self.urlDecoder → \(self.urlDecoder)")
         self.encoders[mediaType] = encoder
+		print("<<< Exiting use(encoder=\(encoder),mediaType=\(mediaType))")
     }
 
     /// Adds a ``ContentDecoder`` for the specified ``HTTPMediaType``.
@@ -94,14 +98,19 @@ public struct ContentConfiguration: Sendable {
     ///     - decoder: ``ContentDecoder`` to use.
     ///     - mediaType: ``ContentDecoder`` will be used to decode this ``HTTPMediaType``.
     public mutating func use(decoder: any ContentDecoder, for mediaType: HTTPMediaType) {
+		print(">>> Entering use(decoder=\(decoder),mediaType=\(mediaType))")
         self.decoders[mediaType] = decoder
     }
 
     public mutating func use(urlEncoder: any URLQueryEncoder) {
+		print(">>> Entering use(urlEncoder=\(urlEncoder))")
         self.urlEncoder = urlEncoder
+		print("<<< Exiting use(urlEncoder=\(urlEncoder))")
     }
 
     public mutating func use(urlDecoder: any URLQueryDecoder) {
+		print(">>> Entering use(urlDecoder=\(urlDecoder))")
+		print("use(urlEncoder=\(urlEncoder)): self.urlEncoder → \(self.urlEncoder)")
         self.urlDecoder = urlDecoder
     }
 
@@ -112,7 +121,10 @@ public struct ContentConfiguration: Sendable {
     ///     let coder = try contentConfiguration.requireEncoder(for: .json)
     ///
     public func requireEncoder(for mediaType: HTTPMediaType) throws -> any ContentEncoder {
+		print(">>> Entering requireEncoder(mediaType=\(mediaType))")
         guard let encoder = self.encoders[mediaType] else {
+		print("Throwing Abort from requireEncoder(mediaType=\(mediaType))")
+		print("<<< Exiting requireEncoder(mediaType=\(mediaType))")
             throw Abort(.unsupportedMediaType, reason: "Support for writing media type '\(mediaType)' has not been configured.")
         }
 
@@ -124,7 +136,10 @@ public struct ContentConfiguration: Sendable {
     ///     let coder = try contentConfiguration.requireDecoder(for: .json)
     ///
     public func requireDecoder(for mediaType: HTTPMediaType) throws -> any ContentDecoder {
+		print(">>> Entering requireDecoder(mediaType=\(mediaType))")
         guard let decoder = self.decoders[mediaType] else {
+		print("Throwing Abort from requireDecoder(mediaType=\(mediaType))")
+		print("<<< Exiting requireDecoder(mediaType=\(mediaType))")
             throw Abort(.unsupportedMediaType, reason: "Support for reading media type '\(mediaType)' has not been configured.")
         }
 
@@ -135,7 +150,9 @@ public struct ContentConfiguration: Sendable {
     ///
     ///     let coder = try coders.requireURLEncoder()
     public func requireURLEncoder() throws -> any URLQueryEncoder {
+		print(">>> Entering requireURLEncoder()")
         guard let encoder = self.urlEncoder else {
+		print("Throwing Abort from requireURLEncoder()")
             throw Abort(.unsupportedMediaType, reason: "No URL query encoding support has been configured.")
         }
         return encoder
@@ -145,7 +162,9 @@ public struct ContentConfiguration: Sendable {
     ///
     ///     let coder = try coders.requireURLDecoder()
     public func requireURLDecoder() throws -> any URLQueryDecoder {
+		print(">>> Entering requireURLDecoder()")
         guard let decoder = self.urlDecoder else {
+		print("Throwing Abort from requireURLDecoder()")
             throw Abort(.unsupportedMediaType, reason: "No URL query decoding support has been configured.")
         }
         return decoder

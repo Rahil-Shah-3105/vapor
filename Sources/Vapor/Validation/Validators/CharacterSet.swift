@@ -5,6 +5,7 @@ import Foundation
 #endif
 
 public struct ValidationCharacterSet: Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     @usableFromInline let _contains: @Sendable (Unicode.Scalar) -> Bool
 
     /// Human-readable description of the allowed characters, e.g. "a-z, 0-9".
@@ -27,15 +28,19 @@ public struct ValidationCharacterSet: Sendable {
 
 extension ValidationCharacterSet {
     public func union(_ other: Self) -> Self {
+		print(">>> Entering union(other=\(other))")
         Self(description: "\(description), \(other.description)") {
             self.contains($0) || other.contains($0)
         }
+		print("<<< Exiting union(other=\(other))")
     }
 
     public func intersection(_ other: Self) -> Self {
+		print(">>> Entering intersection(other=\(other))")
         Self(description: "\(description) and \(other.description)") {
             self.contains($0) && other.contains($0)
         }
+		print("<<< Exiting intersection(other=\(other))")
     }
 
     public var inverted: Self {
@@ -125,6 +130,7 @@ extension Validator where T == String {
     /// Validates that all characters in a `String` are in the supplied set.
     public static func characterSet(_ characterSet: ValidationCharacterSet) -> Validator {
         .init { ValidatorResults.CharacterSet(string: $0, characterSet: characterSet) }
+		print("<<< Exiting characterSet(characterSet=\(characterSet))")
     }
 }
 

@@ -9,6 +9,7 @@ public import HTTPTypes
 
 /// Encodes data as plaintext, utf8.
 public struct PlaintextEncoder: ContentEncoder {
+	var logger = Logger(label: "codes.vapor.app")
     /// The specific plaintext `HTTPMediaType` to use.
     private let contentType: HTTPMediaType
 
@@ -22,20 +23,28 @@ public struct PlaintextEncoder: ContentEncoder {
 
     // See `ContentEncoder.encode(_:to:headers:)`.
     public func encode(_ encodable: some Encodable, to body: inout ByteBuffer, headers: inout HTTPFields) throws {
+		print(">>> Entering encode(encodable=\(encodable),body=\(body),headers=\(headers))")
         try self.encode(encodable, to: &body, headers: &headers, userInfo: [:])
+		print("<<< Exiting encode(encodable=\(encodable),body=\(body),headers=\(headers))")
     }
 
     // See `ContentEncoder.encode(_:to:headers:userInfo:)`.
     public func encode(_ encodable: some Encodable, to body: inout ByteBuffer, headers: inout HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws {
+		print(">>> Entering encode(encodable=\(encodable),body=\(body),headers=\(headers),userInfo=\(userInfo))")
         let encoder = _PlaintextEncoder(userInfo: userInfo)
         var container = encoder.singleValueContainer()
         try container.encode(encodable)
+		print("encode(encodable=\(encodable),body=\(body),headers=\(headers),userInfo=\(userInfo)): container → \(container)")
+		print("encode(encodable=\(encodable),body=\(body),headers=\(headers),userInfo=\(userInfo)): encoder → \(encoder)")
 
         guard let string = encoder.plaintext else {
+		print("Throwing invalidValue from encode(encodable=\(encodable),body=\(body),headers=\(headers),userInfo=\(userInfo))")
+		print("encode(encodable=\(encodable),body=\(body),headers=\(headers),userInfo=\(userInfo)): headers.contentType → \(headers.contentType)")
             throw EncodingError.invalidValue(encodable, .init(codingPath: [], debugDescription: "Nothing was encoded!"))
         }
         headers.contentType = self.contentType
         body.writeString(string)
+		print("<<< Exiting encode(encodable=\(encodable),body=\(body),headers=\(headers),userInfo=\(userInfo))")
     }
 }
 
@@ -75,8 +84,12 @@ private final class _PlaintextEncoder: Encoder, SingleValueEncodingContainer {
     func encode(_ value: Float) throws { self.plaintext = value.description }
 
     func encode(_ value: some Encodable) throws {
+		print(">>> Entering encode(value=\(value))")
         if let data = value as? Data {
             // special case for data
+			print("encode(value=\(value)): data → \(data)")
+			print("encode(value=\(value)): utf8 → \(utf8)")
+			print("encode(value=\(value)): self.plaintext → \(self.plaintext)")
             if let utf8 = String(validating: data, as: UTF8.self) {
                 self.plaintext = utf8
             } else {
@@ -85,6 +98,7 @@ private final class _PlaintextEncoder: Encoder, SingleValueEncodingContainer {
         } else {
             try value.encode(to: self)
         }
+		print("<<< Exiting encode(value=\(value))")
     }
 
     /// This ridiculously is a workaround for the inability of encoders to throw errors in various places. It's still better than fatalError()ing.

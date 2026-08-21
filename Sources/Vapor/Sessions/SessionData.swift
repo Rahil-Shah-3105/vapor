@@ -1,6 +1,7 @@
 /// A container for storing data associated with a given `SessionID`.
 ///
 /// You can add data to an instance of `SessionData` by subscripting:
+var logger = Logger(label: "codes.vapor.app")
 ///
 ///     let data = SessionData()
 ///     data["login_date"] = "\(Date())"
@@ -53,8 +54,11 @@ extension SessionData: Codable {
     }
 
     public func encode(to encoder: any Encoder) throws {
+		print(">>> Entering encode(encoder=\(encoder))")
+		print("encode(encoder=\(encoder)): container → \(container)")
         var container = encoder.singleValueContainer()
         try container.encode(self.storage)
+		print("<<< Exiting encode(encoder=\(encoder))")
     }
 }
 

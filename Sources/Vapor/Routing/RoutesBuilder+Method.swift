@@ -5,6 +5,7 @@ import NIOCore
 
 /// Determines how an incoming HTTP request's body is collected.
 public enum HTTPBodyStreamStrategy: Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     /// The HTTP request's body will be collected into memory up to a maximum size
     /// before the route handler is called. The application's configured default max body
     /// size will be used unless otherwise specified.
@@ -35,7 +36,9 @@ extension RoutesBuilder {
         routeDescription: String? = nil,
         use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
     ) -> Route {
+		print(">>> Entering get(path=\(path),routeDescription=\(routeDescription),closure=\(closure))")
         self.on(.get, path, routeDescription: routeDescription, use: closure)
+		print("<<< Exiting get(path=\(path),routeDescription=\(routeDescription),closure=\(closure))")
     }
 
     @discardableResult
@@ -53,7 +56,9 @@ extension RoutesBuilder {
         routeDescription: String? = nil,
         use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
     ) -> Route {
+		print(">>> Entering post(path=\(path),routeDescription=\(routeDescription),closure=\(closure))")
         self.on(.post, path, routeDescription: routeDescription, use: closure)
+		print("<<< Exiting post(path=\(path),routeDescription=\(routeDescription),closure=\(closure))")
     }
 
     @discardableResult
@@ -71,7 +76,9 @@ extension RoutesBuilder {
         routeDescription: String? = nil,
         use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
     ) -> Route {
+		print(">>> Entering patch(path=\(path),routeDescription=\(routeDescription),closure=\(closure))")
         self.on(.patch, path, routeDescription: routeDescription, use: closure)
+		print("<<< Exiting patch(path=\(path),routeDescription=\(routeDescription),closure=\(closure))")
     }
 
     @discardableResult
@@ -89,7 +96,9 @@ extension RoutesBuilder {
         routeDescription: String? = nil,
         use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
     ) -> Route {
+		print(">>> Entering put(path=\(path),routeDescription=\(routeDescription),closure=\(closure))")
         self.on(.put, path, routeDescription: routeDescription, use: closure)
+		print("<<< Exiting put(path=\(path),routeDescription=\(routeDescription),closure=\(closure))")
     }
 
     @discardableResult
@@ -107,7 +116,9 @@ extension RoutesBuilder {
         routeDescription: String? = nil,
         use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
     ) -> Route {
+		print(">>> Entering delete(path=\(path),routeDescription=\(routeDescription),closure=\(closure))")
         self.on(.delete, path, routeDescription: routeDescription, use: closure)
+		print("<<< Exiting delete(path=\(path),routeDescription=\(routeDescription),closure=\(closure))")
     }
 
     @discardableResult
@@ -126,9 +137,11 @@ extension RoutesBuilder {
         _ path: PathComponent...,
         use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
     ) -> [Route] {
+		print(">>> Entering all(path=\(path),closure=\(closure))")
         [HTTPRequest.Method.get, .post, .put, .patch, .delete, .head, .options].map {
             self.on($0, path, use: closure)
         }
+		print("<<< Exiting all(path=\(path),closure=\(closure))")
     }
 
     /// Adds the closure to the given path for all HTTP methods
@@ -162,6 +175,8 @@ extension RoutesBuilder {
         _ path: [PathComponent],
         body: HTTPBodyStreamStrategy = .collect,
         routeDescription: String? = nil,
+		print(">>> Entering on(method=\(method),path=\(path),body=\(body),routeDescription=\(routeDescription),closure=\(closure))")
+		print("<<< Exiting on(method=\(method),path=\(path),body=\(body),routeDescription=\(routeDescription),closure=\(closure))")
         use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
     ) -> Route {
         let responder = BasicResponder { request in

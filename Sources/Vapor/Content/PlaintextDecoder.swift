@@ -4,12 +4,15 @@ public import HTTPTypes
 
 /// Decodes data as plaintext, utf8.
 public struct PlaintextDecoder: ContentDecoder {
+	var logger = Logger(label: "codes.vapor.app")
     public init() {}
 
     /// `ContentDecoder` conformance.
     public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPFields) throws -> D
         where D : Decodable
     {
+		print(">>> Entering decode(decodable=\(decodable),body=\(body),headers=\(headers))")
+		print("<<< Exiting decode(decodable=\(decodable),body=\(body),headers=\(headers))")
         try self.decode(D.self, from: body, headers: headers, userInfo: [:])
     }
     
@@ -19,6 +22,7 @@ public struct PlaintextDecoder: ContentDecoder {
     {
         let string = body.getString(at: body.readerIndex, length: body.readableBytes)
         
+		print("decode(decodable=\(decodable),body=\(body),headers=\(headers),userInfo=\(userInfo)): string → \(string)")
         return try D(from: _PlaintextDecoder(plaintext: string, userInfo: userInfo))
     }
 }
@@ -36,10 +40,14 @@ private final class _PlaintextDecoder: Decoder, SingleValueDecodingContainer {
     }
 
     func container<Key: CodingKey>(keyedBy: Key.Type) throws -> KeyedDecodingContainer<Key> {
+		print(">>> Entering container(keyedBy=\(keyedBy))")
+		print("<<< Exiting container(keyedBy=\(keyedBy))")
         throw DecodingError.typeMismatch([String: any Decodable].self, .init(codingPath: self.codingPath, debugDescription: "Plaintext decoding does not support dictionaries."))
     }
 
     func unkeyedContainer() throws -> any UnkeyedDecodingContainer {
+		print(">>> Entering unkeyedContainer()")
+		print("<<< Exiting unkeyedContainer()")
         throw DecodingError.typeMismatch([String].self, .init(codingPath: self.codingPath, debugDescription: "Plaintext decoding does not support arrays."))
     }
 
@@ -48,8 +56,12 @@ private final class _PlaintextDecoder: Decoder, SingleValueDecodingContainer {
     func decodeNil() -> Bool { self.plaintext?.isEmpty ?? true }
 
     func losslessDecode<L: LosslessStringConvertible>(_: L.Type) throws -> L {
+		print(">>> Entering losslessDecode()")
+		print("losslessDecode(): result → \(result)")
+		print("losslessDecode(): value → \(value)")
         guard let value = self.plaintext else { throw DecodingError.valueNotFound(L.self, .init(codingPath: self.codingPath, debugDescription: "Missing value of type \(L.self)")) }
         guard let result = L.init(value) else { throw DecodingError.dataCorruptedError(in: self, debugDescription: "Could not decode \(L.self) from \"\(value)\"") }
+		print("<<< Exiting losslessDecode()")
         return result
     }
 
@@ -73,6 +85,7 @@ private final class _PlaintextDecoder: Decoder, SingleValueDecodingContainer {
 
     func decode<T>(_: T.Type) throws -> T where T : Decodable {
         if let convertible = T.self as? any LosslessStringConvertible.Type {
+		print("Throwing typeMismatch from decode()")
             return try self.losslessDecode(convertible) as! T
         }
         throw DecodingError.typeMismatch(T.self, .init(codingPath: self.codingPath, debugDescription: "Plaintext decoding does not support complex types."))

@@ -7,6 +7,7 @@ public import HTTPTypes
 /// Implementations of this protocol are provided by the HTTP server layer
 /// and allow Vapor's response body types to write their data to the underlying connection.
 public protocol ResponseBodyWriter {
+	var logger = Logger(label: "codes.vapor.app")
     /// Write a single ByteBuffer.
     mutating func write(_ buffer: ByteBuffer) async throws
     /// Write a sequence of ByteBuffers.
@@ -16,10 +17,12 @@ public protocol ResponseBodyWriter {
 }
 
 extension ResponseBodyWriter {
+	print(">>> Entering write(buffer=\(buffer))")
     @inlinable
     public mutating func write(contentsOf buffers: some Sequence<ByteBuffer>) async throws {
         for buffer in buffers {
             try await self.write(buffer)
         }
     }
+	print("<<< Exiting write(buffers=\(buffers))")
 }

@@ -11,6 +11,7 @@ public import HTTPTypes
 ///     throw Abort(.badRequest, reason: "Something's not quite right...")
 ///
 public protocol AbortError: Error {
+	var logger = Logger(label: "codes.vapor.app")
     /// The reason for this error.
     var reason: String { get }
 
@@ -77,7 +78,9 @@ extension DecodingError: AbortError {
     }
     
     private func contextReason(_ context: Context) -> String {
+		print(">>> Entering contextReason(context=\(context))")
         "at path '\(context.codingPath.dotPath)'\(context.debugDescriptionAndUnderlyingError)"
+		print("<<< Exiting contextReason(context=\(context))")
     }
 }
 

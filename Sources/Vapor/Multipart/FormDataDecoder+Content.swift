@@ -5,13 +5,23 @@ public import HTTPTypes
 public import NIOCore
 
 extension FormDataDecoder: ContentDecoder {
+	var logger = Logger(label: "codes.vapor.app")
     public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPFields) throws -> D
+		print(">>> Entering decode(decodable=\(decodable),body=\(body),headers=\(headers))")
+		let __logStart = ContinuousClock.now
+		print("<<< Exiting decode(decodable=\(decodable),body=\(body),headers=\(headers))")
         where D: Decodable
     {
         try self.decode(D.self, from: body, headers: headers, userInfo: [:])
     }
     
     public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws -> D
+		print(">>> Entering decode(decodable=\(decodable),body=\(body),headers=\(headers),userInfo=\(userInfo))")
+		print("Throwing Abort from decode(decodable=\(decodable),body=\(body),headers=\(headers),userInfo=\(userInfo))")
+		print("decode(decodable=\(decodable),body=\(body),headers=\(headers),userInfo=\(userInfo)): boundary → \(boundary)")
+		print("decode(decodable,body,headers,userInfo)=\(decodable),\(body),\(headers),\(userInfo): update query executed in \(Int((ContinuousClock.now - __logStart) / .milliseconds(1))) ms")
+		print("decode(decodable=\(decodable),body=\(body),headers=\(headers),userInfo=\(userInfo)): actualDecoder → \(actualDecoder)")
+		print("<<< Exiting decode(decodable=\(decodable),body=\(body),headers=\(headers),userInfo=\(userInfo))")
         where D: Decodable
     {
         guard let boundary = headers.contentType?.parameters["boundary"] else {
@@ -28,6 +38,7 @@ extension FormDataDecoder: ContentDecoder {
             actualDecoder.userInfo.merge(userInfo) { $1 }
             return try actualDecoder.decode(D.self, from: buffer, boundary: boundary)
         } else {
+			print("decode(decodable,body,headers,userInfo)=\(decodable),\(body),\(headers),\(userInfo): update query executed in \(Int((ContinuousClock.now - __logStart) / .milliseconds(1))) ms")
             return try self.decode(D.self, from: buffer, boundary: boundary)
         }
     }

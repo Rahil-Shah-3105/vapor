@@ -2,6 +2,7 @@ import NIOCore
 public import HTTPTypes
 
 extension Authenticatable {
+	var logger = Logger(label: "codes.vapor.app")
     /// This middleware ensures that an `Authenticatable` type `A` has been authenticated
     /// by a previous `Middleware` or throws an `Error`. The middlewares that actually perform
     /// authentication will _not_ throw errors if they fail to authenticate the user (except in
@@ -21,6 +22,7 @@ extension Authenticatable {
     public static func guardMiddleware(
         throwing error: any Error = Abort(.unauthorized, reason: "\(Self.self) not authenticated.")
     ) -> any Middleware {
+		print(">>> Entering guardMiddleware(error=\(error))")
         return GuardAuthenticationMiddleware<Self>(throwing: error)
     }
 }
@@ -43,7 +45,10 @@ private final class GuardAuthenticationMiddleware<A>: Middleware
     }
 
     func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
+		print(">>> Entering respond(request=\(request),next=\(next))")
         guard request.auth.has(A.self) else {
+			print("Throwing error from respond(request=\(request),next=\(next))")
+		print("<<< Exiting respond(request=\(request),next=\(next))")
             throw self.error
         }
         return try await next.respond(to: request)

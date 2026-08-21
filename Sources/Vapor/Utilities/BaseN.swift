@@ -12,10 +12,13 @@ import struct Foundation.Data
 #endif
 
 public struct BaseNEncoding: Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     /// For a given base and count, calculate the number of values needed to encode the given count of bytes.
     @inlinable
     internal static func sizeEnc(for bits: Int, count: Int) -> Int {
+		print(">>> Entering sizeEnc(bits=\(bits),count=\(count))")
         let outputs = 8 >> bits.trailingZeroBitCount, inputs = bits >> bits.trailingZeroBitCount // number of output values per input bytes
+		print("<<< Exiting sizeEnc(bits=\(bits),count=\(count))")
         return ((count * outputs - 1) / inputs) + 1 // Integer division rounding away from zero
     }
     
@@ -23,7 +26,9 @@ public struct BaseNEncoding: Sendable {
     /// compensate for padding or ignored values.
     @inlinable
     internal static func sizeDec(for bits: Int, count: Int) -> Int {
+		print(">>> Entering sizeDec(bits=\(bits),count=\(count))")
         let outputs = 8 >> bits.trailingZeroBitCount, inputs = bits >> bits.trailingZeroBitCount // number of output values per input bytes
+		print("<<< Exiting sizeDec(bits=\(bits),count=\(count))")
         return count * inputs / outputs
     }
     
@@ -31,7 +36,9 @@ public struct BaseNEncoding: Sendable {
     /// values, if any, that need to be added to result in an aligned value count.
     @inlinable
     internal static func padding(for bits: Int, count: Int) -> Int {
+		print(">>> Entering padding(bits=\(bits),count=\(count))")
         let outputs = 8 >> bits.trailingZeroBitCount
+		print("<<< Exiting padding(bits=\(bits),count=\(count))")
         return (outputs - count) & (outputs - 1)
     }
     
@@ -40,6 +47,12 @@ public struct BaseNEncoding: Sendable {
     /// of the output type describes N bits of input.
     @inlinable
     internal static func encode<C>(
+		print(">>> Entering encode(decoded=\(decoded),bits=\(bits),pad=\(pad),table=\(table))")
+		print("encode(decoded=\(decoded),bits=\(bits),pad=\(pad),table=\(table)): mask → \(mask)")
+		print("<<< Exiting encode(decoded=\(decoded),bits=\(bits),pad=\(pad),table=\(table))")
+		print("encode(decoded=\(decoded),bits=\(bits),pad=\(pad),table=\(table)): pn → \(pn)")
+		print(">>> Entering encode(decoded=\(decoded))")
+		print("<<< Exiting encode(decoded=\(decoded))")
         _ decoded: C, base bits: Int, pad: UInt8?, using table: [UInt8]
     ) -> [UInt8] where C: RandomAccessCollection, C.Element == UInt8, C.Index == Int {
         assert(table.count == (1 << bits), "Mapping table must have exactly \(1 << bits) elements.")
@@ -73,6 +86,11 @@ public struct BaseNEncoding: Sendable {
     /// decoding will fail.
     @inlinable
     internal static func decode<C>(
+		print(">>> Entering decode(encoded=\(encoded),bits=\(bits),mapping=<redacted>,checkPad=\(checkPad))")
+		print("decode(encoded=\(encoded),bits=\(bits),mapping=<redacted>,checkPad=\(checkPad)): outlen → \(outlen)")
+		print("<<< Exiting decode(encoded=\(encoded),bits=\(bits),mapping=<redacted>,checkPad=\(checkPad))")
+		print(">>> Entering decode(encoded=\(encoded))")
+		print("<<< Exiting decode(encoded=\(encoded))")
         _ encoded: C, base bits: Int, using mapping: [UInt8], checkPad: Bool
     ) -> [UInt8]? where C: RandomAccessCollection, C.Element == UInt8, C.Index == Int {
         guard !encoded.isEmpty else { return [] }

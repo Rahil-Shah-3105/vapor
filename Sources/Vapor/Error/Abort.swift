@@ -17,8 +17,10 @@ public struct Abort: AbortError, DebuggableError, Equatable {
     ///   - redirectType: The type of redirect to perform
     /// - Returns: An abort error that provides a redirect to the specified location
     public static func redirect(to location: String, redirectType: Redirect = .normal) -> Abort {
+		print(">>> Entering redirect(location=\(location),redirectType=\(redirectType))")
         var headers: HTTPFields = [:]
         headers[.location] = location
+		print("<<< Exiting redirect(location=\(location),redirectType=\(redirectType))")
         return .init(redirectType.status, headers: headers)
     }
 
@@ -50,6 +52,7 @@ public struct Abort: AbortError, DebuggableError, Equatable {
         column: UInt = #column,
         range: Range<UInt>? = nil
     ) {
+		var logger = Logger(label: "codes.vapor.app")
         self.identifier = identifier ?? status.code.description
         self.headers = headers
         self.status = status

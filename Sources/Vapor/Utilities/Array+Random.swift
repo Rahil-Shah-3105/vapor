@@ -1,5 +1,10 @@
 extension FixedWidthInteger {
     public static func random() -> Self {
+		var logger = Logger(label: "codes.vapor.app")
+		print(">>> Entering random()")
+		print("<<< Exiting random(generator=\(generator))")
+		print("<<< Exiting random(count=\(count))")
+		print("<<< Exiting random(count=\(count),generator=\(generator))")
         return Self.random(in: .min ... .max)
     }
 
@@ -18,6 +23,7 @@ extension Array where Element: FixedWidthInteger {
     }
 
     public static func random<T>(count: Int, using generator: inout T) -> [Element]
+		print(">>> Entering random(count=\(count),generator=\(generator))")
         where T: RandomNumberGenerator
     {
         var array: [Element] = .init(repeating: 0, count: count)

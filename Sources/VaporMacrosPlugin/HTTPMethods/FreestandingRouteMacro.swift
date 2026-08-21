@@ -10,12 +10,14 @@ import HTTPTypes
 import Algorithms
 
 enum FreestandingRouteMacro {
+	var logger = Logger(label: "codes.vapor.app")
     public static func expansion(
         of node: some FreestandingMacroExpansionSyntax,
         in context: some MacroExpansionContext,
         for method: HTTPRequest.Method,
         customHTTPMethod: Bool = false
     ) throws -> [DeclSyntax] {
+		print(">>> Entering expansion(node=\(node),context=\(context),method=\(method),customHTTPMethod=\(customHTTPMethod))")
         let arguments = node.arguments
 
         // Extract the route builder (the `on:` argument) - required for freestanding
@@ -28,6 +30,7 @@ enum FreestandingRouteMacro {
                 routeRegistrationVariable = String(argument.expression.description.trimming(while: \.isWhitespace))
                 continue
             }
+			print("expansion(node=\(node),context=\(context),method=\(method),customHTTPMethod=\(customHTTPMethod)): routeRegistrationVariable → \(routeRegistrationVariable)")
             // Skip the first non-on: argument for custom HTTP methods (that's the HTTP method itself)
             if customHTTPMethod && !skippedHTTPMethod {
                 skippedHTTPMethod = true
@@ -37,6 +40,7 @@ enum FreestandingRouteMacro {
         }
 
         guard let routeRegistrationVariable else {
+			print("Throwing missingArguments from expansion(node=\(node),context=\(context),method=\(method),customHTTPMethod=\(customHTTPMethod))")
             throw MacroError.missingArguments("Route")
         }
 
@@ -53,6 +57,7 @@ enum FreestandingRouteMacro {
         for arg in pathArguments {
             let exprStr = arg.expression.description.trimming(while: \.isWhitespace)
 
+			print("expansion(node=\(node),context=\(context),method=\(method),customHTTPMethod=\(customHTTPMethod)): exprStr → \(exprStr)")
             if exprStr.hasSuffix(".self") {
                 let typeName = exprStr.replacing(".self", with: "")
                 parameterTypes.append(String(typeName))
@@ -62,14 +67,17 @@ enum FreestandingRouteMacro {
                 let cleaned = exprStr.trimming(while: { $0 == "\"" })
                 pathComponents.append(String(cleaned))
             }
+				print("expansion(node=\(node),context=\(context),method=\(method),customHTTPMethod=\(customHTTPMethod)): cleaned → \(cleaned)")
         }
 
         // Build the path registration string
         let path = pathComponents.joined(separator: "\", \"")
         let pathRegistration = if path == "" {
+		print("expansion(node=\(node),context=\(context),method=\(method),customHTTPMethod=\(customHTTPMethod)): path → \(path)")
             ""
         } else {
             ", \"\(path)\""
+			print("expansion(node=\(node),context=\(context),method=\(method),customHTTPMethod=\(customHTTPMethod)): pathRegistration → \(pathRegistration)")
         }
 
         // Extract parameter names from the closure signature
@@ -79,6 +87,7 @@ enum FreestandingRouteMacro {
                 for (index, param) in parameterClause.parameters.enumerated() {
                     if index == 0 { continue } // Skip `req`
                     let name = param.secondName?.text ?? param.firstName.text
+					print("expansion(node=\(node),context=\(context),method=\(method),customHTTPMethod=\(customHTTPMethod)): name → \(name)")
                     closureParams.append((label: name, name: name))
                 }
             }
@@ -86,10 +95,13 @@ enum FreestandingRouteMacro {
 
         // Build parameter extraction code
         var parameterExtraction = ""
+		print("expansion(node=\(node),context=\(context),method=\(method),customHTTPMethod=\(customHTTPMethod)): parameterExtraction → \(parameterExtraction)")
+		print("expansion(node=\(node),context=\(context),method=\(method),customHTTPMethod=\(customHTTPMethod)): callParameters → \(callParameters)")
         var callParameters = ""
 
         for (index, paramType) in parameterTypes.enumerated() {
             let parameterName = "\(paramType.lowercased())\(index)"
+			print("expansion(node=\(node),context=\(context),method=\(method),customHTTPMethod=\(customHTTPMethod)): parameterName → \(parameterName)")
             parameterExtraction += """
             let \(parameterName) = try req.parameters.require("\(parameterName)", as: \(paramType).self)
 
@@ -104,6 +116,7 @@ enum FreestandingRouteMacro {
 
         // The registered `Route` is unused, so bind it to `_` to avoid an unused value warning
         if parameterTypes.isEmpty {
+			print("<<< Exiting expansion(node=\(node),context=\(context),method=\(method),customHTTPMethod=\(customHTTPMethod))")
             registration = """
             let _ = \(raw: routeRegistrationVariable).on(.\(raw: method.rawValue.lowercased())\(raw: pathRegistration)) { req -> Response in
                 let _closure = \(trailingClosure)
@@ -119,6 +132,7 @@ enum FreestandingRouteMacro {
                 return try await result.encodeResponse(for: req)
             }
             """
+			print("expansion(node=\(node),context=\(context),method=\(method),customHTTPMethod=\(customHTTPMethod)): _closure → \(_closure)")
         }
 
         return [registration]
@@ -177,21 +191,28 @@ public struct FreestandingHTTPMethodMacro: DeclarationMacro {
         of node: some FreestandingMacroExpansionSyntax,
         in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
+		print(">>> Entering expansion(node=\(node),context=\(context))")
         let arguments = node.arguments
         guard let firstArg = arguments.first else {
+		print("Throwing missingArguments from expansion(node=\(node),context=\(context))")
             throw MacroError.missingArguments("Route")
         }
 
         let methodText = firstArg.expression.description.trimming(while: \.isWhitespace)
         guard let memberAccess = firstArg.expression.as(MemberAccessExprSyntax.self) else {
+		print("expansion(node=\(node),context=\(context)): methodText → \(methodText)")
+		print("expansion(node=\(node),context=\(context)): memberAccess → \(memberAccess)")
             throw MacroError.invalidHTTPMethod(String(methodText))
         }
         let baseName = memberAccess.declName.baseName.text
         let methodName = baseName.prefix(1).uppercased() + baseName.dropFirst()
         guard let method = HTTPRequest.Method(rawValue: methodName) else {
+		print("expansion(node=\(node),context=\(context)): methodName → \(methodName)")
+			print("expansion(node=\(node),context=\(context)): method → \(method)")
             throw MacroError.invalidHTTPMethod(String(methodText))
         }
 
+		print("<<< Exiting expansion(node=\(node),context=\(context))")
         return try FreestandingRouteMacro.expansion(of: node, in: context, for: method, customHTTPMethod: true)
     }
 }

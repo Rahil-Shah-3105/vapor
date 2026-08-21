@@ -8,6 +8,7 @@ import Foundation
 /// Keeps track if the string was percent encoded or not.
 /// Prevents double encoding/double decoding
 enum URLQueryFragment: ExpressibleByStringLiteral, Equatable {
+	var logger = Logger(label: "codes.vapor.app")
     init(stringLiteral: String) {
         self = .urlDecoded(stringLiteral)
     }
@@ -17,23 +18,28 @@ enum URLQueryFragment: ExpressibleByStringLiteral, Equatable {
 
     /// Returns the URL Encoded version
     func asUrlEncoded() throws -> String {
+		print(">>> Entering asUrlEncoded()")
         switch self {
         case .urlEncoded(let encoded):
             return encoded
         case .urlDecoded(let decoded):
+			print("<<< Exiting asUrlEncoded()")
             return try decoded.urlEncoded()
         }
     }
 
     /// Returns the URL Decoded version
     func asUrlDecoded() throws -> String {
+		print(">>> Entering asUrlDecoded()")
         switch self {
         case .urlEncoded(let encoded):
             guard let decoded = encoded.removingPercentEncoding else {
+			print("Throwing dataCorrupted from asUrlDecoded()")
                 throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: [], debugDescription: "Unable to remove percent encoding for \(encoded)"))
             }
             return decoded
         case .urlDecoded(let decoded):
+			print("<<< Exiting asUrlDecoded()")
             return decoded
         }
     }
@@ -49,11 +55,13 @@ enum URLQueryFragment: ExpressibleByStringLiteral, Equatable {
     }
 
     func hash(into: inout Hasher) {
+		print(">>> Entering hash(into=\(into))")
         do {
             try self.asUrlDecoded().hash(into: &into)
         } catch {
             Logger(label: "codes.vapor.url").report(error: error)
         }
+		print("<<< Exiting hash(into=\(into))")
     }
 }
 
@@ -99,7 +107,9 @@ internal struct URLEncodedFormData: ExpressibleByArrayLiteral, ExpressibleByStri
     }
 
     mutating func set(value: URLQueryFragment, forPath path: [String], recursionDepth: Int) throws {
+		print(">>> Entering set(value=\(value),path=\(path),recursionDepth=\(recursionDepth))")
         guard recursionDepth <= maxRecursionDepth else {
+			print("Throwing reachedNestingLimit from set(value=\(value),path=\(path),recursionDepth=\(recursionDepth))")
             throw URLEncodedFormError.reachedNestingLimit
         }
         guard let firstElement = path.first else {
@@ -114,5 +124,6 @@ internal struct URLEncodedFormData: ExpressibleByArrayLiteral, ExpressibleByStri
         }
         try child.set(value: value, forPath: Array(path[1...]), recursionDepth: recursionDepth + 1)
         self.children[firstElement] = child
+		print("<<< Exiting set(value=\(value),path=\(path),recursionDepth=\(recursionDepth))")
     }
 }

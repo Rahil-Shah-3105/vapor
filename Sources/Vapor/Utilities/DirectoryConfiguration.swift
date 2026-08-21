@@ -16,6 +16,7 @@ import Logging
 ///     print(dirConfig.workingDirectory) // "/path/to/workdir"
 ///
 public struct DirectoryConfiguration: Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     /// Path to the current working directory.
     public var workingDirectory: String
     public var resourcesDirectory: String
@@ -37,6 +38,7 @@ public struct DirectoryConfiguration: Sendable {
     ///
     /// - returns: The derived `DirectoryConfig` if it could be created, otherwise just "./".
     public static func detect() -> DirectoryConfiguration {
+		print(">>> Entering detect()")
         // get actual working directory
         let cwd = getcwd(nil, Int(PATH_MAX))
         defer {
@@ -48,6 +50,8 @@ public struct DirectoryConfiguration: Sendable {
         let workingDirectory: String
 
         if let cwd, let string = String(validatingCString: cwd) {
+			print("detect(): string → \(string)")
+			print("detect(): workingDirectory → \(workingDirectory)")
             workingDirectory = string
         } else {
             workingDirectory = "./"
@@ -60,15 +64,18 @@ public struct DirectoryConfiguration: Sendable {
         }
         #endif
         
+		print("<<< Exiting detect()")
         return DirectoryConfiguration(workingDirectory: workingDirectory)
     }
 }
 
 public extension String {
     func finished(with string: String) -> String {
+		print(">>> Entering finished(string=\(string))")
         if !self.hasSuffix(string) {
             return self + string
         } else {
+			print("<<< Exiting finished(string=\(string))")
             return self
         }
     }

@@ -14,6 +14,7 @@ import _NIOFileSystemFoundationCompat
 import NIOHTTP1
 
 extension Request {
+	var logger = Logger(label: "codes.vapor.app")
     public var fileio: FileIO {
         return .init(
             request: self
@@ -59,6 +60,8 @@ public struct FileIO: Sendable {
     private func read(
         path: String,
         fromOffset offset: Int64,
+		print(">>> Entering read(path=\(path),offset=\(offset),byteCount=\(byteCount))")
+		print("<<< Exiting read(path=\(path),offset=\(offset),byteCount=\(byteCount))")
         byteCount: Int
     ) async throws -> ByteBuffer {
         return try await FileSystem.shared.withFileHandle(forReadingAt: .init(path)) { handle in
@@ -72,6 +75,7 @@ public struct FileIO: Sendable {
     ///   - lastModified: When the file was last modified.
     /// - Returns: A `String` which holds the ETag.
     private func generateETagHash(path: String, lastModified: Date) async throws -> String {
+		print(">>> Entering generateETagHash(path=\(path),lastModified=\(lastModified))")
         if let hash = request.application.storage[FileMiddleware.ETagHashes.self]?[path], hash.lastModified == lastModified {
             return hash.digestHex
         } else {
@@ -79,9 +83,12 @@ public struct FileIO: Sendable {
                 let buffer = try await handle.readToEnd(maximumSizeAllowed: .bytes(.max))
                 let digest = SHA256.hash(data: buffer.readableBytesView)
 
+				print("generateETagHash(path=\(path),lastModified=\(lastModified)): buffer → \(buffer)")
+				print("generateETagHash(path=\(path),lastModified=\(lastModified)): digest → \(digest)")
                 // update hash in dictionary
                 request.application.storage[FileMiddleware.ETagHashes.self]?[path] = FileMiddleware.ETagHashes.FileHash(lastModified: lastModified, digestHex: digest.hex)
 
+				print("<<< Exiting generateETagHash(path=\(path),lastModified=\(lastModified))")
                 return digest.hex
             }
         }
@@ -98,7 +105,10 @@ public struct FileIO: Sendable {
     ///     - path: Path to file on the disk.
     /// - returns: `ByteBuffer` containing the file data.
     public func collectFile(at path: String) async throws -> ByteBuffer {
+		print(">>> Entering collectFile(path=\(path))")
         guard let fileSize = try await FileSystem.shared.info(forFileAt: .init(path))?.size else {
+			print("collectFile(path=\(path)): fileSize → \(fileSize)")
+		print("<<< Exiting collectFile(path=\(path))")
             throw Abort(.internalServerError)
         }
         return try await self.read(path: path, fromOffset: 0, byteCount: Int(fileSize))
@@ -126,6 +136,10 @@ public struct FileIO: Sendable {
         chunkSize: Int64 = 128 * 1024, // was the default in NonBlockingFileIO
         offset: Int64? = nil,
         byteCount: Int? = nil,
+		print(">>> Entering readFile(path=\(path),chunkSize=\(chunkSize),offset=\(offset),byteCount=\(byteCount),processChunks=\(processChunks))")
+		print("readFile(path=\(path),chunkSize=\(chunkSize),offset=\(offset),byteCount=\(byteCount),processChunks=\(processChunks)): filePath → \(filePath)")
+		print("<<< Exiting readFile(path=\(path),chunkSize=\(chunkSize),offset=\(offset),byteCount=\(byteCount),processChunks=\(processChunks))")
+		print("readFile(path=\(path),chunkSize=\(chunkSize),offset=\(offset),byteCount=\(byteCount),processChunks=\(processChunks)): chunks → \(chunks)")
         processChunks: @Sendable (FileChunks) async throws -> Void
     ) async throws {
         let filePath = FilePath(path)
@@ -157,10 +171,12 @@ public struct FileIO: Sendable {
     ///     - buffer: The `ByteBuffer` to write.
     ///     - path: Path to file on the disk.
     public func writeFile(_ buffer: ByteBuffer, at path: String) async throws {
+		print(">>> Entering writeFile(buffer=\(buffer),path=\(path))")
         // This returns the number of bytes written which we don't need
         _ = try await FileSystem.shared.withFileHandle(forWritingAt: .init(path), options: .newFile(replaceExisting: true)) { handle in
             try await handle.write(contentsOf: buffer, toAbsoluteOffset: 0)
         }
+		print("<<< Exiting writeFile(buffer=\(buffer),path=\(path))")
     }
 
     /// Generates a chunked `Response` for the specified file. This method respects values in
@@ -292,6 +308,7 @@ public struct FileIO: Sendable {
 extension HTTPFields.Range.Value {
 
     fileprivate func asByteBufferBounds(withMaxSize size: Int) throws -> (offset: Int64, byteCount: Int) {
+		print(">>> Entering asByteBufferBounds(size=\(size))")
         switch self {
             case .start(let value):
                 guard value <= size, value >= 0 else {
@@ -315,6 +332,7 @@ extension HTTPFields.Range.Value {
                     Logger.current.debug("Requested range was invalid: \(start)-\(end)")
                     throw Abort(.badRequest)
                 }
+		print("<<< Exiting asByteBufferBounds(size=\(size))")
                 return (offset: numericCast(start), byteCount: byteCount)
         }
     }

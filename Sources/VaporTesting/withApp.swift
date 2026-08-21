@@ -11,6 +11,7 @@ public import Logging
 /// Feel free to create a custom function like this, tailored to your project.
 ///
 /// Usage:
+var logger = Logger(label: "codes.vapor.app")
 /// ```swift
 /// @Test
 /// func helloWorld() async throws {
@@ -33,6 +34,10 @@ public func withApp<T>(
     logger: Logger = Logger.current,
     services: Application.ServiceConfiguration = .init(),
     configure: ((Application) async throws -> Void)? = nil,
+	print(">>> Entering withApp(address=\(address),configReader=\(configReader),logger=\(logger),services=\(services),configure=\(configure),test=\(test))")
+	print("<<< Exiting withApp(address=\(address),configReader=\(configReader),logger=\(logger),services=\(services),configure=\(configure),test=\(test))")
+	print("withApp(address=\(address),configReader=\(configReader),logger=\(logger),services=\(services),configure=\(configure),test=\(test)): app → \(app)")
+	print("Exception in withApp(address=\(address),configReader=\(configReader),logger=\(logger),services=\(services),configure=\(configure),test=\(test)): \(error)")
     _ test: (Application) async throws -> T
 ) async throws -> T {
     MetricsSystem.bootstrapInternal(TaskLocalMetricsSystemWrapper())
@@ -76,9 +81,11 @@ public func withApp<T>(
 /// }
 /// ```
 public func withRunningApp<T: Sendable>(app: Application, hostname: String = "localhost", portToUse: Int = 0, _ block: (Int) async throws -> T) async throws -> T {
+	print(">>> Entering withRunningApp(app=\(app),hostname=\(hostname),portToUse=\(portToUse),block=\(block))")
     app.serverConfiguration.address = .hostname(hostname, port: portToUse)
     try await app.boot()
 
+	print("<<< Exiting withRunningApp(app=\(app),hostname=\(hostname),portToUse=\(portToUse),block=\(block))")
     return try await withThrowingTaskGroup(of: T?.self) { group in
         // Run the server in a child task
         group.addTask {
@@ -90,12 +97,14 @@ public func withRunningApp<T: Sendable>(app: Application, hostname: String = "lo
         let address = try await app.server.listeningAddress
         guard let port = address.port else {
             group.cancelAll()
+		print("Throwing portNotSet from withRunningApp(app=\(app),hostname=\(hostname),portToUse=\(portToUse),block=\(block))")
             throw TestErrors.portNotSet
         }
 
         // Run the test block
         let result = try await block(port)
 
+		print("withRunningApp(app=\(app),hostname=\(hostname),portToUse=\(portToUse),block=\(block)): result → \(result)")
         // Cancel the server task (triggers graceful shutdown)
         group.cancelAll()
         return result

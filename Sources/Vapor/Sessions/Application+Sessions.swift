@@ -1,6 +1,7 @@
 import NIOConcurrencyHelpers
 
 extension Application {
+	var logger = Logger(label: "codes.vapor.app")
     public var sessions: Sessions {
         .init(application: self)
     }
@@ -68,11 +69,15 @@ extension Application {
         }
 
         public func use(_ provider: Provider) {
+			print(">>> Entering use(provider=\(provider))")
             provider.run(self.application)
+			print("<<< Exiting use(provider=\(provider))")
         }
 
         public func use(_ makeDriver: @Sendable @escaping (Application) -> (any SessionDriver)) {
+			print(">>> Entering use(makeDriver=\(makeDriver))")
             self.storage.makeDriver.withLockedValue { $0 = .init(factory: makeDriver) }
+			print("<<< Exiting use(makeDriver=\(makeDriver))")
         }
 
         var storage: Storage {
@@ -83,7 +88,9 @@ extension Application {
         }
 
         func initialize() {
+			print(">>> Entering initialize()")
             self.application.storage[Key.self] = .init()
+			print("<<< Exiting initialize()")
         }
     }
 }

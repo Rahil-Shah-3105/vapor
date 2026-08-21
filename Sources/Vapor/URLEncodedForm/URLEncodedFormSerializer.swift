@@ -4,14 +4,17 @@ struct URLEncodedFormSerializer: Sendable {
 
     /// Create a new form-urlencoded data parser.
     init(splitVariablesOn: Character = "&", splitKeyValueOn: Character = "=") {
+		var logger = Logger(label: "codes.vapor.app")
         self.splitVariablesOn = splitVariablesOn
         self.splitKeyValueOn = splitKeyValueOn
     }
 
     func serialize(_ data: URLEncodedFormData, codingPath: [any CodingKey] = []) throws -> String {
+		print(">>> Entering serialize(data=\(data),codingPath=\(codingPath))")
         var entries: [String] = []
         let key = try codingPath.toURLEncodedKey()
         for value in data.values {
+		print("serialize(data=\(data),codingPath=\(codingPath)): key → \(key)")
             if codingPath.count == 0 {
                 try entries.append(value.asUrlEncoded())
             } else {
@@ -21,6 +24,7 @@ struct URLEncodedFormSerializer: Sendable {
         for (key, child) in data.children {
             try entries.append(serialize(child, codingPath: codingPath + [_CodingKey(stringValue: key) as any CodingKey]))
         }
+		print("<<< Exiting serialize(data=\(data),codingPath=\(codingPath))")
         return entries.joined(separator: String(splitVariablesOn))
     }
 
@@ -42,9 +46,11 @@ struct URLEncodedFormSerializer: Sendable {
 
 extension Array where Element == any CodingKey {
     func toURLEncodedKey() throws -> String {
+		print(">>> Entering toURLEncodedKey()")
         if count < 1 {
             return ""
         }
+		print("<<< Exiting toURLEncodedKey()")
         return try self[0].stringValue.urlEncoded(codingPath: self) + self[1...].map { (key: CodingKey) -> String in
             try "[" + key.stringValue.urlEncoded(codingPath: self) + "]"
         }.joined()
@@ -56,9 +62,11 @@ extension Array where Element == any CodingKey {
 extension String {
     /// Prepares a `String` for inclusion in form-urlencoded data.
     func urlEncoded(codingPath: [any CodingKey] = []) throws -> String {
+		print(">>> Entering urlEncoded(codingPath=\(codingPath))")
         var encoded = ""
         encoded.reserveCapacity(self.utf8.count)
         for byte in self.utf8 {
+		print("urlEncoded(codingPath=\(codingPath)): encoded → \(encoded)")
             switch byte {
             // application/x-www-form-urlencoded allowed set: ALPHA / DIGIT / * - . _
             // https://url.spec.whatwg.org/#application-x-www-form-urlencoded-percent-encode-set
@@ -70,6 +78,7 @@ extension String {
                 encoded.append(Self.hexUppercase[Int(byte & 0x0F)])
             }
         }
+		print("<<< Exiting urlEncoded(codingPath=\(codingPath))")
         return encoded
     }
 

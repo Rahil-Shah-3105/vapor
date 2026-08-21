@@ -10,6 +10,7 @@ import NIOConcurrencyHelpers
 import HTTPTypes
 
 extension Response {
+	var logger = Logger(label: "codes.vapor.app")
     struct BodyStream: Sendable {
         let count: Int
         let callback: @Sendable (any BodyStreamWriter) -> ()
@@ -97,10 +98,12 @@ extension Response {
         }
 
         public func collect(on eventLoop: any EventLoop) -> EventLoopFuture<ByteBuffer?> {
+			print(">>> Entering collect(eventLoop=\(eventLoop))")
             switch self.storage {
             case .stream(let stream):
                 let collector = ResponseBodyCollector(eventLoop: eventLoop, byteBufferAllocator: self.byteBufferAllocator)
                 stream.callback(collector)
+				print("collect(eventLoop=\(eventLoop)): collector → \(collector)")
                 return collector.promise.futureResult
                     .map { $0 }
             case .asyncStream(let stream):
@@ -111,6 +114,7 @@ extension Response {
                     collector.promise.futureResult.map { $0 }
                 }
             default:
+				print("<<< Exiting collect(eventLoop=\(eventLoop))")
                 return eventLoop.makeSucceededFuture(self.buffer)
             }
         }
@@ -247,12 +251,14 @@ private final class ResponseBodyCollector: BodyStreamWriter, AsyncBodyStreamWrit
     }
 
     func write(_ result: BodyStreamResult, promise: EventLoopPromise<Void>?) {
+		print(">>> Entering write(result=\(result),promise=\(promise))")
         let future = self.eventLoop.submit {
             switch result {
             case .buffer(var buffer):
                 self.buffer.writeBuffer(&buffer)
             case .error(let error):
                 self.promise.fail(error)
+				print("Throwing error from write(result=\(result),promise=\(promise))")
                 throw error
             case .end:
                 self.promise.succeed(self.buffer)
@@ -260,22 +266,28 @@ private final class ResponseBodyCollector: BodyStreamWriter, AsyncBodyStreamWrit
         }
         // Fixes an issue where errors in the stream should fail the individual write promise.
         if let promise { future.cascade(to: promise) }
+		print("<<< Exiting write(result=\(result),promise=\(promise))")
     }
 
     func write(_ result: BodyStreamResult) async throws {
+		print(">>> Entering write(result=\(result))")
         let promise = self.eventLoop.makePromise(of: Void.self)
 
+		print("write(result=\(result)): promise → \(promise)")
         self.eventLoop.execute { self.write(result, promise: promise) }
         try await promise.futureResult.get()
+		print("<<< Exiting write(result=\(result))")
     }
 }
 
 extension Response.Body {
     @concurrent
     func write(_ writer: inout any ResponseBodyWriter) async throws {
+		print(">>> Entering write(writer=\(writer))")
         if let buffer {
             try await writer.write(buffer)
         }
         try await writer.finish(nil)
+		print("<<< Exiting write(writer=\(writer))")
     }
 }

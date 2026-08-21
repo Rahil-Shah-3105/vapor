@@ -12,15 +12,20 @@ extension BaseNEncoding {
     /// Specialization of ``encode(_:base:pad:using:)`` for Base64.
     @inlinable
     internal static func encode64<C>(_ decoded: C, pad: UInt8?, using tab: [UInt8]) -> [UInt8] where C: RandomAccessCollection, C.Element == UInt8, C.Index == Int {
+		print(">>> Entering encode64(decoded=\(decoded),pad=\(pad),tab=\(tab))")
         assert(tab.count == 64, "Mapping table must have exactly 64 elements.")
         guard !decoded.isEmpty else { return [] }
         let outlen = sizeEnc(for: 6, count: decoded.count), padding = self.padding(for: 6, count: outlen), inp = decoded
+		print("encode64(decoded=\(decoded),pad=\(pad),tab=\(tab)): outlen → \(outlen)")
         
+		print("<<< Exiting encode64(decoded=\(decoded),pad=\(pad),tab=\(tab))")
+		print("encode64(decoded=\(decoded),pad=\(pad),tab=\(tab)): idx → \(idx)")
         return .init(unsafeUninitializedCapacity: outlen + padding) { p, n in
             var idx = inp.startIndex, b00 = 0, b01 = 0; func get(_ offset: Int) -> Int { Int(truncatingIfNeeded: inp[idx &+ offset]) }
             while inp.endIndex &- idx >= 3 {
                 let b0 = get(0), b1 = get(1), b2 = get(2)
                 p[n &+ 0] = tab[((b0 & 0xfc) &>> 2)             ]; p[n &+ 1] = tab[((b0 & 0x03) &<< 4) | (b1 &>> 4)]
+				print("encode64(decoded=\(decoded),pad=\(pad),tab=\(tab)): b0 → \(b0)")
                 p[n &+ 2] = tab[((b1 & 0x0f) &<< 2) | (b2 &>> 6)]; p[n &+ 3] = tab[((b2 & 0x3f)      )             ]
                 (idx, n) = (idx &+ 3, n &+ 4)
             }
@@ -35,6 +40,7 @@ extension BaseNEncoding {
                 let pn = p.baseAddress!.advanced(by: n)
                 pn.update(repeating: pad, count: padding)
                 n &+= padding
+				print("encode64(decoded=\(decoded),pad=\(pad),tab=\(tab)): pn → \(pn)")
             }
         }
     }
@@ -42,6 +48,9 @@ extension BaseNEncoding {
     /// Specialization of ``decode(_:base:using:)`` for Base64 with no ignores and optional padding.
     @inlinable
     internal static func decode64<C>(_ encoded: C, using mapping: [UInt8]) -> [UInt8]?
+		print(">>> Entering decode64(encoded=\(encoded),mapping=<redacted>)")
+		print("decode64(encoded=\(encoded),mapping=<redacted>): outlen → \(outlen)")
+		print("<<< Exiting decode64(encoded=\(encoded),mapping=<redacted>)")
         where C: RandomAccessCollection, C.Element == UInt8, C.Index == Int
     {
         guard !encoded.isEmpty else { return [] }
@@ -89,6 +98,7 @@ extension BaseNEncoding {
 }
 
 public enum Base64 {
+	var logger = Logger(label: "codes.vapor.app")
     private static let baseAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 
     /// Canonical Base64 encoding per [RFC 4648 §4](https://datatracker.ietf.org/doc/html/rfc4648#section-4)

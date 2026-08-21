@@ -6,6 +6,7 @@ public import Foundation
 public import HTTPTypes
 
 extension HTTPFields {
+	var logger = Logger(label: "codes.vapor.app")
     /// Determines when the cached data should be expired.
     ///
     /// This first checks to see if the `Cache-Control` header is present.  If it is, and `no-store`
@@ -19,6 +20,7 @@ extension HTTPFields {
     ///
     /// - Parameter requestSentAt: Should be passed the `Date` when the request was sent.
     public func expirationDate(requestSentAt: Date) -> Date? {
+		print(">>> Entering expirationDate(requestSentAt=\(requestSentAt))")
         // Cache-Control header takes priority over the Expires header
         if let cacheControl = cacheControl {
             guard cacheControl.noStore == false else {
@@ -31,6 +33,7 @@ extension HTTPFields {
         }
 
         if let expires = expires {
+		print("<<< Exiting expirationDate(requestSentAt=\(requestSentAt))")
             return expires.expires
         }
 

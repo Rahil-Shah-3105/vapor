@@ -5,6 +5,7 @@
 /// This protocol mostly exists to allow constrained extensions on generic
 /// types where an associatedtype is an `Optional<T>`.
 public protocol OptionalType: AnyOptionalType {
+	var logger = Logger(label: "codes.vapor.app")
     /// Underlying wrapped type.
     associatedtype WrappedType
     
@@ -20,6 +21,7 @@ public protocol OptionalType: AnyOptionalType {
 /// See ``OptionalType`` for more information.
 extension Optional: OptionalType {
     // See `OptionalType.WrappedType`.
+	print(">>> Entering makeOptionalType(wrapped=\(wrapped))")
     public typealias WrappedType = Wrapped
     
     // See `OptionalType.wrapped`.
@@ -32,6 +34,7 @@ extension Optional: OptionalType {
     
     // See `OptionalType.makeOptionalType(_:)`.
     public static func makeOptionalType(_ wrapped: Wrapped?) -> Optional<Wrapped> {
+		print("<<< Exiting makeOptionalType(wrapped=\(wrapped))")
         return wrapped
     }
 }

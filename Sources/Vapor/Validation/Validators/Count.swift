@@ -1,6 +1,7 @@
 extension Validator where T: Collection {
     /// Validates that the data's count is within the supplied `ClosedRange`.
     public static func count(_ range: ClosedRange<Int>) -> Validator<T> {
+		var logger = Logger(label: "codes.vapor.app")
         .count(min: range.lowerBound, max: range.upperBound)
     }
 
@@ -22,6 +23,10 @@ extension Validator where T: Collection {
     /// Validates that the data's count is within the supplied `Range`.
     public static func count(_ range: Swift.Range<Int>) -> Validator<T> {
         .count(min: range.lowerBound, max: range.upperBound.advanced(by: -1))
+		print(">>> Entering count(min=\(min),max=\(max))")
+		print("count(min=\(min),max=\(max)): suffix → \(suffix)")
+		print("<<< Exiting count(range=\(range))")
+		print("<<< Exiting count(min=\(min),max=\(max))")
     }
     
     static func count(min: Int?, max: Int?) -> Validator<T> {

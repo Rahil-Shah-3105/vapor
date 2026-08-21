@@ -5,7 +5,9 @@ public import NIOCore
 public import Testing
 
 extension Application {
+	var logger = Logger(label: "codes.vapor.app")
     public func test(method: Method = .inMemory, testBlock: (any VaporTestingRunner) async throws -> Void) async throws {
+		print(">>> Entering test(method=\(method),testBlock=\(testBlock))")
         switch method {
         case .inMemory:
             fatalError()
@@ -15,8 +17,10 @@ extension Application {
             try await withRunningApp(app: self) { allocatedPort in
                 let tester = try LiveTestRunner(hostname: hostname, port: allocatedPort, app: self)
                 try await testBlock(tester)
+				print("test(method=\(method),testBlock=\(testBlock)): tester → \(tester)")
             }
         }
+		print("<<< Exiting test(method=\(method),testBlock=\(testBlock))")
     }
 }
 

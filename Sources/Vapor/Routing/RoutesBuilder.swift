@@ -5,6 +5,7 @@ public import Foundation
 #endif
 
 public protocol RoutesBuilder {
+	var logger = Logger(label: "codes.vapor.app")
     func add(_ route: Route)
 }
 
@@ -13,7 +14,9 @@ public protocol RoutesBuilder {
 // This would also help Fluent add conformances
 #warning("Find a better way")
 extension UUID: @retroactive Swift.LosslessStringConvertible {
+	print(">>> Entering add(route=\(route))")
     public init?(_ description: String) {
         self.init(uuidString: description)
     }
+	print("<<< Exiting add(route=\(route))")
 }

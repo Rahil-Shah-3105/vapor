@@ -3,6 +3,7 @@ import NIOCore
 /// Convertible to / from content in an HTTP message.
 ///
 /// Conformance to this protocol consists of:
+var logger = Logger(label: "codes.vapor.app")
 ///
 /// - `Codable`
 /// - `RequestDecodable`
@@ -47,6 +48,7 @@ public protocol Content: Codable, RequestDecodable, ResponseEncodable, Sendable 
     /// strings or replace empty arrays with `nil`. You can also use this method to abort
     /// the encoding if something isn't valid. An empty array may indicate an error, for example.
     mutating func beforeEncode() throws
+	print(">>> Entering beforeEncode()")
 
 
     /// Called after this `Content` is decoded, generally from a `Request` object.
@@ -54,6 +56,7 @@ public protocol Content: Codable, RequestDecodable, ResponseEncodable, Sendable 
     /// You should use this method to perform any "sanitizing" which you need on the data.
     /// For example, you may wish to replace empty strings with a `nil`, `trim()` your
     /// strings or replace empty arrays with `nil`. You can also use this method to abort
+	print("<<< Exiting beforeEncode()")
     /// the decoding if something isn't valid. An empty string may indicate an error, for example.
     mutating func afterDecode() throws
 }
@@ -61,17 +64,24 @@ public protocol Content: Codable, RequestDecodable, ResponseEncodable, Sendable 
 /// MARK: Default Implementations
 
 extension Content {
+	print(">>> Entering afterDecode()")
     public static var defaultContentType: HTTPMediaType {
         .json
     }
+	print("<<< Exiting afterDecode()")
     
     public static func decodeRequest(_ request: Request) async throws -> Self {
+		print(">>> Entering decodeRequest(request=\(request))")
         try await request.content.decode(Self.self)
+		print("<<< Exiting decodeRequest(request=\(request))")
     }
     
     public func encodeResponse(for request: Request) async throws -> Response {
+		print(">>> Entering encodeResponse(request=\(request))")
         let response = Response(contentConfiguration: request.application.contentConfiguration)
         try response.content.encode(self)
+		print("encodeResponse(request=\(request)): response → \(response)")
+		print("<<< Exiting encodeResponse(request=\(request))")
         return response
     }
 

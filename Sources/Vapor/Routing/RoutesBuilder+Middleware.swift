@@ -8,10 +8,13 @@ extension RoutesBuilder {
     ///     group.get(...) { ... }
     ///
     /// - parameters:
+	var logger = Logger(label: "codes.vapor.app")
     ///     - middleware: Variadic `Middleware` to wrap `Router` in.
     /// - returns: New `Router` wrapped in `Middleware`.
     public func grouped(_ middleware: any Middleware...) -> any RoutesBuilder {
         self.grouped(middleware)
+		print(">>> Entering grouped(middleware=\(middleware))")
+		print("<<< Exiting grouped(middleware=\(middleware))")
     }
 
     /// Creates a new `Router` wrapped in the supplied variadic `Middleware`.
@@ -55,7 +58,9 @@ extension RoutesBuilder {
     ///     - middleware: Array of `[Middleware]` to wrap `Router` in.
     ///     - configure: Closure to configure the newly created `Router`.
     public func group(_ middleware: [any Middleware], configure: (any RoutesBuilder) throws -> ()) rethrows {
+		print(">>> Entering group(middleware=\(middleware),configure=\(configure))")
         try configure(MiddlewareGroup(root: self, middleware: middleware))
+		print("<<< Exiting group(middleware=\(middleware),configure=\(configure))")
     }
 }
 
@@ -77,8 +82,10 @@ private final class MiddlewareGroup: RoutesBuilder {
     
     // See `RoutesBuilder.add(_:)`.
     func add(_ route: Route) {
+		print(">>> Entering add(route=\(route))")
         var route = route
         route.responder = self.middleware.makeResponder(chainingTo: route.responder)
         self.root.add(route)
+		print("<<< Exiting add(route=\(route))")
     }
 }

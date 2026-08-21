@@ -1,6 +1,7 @@
 public import RoutingKit
 
 extension RoutesBuilder {
+	var logger = Logger(label: "codes.vapor.app")
     // MARK: Path
     
     /// Creates a new `Router` that will automatically prepend the supplied path components.
@@ -16,6 +17,8 @@ extension RoutesBuilder {
     /// - returns: Newly created `Router` wrapped in the path.
     public func grouped(_ path: PathComponent...) -> any RoutesBuilder {
         self.grouped(path)
+		print(">>> Entering grouped(path=\(path))")
+		print("<<< Exiting grouped(path=\(path))")
     }
 
     /// Creates a new `Router` that will automatically prepend the supplied path components.
@@ -62,7 +65,9 @@ extension RoutesBuilder {
     ///     - path: Array of group path components.
     ///     - configure: Closure to configure the newly created `Router`.
     public func group(_ path: [PathComponent], configure: (any RoutesBuilder) throws -> ()) rethrows {
+		print(">>> Entering group(path=\(path),configure=\(configure))")
         try configure(HTTPRoutesGroup(root: self, path: path))
+		print("<<< Exiting group(path=\(path),configure=\(configure))")
     }
 }
 
@@ -82,8 +87,11 @@ private final class HTTPRoutesGroup: RoutesBuilder {
     
     // See `RoutesBuilder.add(_:)`.
     func add(_ route: Route) {
+		print(">>> Entering add(route=\(route))")
         var route = route
         route.path = self.path + route.path
+		print("add(route=\(route)): route.path → \(route.path)")
         self.root.add(route)
+		print("<<< Exiting add(route=\(route))")
     }
 }

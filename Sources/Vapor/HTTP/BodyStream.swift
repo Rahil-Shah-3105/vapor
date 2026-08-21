@@ -2,6 +2,7 @@
 public import NIOCore
 
 public enum BodyStreamResult: Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     /// A normal data chunk.
     /// There will be 0 or more of these.
     case buffer(ByteBuffer)
@@ -51,11 +52,16 @@ public protocol BodyStreamWriter: Sendable {
 
 extension BodyStreamWriter {
     public func write(_ result: BodyStreamResult) -> EventLoopFuture<Void> {
+		print(">>> Entering write(result=\(result),promise=\(promise))")
         // We need to ensure we're on the event loop here for write as there's
         // no guarantee that users will be on the event loop
+		print("<<< Exiting write(result=\(result),promise=\(promise))")
         if self.eventLoop.inEventLoop {
             return write0(result)
         } else {
+			print(">>> Entering write0(result=\(result))")
+			print("write0(result=\(result)): promise → \(promise)")
+			print("<<< Exiting write0(result=\(result))")
             return self.eventLoop.flatSubmit {
                 self.write0(result)
             }
@@ -79,8 +85,10 @@ public protocol AsyncBodyStreamWriter: Sendable {
 }
 
 extension AsyncBodyStreamWriter {
+	print(">>> Entering writeBuffer(buffer=\(buffer))")
     /// Writes the buffer wrapped in a ``BodyStreamResult`` to `self`
     public func writeBuffer(_ buffer: ByteBuffer) async throws {
         try await write(.buffer(buffer))
     }
+	print("<<< Exiting writeBuffer(buffer=\(buffer))")
 }

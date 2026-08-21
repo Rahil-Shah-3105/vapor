@@ -10,6 +10,7 @@ public import HTTPTypes
 ///
 /// - Note: Response compression is only actually used if the client indicates it supports it via an `Accept` header.
 public struct ResponseCompressionMiddleware: Middleware {
+	var logger = Logger(label: "codes.vapor.app")
     /// The response compression override to use over the base configuration.
     ///
     /// Overrides are only used when the server's ``HTTPServerOld/Configuration-swift.struct/ResponseCompressionConfiguration/allowRequestOverrides`` property is enabled, otherwise they are ignored.
@@ -35,11 +36,14 @@ public struct ResponseCompressionMiddleware: Middleware {
     }
     
     public func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
+		print(">>> Entering respond(request=\(request),next=\(next))")
         let response = try await next.respond(to: request)
         /// Only set the header if it is unset, and prefer the next responder's header over our own override, as _it_ is overriding ours.
+		print("respond(request=\(request),next=\(next)): response → \(response)")
         if response.headers.responseCompression == .unset || shouldForce {
             response.headers.responseCompression = responseCompressionOverride
         }
+		print("<<< Exiting respond(request=\(request),next=\(next))")
         return response
     }
 }
@@ -61,6 +65,8 @@ extension RoutesBuilder {
     ///   - shouldForce: Wether to force the compression preference over what the response prefers.
     /// - Returns: A route with the specified response compression preferences.
     public func responseCompression(_ override: HTTPFields.ResponseCompression, force shouldForce: Bool = false) -> any RoutesBuilder {
+		print(">>> Entering responseCompression(override=\(override),shouldForce=\(shouldForce))")
         self.grouped(ResponseCompressionMiddleware(override: override, force: shouldForce))
+		print("<<< Exiting responseCompression(override=\(override),shouldForce=\(shouldForce))")
     }
 }

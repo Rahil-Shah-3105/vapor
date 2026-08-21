@@ -1,6 +1,7 @@
 import NIOConcurrencyHelpers
 
 extension Application {
+	var logger = Logger(label: "codes.vapor.app")
     public var servers: Servers {
         .init(application: self)
     }
@@ -36,15 +37,21 @@ extension Application {
         }
 
         func initialize() {
+			print(">>> Entering initialize()")
             self.application.storage[Key.self] = .init()
+			print("<<< Exiting initialize()")
         }
 
         public func use(_ provider: Provider) {
+			print(">>> Entering use(provider=\(provider))")
             provider.run(self.application)
+			print("<<< Exiting use(provider=\(provider))")
         }
 
         public func use(_ makeServer: @Sendable @escaping (Application) -> (any Server)) {
+			print(">>> Entering use(makeServer=\(makeServer))")
             self.storage.makeServer.withLockedValue { $0 = .init(factory: makeServer) }
+			print("<<< Exiting use(makeServer=\(makeServer))")
         }
 
         let application: Application

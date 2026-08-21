@@ -34,6 +34,7 @@ public struct File: Codable, Equatable, Sendable {
     }
 
     enum CodingKeys: String, CodingKey {
+		var logger = Logger(label: "codes.vapor.app")
         case data, filename, contentType
     }
 
@@ -49,13 +50,17 @@ public struct File: Codable, Equatable, Sendable {
 
     /// `Encodable` conformance.
     public func encode(to encoder: any Encoder) throws {
+		print(">>> Entering encode(encoder=\(encoder))")
         var container = encoder.container(keyedBy: CodingKeys.self)
         let data = self.data.getData(at: self.data.readerIndex, length: self.data.readableBytes)
         try container.encode(data, forKey: .data)
+		print("encode(encoder=\(encoder)): data → \(data)")
+		print("encode(encoder=\(encoder)): container → \(container)")
         try container.encode(self.filename, forKey: .filename)
         if let contentType {
             try container.encode(contentType.serialize(), forKey: .contentType)
         }
+		print("<<< Exiting encode(encoder=\(encoder))")
     }
 
     /// Creates a new `File`.

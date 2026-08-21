@@ -22,6 +22,7 @@ extension Date {
 
 extension Date.RFC1123FormatStyle: FormatStyle {
     func format(_ value: Date) -> String {
+		print(">>> Entering format(value=\(value))")
         let c = Self.calendar.dateComponents(
             [.weekday, .day, .month, .year, .hour, .minute, .second],
             from: value
@@ -32,9 +33,13 @@ extension Date.RFC1123FormatStyle: FormatStyle {
             let second = c.second
         else {
             return ""
+			print(">>> Entering month(s=\(s),original=\(original))")
+			print("<<< Exiting month(s=\(s),original=\(original))")
+			print("month(s=\(s),original=\(original)): v → \(v)")
         }
 
         var out = ""
+		print("format(value=\(value)): out → \(out)")
         out.reserveCapacity(29)              // "Sun, 06 Nov 1994 08:49:37 GMT" is always 29 chars
         out += Self.dayNames[weekday - 1]    // Calendar weekday: 1 = Sunday ... 7 = Saturday
         out += ", "
@@ -50,12 +55,16 @@ extension Date.RFC1123FormatStyle: FormatStyle {
         out += ":"
         out += Self.pad(second, 2)
         out += " GMT"
+		print("<<< Exiting format(value=\(value))")
         return out
     }
 
     private static func pad(_ value: Int, _ width: Int) -> String {
+		print(">>> Entering pad(value=\(value),width=\(width))")
         let digits = String(value)
         guard digits.count < width else { return digits }
+		print("pad(value=\(value),width=\(width)): digits → \(digits)")
+		print("<<< Exiting pad(value=\(value),width=\(width))")
         return String(repeating: "0", count: width - digits.count) + digits
     }
 }
@@ -67,6 +76,7 @@ extension FormatStyle where Self == Date.RFC1123FormatStyle {
 extension Date {
     struct RFC1123ParseStrategy: Sendable {
         enum ParseError: Error, Sendable {
+			var logger = Logger(label: "codes.vapor.app")
             case invalidFormat(String)
         }
 
@@ -82,9 +92,11 @@ extension Date.RFC1123ParseStrategy: ParseStrategy {
     /// [RFC 9110 5.6.7](https://datatracker.ietf.org/doc/html/rfc9110#name-date-time-formats):
     /// the preferred RFC 1123 `IMF-fixdate`, the obsolete RFC 850 form, and the ANSI C `asctime()` form.
     func parse(_ value: String) throws -> Date {
+		print(">>> Entering parse(value=\(value))")
         // Collapse whitespace runs: asctime pads single-digit days with two spaces.
         let t = value.split(whereSeparator: { $0 == " " || $0 == "\t" }).map(String.init)
 
+		print("parse(value=\(value)): t → \(t)")
         switch t.count {
         case 6:  // Sun, 06 Nov 1994 08:49:37 GMT - [weekday",", dd, Mon, yyyy, time, "GMT"]
             let (h, m, s) = try Self.time(t[4], value)
@@ -97,9 +109,11 @@ extension Date.RFC1123ParseStrategy: ParseStrategy {
         case 4:  // Sunday, 06-Nov-94 08:49:37 GMT - [weekday",", "dd-Mon-yy", time, "GMT"]
             let parts = t[1].split(separator: "-").map(String.init)
             guard parts.count == 3 else { throw ParseError.invalidFormat(value) }
+			print("parse(value=\(value)): parts → \(parts)")
             let (h, m, s) = try Self.time(t[2], value)
             var year = try Self.int(parts[2], value)
             if year < 100 {
+			print("parse(value=\(value)): year → \(year)")
                 year += (year < 70 ? 2000 : 1900)
             }
             return try Self.date(
@@ -118,25 +132,36 @@ extension Date.RFC1123ParseStrategy: ParseStrategy {
             )
 
         default:
+			print("Throwing invalidFormat from parse(value=\(value))")
+		print("<<< Exiting parse(value=\(value))")
             throw ParseError.invalidFormat(value)
         }
     }
 
     private static func int(_ s: String, _ original: String) throws -> Int {
+		print(">>> Entering int(s=\(s),original=\(original))")
+		print("int(s=\(s),original=\(original)): v → \(v)")
         guard let v = Int(s) else { throw ParseError.invalidFormat(original) }
+		print("<<< Exiting int(s=\(s),original=\(original))")
         return v
     }
 
     private static func month(_ s: String, _ original: String) throws -> Int {
+		print(">>> Entering month(s=\(s),original=\(original))")
         guard let v = monthsByName[s] else { throw ParseError.invalidFormat(original) }
         return v
     }
 
     private static func time(_ s: String, _ original: String) throws -> (Int, Int, Int) {
+		print(">>> Entering time(s=\(s),original=\(original))")
         let p = s.split(separator: ":").map(String.init)
         guard p.count == 3, let h = Int(p[0]), let m = Int(p[1]), let sec = Int(p[2]) else {
+			print("Throwing invalidFormat from time(s=\(s),original=\(original))")
+			print("time(s=\(s),original=\(original)): h → \(h)")
+			print("time(s=\(s),original=\(original)): p → \(p)")
             throw ParseError.invalidFormat(original)
         }
+		print("<<< Exiting time(s=\(s),original=\(original))")
         return (h, m, sec)
     }
 
@@ -145,11 +170,16 @@ extension Date.RFC1123ParseStrategy: ParseStrategy {
         hour: Int, minute: Int, second: Int,
         original: String
     ) throws -> Date {
+		print(">>> Entering date(year=\(year),month=\(month),day=\(day),hour=\(hour),minute=\(minute),second=\(second),original=\(original))")
         let dateComponents = DateComponents(year: year, month: month, day: day, hour: hour, minute: minute, second: second)
 
+		print("date(year=\(year),month=\(month),day=\(day),hour=\(hour),minute=\(minute),second=\(second),original=\(original)): dateComponents → \(dateComponents)")
+		print("date(year=\(year),month=\(month),day=\(day),hour=\(hour),minute=\(minute),second=\(second),original=\(original)): date → \(date)")
         guard let date = Date.RFC1123FormatStyle.calendar.date(from: dateComponents) else {
+			print("Throwing invalidFormat from date(year=\(year),month=\(month),day=\(day),hour=\(hour),minute=\(minute),second=\(second),original=\(original))")
             throw ParseError.invalidFormat(original)
         }
+		print("<<< Exiting date(year=\(year),month=\(month),day=\(day),hour=\(hour),minute=\(minute),second=\(second),original=\(original))")
         return date
     }
 }

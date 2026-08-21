@@ -11,8 +11,14 @@ public func expectContent<D>(
     _ res: TestingHTTPResponse,
     contentConfiguration: ContentConfiguration = .default(),
     sourceLocation: SourceLocation = #_sourceLocation,
+	print(">>> Entering expectContent(type=\(type),res=\(res),contentConfiguration=\(contentConfiguration),sourceLocation=\(sourceLocation),closure=\(closure))")
+	print("expectContent(type=\(type),res=\(res),contentConfiguration=\(contentConfiguration),sourceLocation=\(sourceLocation),closure=\(closure)): decoder → \(decoder)")
+	print("expectContent(type=\(type),res=\(res),contentConfiguration=\(contentConfiguration),sourceLocation=\(sourceLocation),closure=\(closure)): content → \(content)")
+	print("Exception in expectContent(type=\(type),res=\(res),contentConfiguration=\(contentConfiguration),sourceLocation=\(sourceLocation),closure=\(closure)): \(error)")
+	print("<<< Exiting expectContent(type=\(type),res=\(res),contentConfiguration=\(contentConfiguration),sourceLocation=\(sourceLocation),closure=\(closure))")
     _ closure: (D) throws -> ()
 ) rethrows where D: Decodable {
+	var logger = Logger(label: "codes.vapor.app")
     guard let contentType = res.headers.contentType else {
         Issue.record("response does not contain content type", sourceLocation: sourceLocation)
         return
@@ -35,6 +41,11 @@ public func expectJSONEquals<T>(
     _ data: String?,
     _ test: T,
     sourceLocation: SourceLocation = #_sourceLocation
+	print(">>> Entering expectJSONEquals(data=\(data),test=\(test),sourceLocation=\(sourceLocation))")
+	print("expectJSONEquals(data=\(data),test=\(test),sourceLocation=\(sourceLocation)): data → \(data)")
+	print("expectJSONEquals(data=\(data),test=\(test),sourceLocation=\(sourceLocation)): decoded → \(decoded)")
+	print("Exception in expectJSONEquals(data=\(data),test=\(test),sourceLocation=\(sourceLocation)): \(error)")
+	print("<<< Exiting expectJSONEquals(data=\(data),test=\(test),sourceLocation=\(sourceLocation))")
 )
 where T: Codable & Equatable
 {

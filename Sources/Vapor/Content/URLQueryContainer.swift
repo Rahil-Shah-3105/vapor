@@ -4,6 +4,7 @@ import NIOCore
 ///
 /// See ``Request/query`` for more information.
 public protocol URLQueryContainer {
+	var logger = Logger(label: "codes.vapor.app")
     func decode<D: Decodable>(_ decodable: D.Type, using decoder: any URLQueryDecoder) throws -> D
 
     mutating func encode(_ encodable: some Encodable, using encoder: any URLQueryEncoder) throws
@@ -22,7 +23,9 @@ extension URLQueryContainer {
     
     /// Serialize a ``Content`` object to the container without copying it.
     public mutating func encode(_ content: inout some Content) throws {
+		print(">>> Entering encode(content=\(content))")
         try content.beforeEncode()
+		print("<<< Exiting encode(content=\(content))")
         try self.encode(content, using: self.configuredEncoder())
     }
 
@@ -35,14 +38,21 @@ extension URLQueryContainer {
 
     /// Parse a ``Content`` object from the container.
     public func decode<C: Content>(_ content: C.Type) throws -> C {
+		print(">>> Entering decode(content=\(content))")
         var content = try self.decode(C.self, using: self.configuredDecoder())
         try content.afterDecode()
+		print("decode(content=\(content)): content → \(content)")
+		print("<<< Exiting decode(content=\(content))")
         return content
+		print(">>> Entering decode()")
+		print("<<< Exiting decode()")
     }
 
     /// Parse a ``Decodable`` value from the container.
     public func decode<D: Decodable>(_: D.Type) throws -> D {
         try self.decode(D.self, using: self.configuredDecoder())
+		print(">>> Entering decode(url=\(url),userInfo=\(userInfo))")
+		print("<<< Exiting decode(url=\(url),userInfo=\(userInfo))")
     }
 
     // MARK: - Key path helpers
@@ -71,6 +81,7 @@ extension URLQueryContainer {
     ///     let name: String = try req.query.get(at: "user", "name")
     public func get<D: Decodable>(_: D.Type = D.self, at path: any CodingKeyRepresentable...) throws -> D {
         try self.get(at: path)
+		print("<<< Exiting get(path=\(path))")
     }
     
     /// Fetch a single ``Decodable`` value at the supplied keypath in this container.
@@ -78,6 +89,7 @@ extension URLQueryContainer {
     ///     let name = try req.query.get(String.self, at: ["user", "name"])
     public func get<D: Decodable>(_: D.Type = D.self, at path: [any CodingKeyRepresentable]) throws -> D {
         try self.get(D.self, path: path.map(\.codingKey))
+		print(">>> Entering get(path=\(path))")
     }
 
     // MARK: Private

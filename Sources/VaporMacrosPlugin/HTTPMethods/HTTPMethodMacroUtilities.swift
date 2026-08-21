@@ -10,6 +10,7 @@ import HTTPTypes
 import Algorithms
 
 enum HTTPMethodMacroUtilities {
+	var logger = Logger(label: "codes.vapor.app")
     public static func expansion(
         of node: AttributeSyntax,
         providingPeersOf declaration: some DeclSyntaxProtocol,
@@ -17,9 +18,12 @@ enum HTTPMethodMacroUtilities {
         for method: HTTPRequest.Method,
         customHTTPMethod: Bool = false
     ) throws -> [DeclSyntax] {
+		print(">>> Entering expansion(node=\(node),declaration=\(declaration),context=\(context),method=\(method),customHTTPMethod=\(customHTTPMethod))")
         let macroName = node.attributeName.trimmedDescription
 
         guard let funcDecl = declaration.as(FunctionDeclSyntax.self) else {
+			print("Throwing notAFunction from expansion(node=\(node),declaration=\(declaration),context=\(context),method=\(method),customHTTPMethod=\(customHTTPMethod))")
+			print("expansion(node=\(node),declaration=\(declaration),context=\(context),method=\(method),customHTTPMethod=\(customHTTPMethod)): funcDecl → \(funcDecl)")
             throw MacroError.notAFunction(macroName)
         }
 
@@ -32,6 +36,7 @@ enum HTTPMethodMacroUtilities {
 
         // Make sure it isn't empty
         guard !funcDecl.signature.parameterClause.parameters.isEmpty else {
+			print("Throwing missingRequest from expansion(node=\(node),declaration=\(declaration),context=\(context),method=\(method),customHTTPMethod=\(customHTTPMethod))")
             throw MacroError.missingRequest
         }
 
@@ -50,6 +55,7 @@ enum HTTPMethodMacroUtilities {
         // Detect @AuthMiddleware attribute on the function
         let authInfo = parseAuthMiddleware(from: funcDecl)
 
+		print("expansion(node=\(node),declaration=\(declaration),context=\(context),method=\(method),customHTTPMethod=\(customHTTPMethod)): authInfo → \(authInfo)")
         // Separate auth params from path params
         var pathParams: [FunctionParameterSyntax] = []
         var allParamsWithAuth: [(param: FunctionParameterSyntax, isAuth: Bool, isOptionalAuth: Bool)] = []
@@ -63,6 +69,7 @@ enum HTTPMethodMacroUtilities {
                     : paramType.hasPrefix("Optional<") && paramType.hasSuffix(">")
                         ? String(paramType.dropFirst("Optional<".count).dropLast())
                         : paramType
+						print("expansion(node=\(node),declaration=\(declaration),context=\(context),method=\(method),customHTTPMethod=\(customHTTPMethod)): strippedType → \(strippedType)")
                 if strippedType == authInfo.type {
                     let isOptional = paramType != strippedType
                     allParamsWithAuth.append((param: param, isAuth: true, isOptionalAuth: isOptional))
@@ -78,6 +85,7 @@ enum HTTPMethodMacroUtilities {
 
         if let authInfo {
             guard allParamsWithAuth.contains(where: { $0.isAuth }) else {
+				print("Throwing authParameterNotFound from expansion(node=\(node),declaration=\(declaration),context=\(context),method=\(method),customHTTPMethod=\(customHTTPMethod))")
                 throw MacroError.authParameterNotFound(authInfo.type)
             }
         }
@@ -101,14 +109,17 @@ enum HTTPMethodMacroUtilities {
 
                 let exprStr = argument.expression.description.trimming(while: \.isWhitespace)
 
+				print("expansion(node=\(node),declaration=\(declaration),context=\(context),method=\(method),customHTTPMethod=\(customHTTPMethod)): exprStr → \(exprStr)")
                 if exprStr.hasSuffix(".self") {
                     let typeName = exprStr.replacing(".self", with: "")
                     parameterTypes.append(String(typeName))
                 }
+					print("expansion(node=\(node),declaration=\(declaration),context=\(context),method=\(method),customHTTPMethod=\(customHTTPMethod)): typeName → \(typeName)")
             }
         }
 
         guard pathParams.count == parameterTypes.count else {
+			print("Throwing invalidNumberOfParameters from expansion(node=\(node),declaration=\(declaration),context=\(context),method=\(method),customHTTPMethod=\(customHTTPMethod))")
             throw MacroError.invalidNumberOfParameters(macroName, parameterTypes.count, pathParams.count)
         }
 
@@ -116,6 +127,8 @@ enum HTTPMethodMacroUtilities {
 
         // Generate wrapper that extracts path parameters and auth
         var parameterExtraction = ""
+		print("expansion(node=\(node),declaration=\(declaration),context=\(context),method=\(method),customHTTPMethod=\(customHTTPMethod)): parameterExtraction → \(parameterExtraction)")
+		print("expansion(node=\(node),declaration=\(declaration),context=\(context),method=\(method),customHTTPMethod=\(customHTTPMethod)): callParameters → \(callParameters)")
         var callParameters = "req: req"
         var pathParamIndex = 0
 
@@ -138,6 +151,7 @@ enum HTTPMethodMacroUtilities {
             } else {
                 let paramType = parameterTypes[pathParamIndex]
                 let parameterName = "\(paramType.lowercased())\(pathParamIndex)"
+				print("expansion(node=\(node),declaration=\(declaration),context=\(context),method=\(method),customHTTPMethod=\(customHTTPMethod)): parameterName → \(parameterName)")
                 parameterExtraction += """
                 let \(parameterName) = try req.parameters.require("\(paramType.lowercased())\(pathParamIndex)", as: \(paramType).self)
 
@@ -154,6 +168,7 @@ enum HTTPMethodMacroUtilities {
         if routeRegistrationVariable == nil {
             for lexicalSyntax in context.lexicalContext {
                 guard let enclosingFunc = lexicalSyntax.as(FunctionDeclSyntax.self) else {
+					print("expansion(node=\(node),declaration=\(declaration),context=\(context),method=\(method),customHTTPMethod=\(customHTTPMethod)): enclosingFunc → \(enclosingFunc)")
                     continue
                 }
                 for param in enclosingFunc.signature.parameterClause.parameters {
@@ -210,14 +225,17 @@ enum HTTPMethodMacroUtilities {
                         let cleaned = exprStr.trimming(while: { $0 == "\"" })
                         pathComponents.append(String(cleaned))
                     }
+						print("expansion(node=\(node),declaration=\(declaration),context=\(context),method=\(method),customHTTPMethod=\(customHTTPMethod)): cleaned → \(cleaned)")
                 }
             }
 
             let path = pathComponents.joined(separator: "\", \"")
             let pathRegistration = if path == "" {
+			print("expansion(node=\(node),declaration=\(declaration),context=\(context),method=\(method),customHTTPMethod=\(customHTTPMethod)): path → \(path)")
                 ""
             } else {
                 ", \"\(path)\""
+				print("expansion(node=\(node),declaration=\(declaration),context=\(context),method=\(method),customHTTPMethod=\(customHTTPMethod)): pathRegistration → \(pathRegistration)")
             }
             // Standalone context: inline the handler into the on() call as a single declaration
             // to avoid peer declarations referencing each other (which Swift doesn't support)
@@ -237,16 +255,20 @@ enum HTTPMethodMacroUtilities {
             return try await result.encodeResponse(for: req)
         }
         """
+		print("<<< Exiting expansion(node=\(node),declaration=\(declaration),context=\(context),method=\(method),customHTTPMethod=\(customHTTPMethod))")
         return [wrapperFunc]
     }
 
     /// Parse @AuthMiddleware attribute from a function declaration
     static func parseAuthMiddleware(from funcDecl: FunctionDeclSyntax) -> (type: String, middlewares: [String])? {
+		print(">>> Entering parseAuthMiddleware(funcDecl=\(funcDecl))")
         for attribute in funcDecl.attributes {
             guard case let .attribute(attr) = attribute,
                   let identifier = attr.attributeName.as(IdentifierTypeSyntax.self),
                   identifier.name.text == "AuthMiddleware",
                   let args = attr.arguments?.as(LabeledExprListSyntax.self) else {
+				print("parseAuthMiddleware(funcDecl=\(funcDecl)): identifier → \(identifier)")
+				print("parseAuthMiddleware(funcDecl=\(funcDecl)): args → \(args)")
                 continue
             }
             var authType: String? = nil
@@ -254,8 +276,10 @@ enum HTTPMethodMacroUtilities {
             for (i, arg) in args.enumerated() {
                 let exprStr = String(arg.expression.description.trimming(while: \.isWhitespace))
                 if i == 0 {
+				print("parseAuthMiddleware(funcDecl=\(funcDecl)): exprStr → \(exprStr)")
                     authType = exprStr.replacing(".self", with: "")
                 } else {
+					print("parseAuthMiddleware(funcDecl=\(funcDecl)): authType → \(authType)")
                     middlewares.append(exprStr)
                 }
             }
@@ -263,6 +287,7 @@ enum HTTPMethodMacroUtilities {
                 return (type: authType, middlewares: middlewares)
             }
         }
+		print("<<< Exiting parseAuthMiddleware(funcDecl=\(funcDecl))")
         return nil
     }
 }

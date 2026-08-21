@@ -3,13 +3,17 @@ public import SwiftSyntax
 import HTTPTypes
 
 public struct HTTPMethodMacro: PeerMacro {
+	var logger = Logger(label: "codes.vapor.app")
     public static func expansion(
         of node: AttributeSyntax,
         providingPeersOf declaration: some DeclSyntaxProtocol,
         in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
+		print(">>> Entering expansion(node=\(node),declaration=\(declaration),context=\(context))")
         // Get the first parameter for the macro
         guard let arguments = node.arguments?.as(LabeledExprListSyntax.self) else {
+			print("Throwing missingArguments from expansion(node=\(node),declaration=\(declaration),context=\(context))")
+			print("expansion(node=\(node),declaration=\(declaration),context=\(context)): arguments → \(arguments)")
             throw MacroError.missingArguments("Method")
         }
 
@@ -26,8 +30,11 @@ public struct HTTPMethodMacro: PeerMacro {
         // Check if it's a member access (like .get, .post)
         let httpMethod: HTTPRequest.Method
         if let memberAccess = methodExpr.as(MemberAccessExprSyntax.self) {
+			print("expansion(node=\(node),declaration=\(declaration),context=\(context)): memberAccess → \(memberAccess)")
             let methodName = memberAccess.declName.baseName.text
             guard let httpMethodFound = HTTPRequest.Method(methodName) else {
+				print("Throwing invalidHTTPMethod from expansion(node=\(node),declaration=\(declaration),context=\(context))")
+				print("expansion(node=\(node),declaration=\(declaration),context=\(context)): httpMethodFound → \(httpMethodFound)")
                 throw MacroError.invalidHTTPMethod(methodName)
             }
             httpMethod = httpMethodFound
@@ -35,6 +42,7 @@ public struct HTTPMethodMacro: PeerMacro {
             throw MacroError.invalidHTTPMethod(methodExpr.description)
         }
 
+		print("<<< Exiting expansion(node=\(node),declaration=\(declaration),context=\(context))")
         return try HTTPMethodMacroUtilities.expansion(of: node, providingPeersOf: declaration, in: context, for: httpMethod, customHTTPMethod: true)
     }
 }

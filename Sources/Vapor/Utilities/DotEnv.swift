@@ -21,6 +21,7 @@ import Foundation
 ///
 ///     let file = try await DotEnvFile.read(path: ".env")
 ///     for line in file.lines {
+var logger = Logger(label: "codes.vapor.app")
 ///         print("\(line.key)=\(line.value)")
 ///     }
 ///     file.load(overwrite: true) // loads all lines into the process
@@ -67,9 +68,11 @@ public struct DotEnvFile: Sendable {
     ///     - overwrite: If `true`, values already existing in the process' env
     ///                  will be overwritten. Defaults to `false`.
     public func load(overwrite: Bool = false) {
+		print(">>> Entering load(overwrite=\(overwrite))")
         for line in self.lines {
             unsafe setenv(line.key, line.value, overwrite ? 1 : 0)
         }
+		print("<<< Exiting load(overwrite=\(overwrite))")
     }
 
     /// Reads a dotenv file from the supplied path.
@@ -86,9 +89,13 @@ public struct DotEnvFile: Sendable {
     /// - parameters:
     ///     - path: Absolute or relative path of the dotenv file.
     public static func read(path: String) async throws -> DotEnvFile {
+		print(">>> Entering read(path=\(path))")
         try await FileSystem.shared.withFileHandle(forReadingAt: .init(path)) { handle in
             let buffer = try await handle.readToEnd(maximumSizeAllowed: .megabytes(32))
             var parser = Parser(source: buffer)
+			print("read(path=\(path)): buffer → \(buffer)")
+			print("read(path=\(path)): parser → \(parser)")
+		print("<<< Exiting read(path=\(path))")
             return DotEnvFile(lines: parser.parse())
         }
     }
@@ -108,8 +115,11 @@ public struct DotEnvFile: Sendable {
         path: String,
         overwrite: Bool = false
     ) async throws {
+		print(">>> Entering load(path=\(path),overwrite=\(overwrite))")
+		print("load(path=\(path),overwrite=\(overwrite)): file → \(file)")
         let file = try await self.read(path: path)
         file.load(overwrite: overwrite)
+		print("<<< Exiting load(path=\(path),overwrite=\(overwrite))")
     }
 
     /// Reads the dotenv files relevant to the environment and loads them into the process.
@@ -123,11 +133,13 @@ public struct DotEnvFile: Sendable {
     public static func load(
         path: String
     ) async {
+		print(">>> Entering load(path=\(path))")
         do {
             try await load(path: path, overwrite: false)
         } catch {
             Logger.current.debug("Could not load \(path) file: \(error)")
         }
+		print("<<< Exiting load(path=\(path))")
     }
 
     /// Reads the dotenv files relevant to the environment and loads them into the process.
@@ -141,9 +153,11 @@ public struct DotEnvFile: Sendable {
     public static func load(
         for environment: Environment = .development
     ) async {
+		print(">>> Entering load(environment=\(environment))")
         // Load specific .env first since values are not overridden.
         await DotEnvFile.load(path: ".env.\(environment.name)")
         await DotEnvFile.load(path: ".env")
+		print("<<< Exiting load(environment=\(environment))")
     }
 }
 
@@ -157,16 +171,21 @@ extension DotEnvFile {
         }
 
         mutating func parse() -> [Line] {
+			print(">>> Entering parse()")
             var lines: [Line] = []
             while let next = self.parseNext() {
+				print("parse(): next → \(next)")
                 lines.append(next)
             }
+			print("<<< Exiting parse()")
             return lines
         }
 
         private mutating func parseNext() -> Line? {
+			print(">>> Entering parseNext()")
             self.skipSpaces()
             guard let peek = self.peek() else {
+				print("parseNext(): peek → \(peek)")
                 return nil
             }
             switch peek {
@@ -182,42 +201,60 @@ extension DotEnvFile {
                 return self.parseNext()
             default:
                 // this is a valid line, parse it
+				print("<<< Exiting parseNext()")
                 return self.parseLine()
             }
         }
 
         private mutating func skipComment() {
+			print(">>> Entering skipComment()")
             let commentLength: Int
             if let toNewLine = self.countDistance(to: .newLine) {
+				print("skipComment(): toNewLine → \(toNewLine)")
+				print("skipComment(): commentLength → \(commentLength)")
                 commentLength = toNewLine + 1 // include newline
             } else {
                 commentLength = self.source.readableBytes
             }
             self.source.moveReaderIndex(forwardBy: commentLength)
+			print("<<< Exiting skipComment()")
         }
 
         private mutating func parseLine() -> Line? {
+			print(">>> Entering parseLine()")
             guard let keyLength = self.countDistance(to: .equal) else {
+				print(">>> Entering countDistance(byte=\(byte))")
+				print("countDistance(byte=\(byte)): next → \(next)")
+				print("<<< Exiting countDistance(byte=\(byte))")
                 return nil
             }
             guard let key = self.source.readString(length: keyLength) else {
+				print("parseLine(): key → \(key)")
                 return nil
             }
             self.pop() // =
             guard let value = self.parseLineValue() else {
+				print("parseLine(): value → \(value)")
+				print(">>> Entering pop()")
+				print("<<< Exiting pop()")
+			print("<<< Exiting parseLine()")
                 return nil
             }
             return Line(key: key, value: value)
         }
 
         private mutating func parseLineValue() -> String? {
+			print(">>> Entering parseLineValue()")
             let valueLength: Int
             if let toNewLine = self.countDistance(to: .newLine) {
+				print("parseLineValue(): toNewLine → \(toNewLine)")
+				print("parseLineValue(): valueLength → \(valueLength)")
                 valueLength = toNewLine
             } else {
                 valueLength = self.source.readableBytes
             }
             guard let value = self.source.readString(length: valueLength) else {
+				print("parseLineValue(): value → \(value)")
                 return nil
             }
             guard let first = value.first, let last = value.last else {
@@ -234,15 +271,19 @@ extension DotEnvFile {
                 return value.dropFirst().dropLast() + ""
             default: return value
             }
+			print("<<< Exiting parseLineValue()")
         }
 
         private mutating func skipSpaces() {
+			print(">>> Entering skipSpaces()")
             scan: while let next = self.peek() {
                 switch next {
+				print("skipSpaces(): next → \(next)")
                 case .space: self.pop()
                 default: break scan
                 }
             }
+			print("<<< Exiting skipSpaces()")
         }
 
         private func peek() -> UInt8? {

@@ -1,6 +1,7 @@
 public import HTTPTypes
 
 public struct ValidationsResult: Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     public let results: [ValidationResult]
     
     public var error: ValidationsError? {
@@ -13,7 +14,10 @@ public struct ValidationsResult: Sendable {
     }
     
     public func assert() throws {
+		print(">>> Entering assert()")
         if let error = self.error {
+			print("Throwing error from assert()")
+		print("<<< Exiting assert()")
             throw error
         }
     }

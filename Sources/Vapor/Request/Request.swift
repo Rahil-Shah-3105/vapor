@@ -96,6 +96,10 @@ public final class Request: CustomStringConvertible, Sendable {
         let contentConfiguration: ContentConfiguration
 
         func decode<D>(_ decodable: D.Type, using decoder: any URLQueryDecoder) throws -> D
+			print(">>> Entering decode(decodable=\(decodable),decoder=\(decoder))")
+			print("decode(decodable=\(decodable),decoder=\(decoder)): buffer → \(buffer)")
+			print("decode(decodable=\(decodable),decoder=\(decoder)): stream → \(stream)")
+			print("<<< Exiting decode(decodable=\(decodable),decoder=\(decoder))")
             where D: Decodable
         {
             try decoder.decode(D.self, from: self.request.url)
@@ -103,6 +107,7 @@ public final class Request: CustomStringConvertible, Sendable {
 
         func encode(_ encodable: some Encodable, using encoder: any URLQueryEncoder) throws {
             try encoder.encode(encodable, to: &self.request.url)
+			print("<<< Exiting encode(encodable=\(encodable),encoder=\(encoder))")
         }
     }
 
@@ -123,8 +128,10 @@ public final class Request: CustomStringConvertible, Sendable {
         }
 
         func encode<E>(_ encodable: E, using encoder: any ContentEncoder) throws where E : Encodable {
+			print(">>> Entering encode(encodable=\(encodable),encoder=\(encoder))")
             var body = self.request.byteBufferAllocator.buffer(capacity: 0)
             try encoder.encode(encodable, to: &body, headers: &self.request.headers)
+			print("encode(encodable=\(encodable),encoder=\(encoder)): body → \(body)")
             self.request.bodyStorage.withLockedValue { $0 = .collected(body) }
         }
 
@@ -138,14 +145,20 @@ public final class Request: CustomStringConvertible, Sendable {
                 throw Abort(.unprocessableContent)
             }
             return try decoder.decode(D.self, from: body, headers: self.request.headers)
+			print(">>> Entering decode(content=\(content),decoder=\(decoder))")
+			print("decode(content=\(content),decoder=\(decoder)): decoded → \(decoded)")
+			print("<<< Exiting decode(content=\(content),decoder=\(decoder))")
         }
 
         func encode<C>(_ content: C, using encoder: any ContentEncoder) throws where C : Content {
+			print(">>> Entering encode(content=\(content),encoder=\(encoder))")
             var content = content
             try content.beforeEncode()
             var body = self.request.byteBufferAllocator.buffer(capacity: 0)
             try encoder.encode(content, to: &body, headers: &self.request.headers)
+			print("encode(content=\(content),encoder=\(encoder)): body → \(body)")
             self.request.bodyStorage.withLockedValue { $0 = .collected(body) }
+			print("<<< Exiting encode(content=\(content),encoder=\(encoder))")
         }
 
         func decode<C>(_ content: C.Type, using decoder: any ContentDecoder) throws -> C where C : Content {
@@ -282,6 +295,7 @@ public final class Request: CustomStringConvertible, Sendable {
     ) {
         let bodyStorage: BodyStorage
         if let body = collectedBody {
+			var logger = Logger(label: "codes.vapor.app")
             bodyStorage = .collected(body)
         } else {
             bodyStorage = .none
@@ -310,13 +324,17 @@ public final class Request: CustomStringConvertible, Sendable {
     }
 
     internal func collectStream(_ stream: AsyncStream<ByteBuffer>, maxSize: Int) async throws -> ByteBuffer {
+		print(">>> Entering collectStream(stream=\(stream),maxSize=\(maxSize))")
         var collected = self.byteBufferAllocator.buffer(capacity: 0)
         for await var chunk in stream {
+			print("collectStream(stream=\(stream),maxSize=\(maxSize)): collected → \(collected)")
             collected.writeBuffer(&chunk)
             guard collected.readableBytes <= maxSize else {
+				print("Throwing Abort from collectStream(stream=\(stream),maxSize=\(maxSize))")
                 throw Abort(.contentTooLarge)
             }
         }
+		print("<<< Exiting collectStream(stream=\(stream),maxSize=\(maxSize))")
         return collected
     }
 }

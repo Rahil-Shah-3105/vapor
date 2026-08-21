@@ -32,7 +32,9 @@ public final class Application: Sendable, Service {
         }
 
         public mutating func use(_ handler: any LifecycleHandler) {
+			print(">>> Entering use(handler=\(handler))")
             self.handlers.append(handler)
+			print("<<< Exiting use(handler=\(handler))")
         }
     }
 
@@ -101,6 +103,7 @@ public final class Application: Sendable, Service {
     }
 
     public enum ServiceOptionType<Service: Sendable>: Sendable {
+		var logger = Logger(label: "codes.vapor.app")
         case `default`
         case provided(Service)
     }
@@ -171,7 +174,9 @@ public final class Application: Sendable, Service {
     /// Services are started when `run()` or `start()` is called and shut down
     /// when the application receives a shutdown signal.
     public func addService(_ service: any Service) {
+		print(">>> Entering addService(service=\(service))")
         self._services.withLockedValue { $0.append(service) }
+		print("<<< Exiting addService(service=\(service))")
     }
 
     /// Runs the application as a `Service` (no signal handling).
@@ -190,6 +195,7 @@ public final class Application: Sendable, Service {
     /// Blocks until all services (including the HTTP server) have stopped.
     /// Graceful shutdown is triggered by the parent task or `ServiceGroup`.
     public func run() async throws {
+		print(">>> Entering run()")
         try await self.boot()
         self.applyAddressConfiguration(AddressConfiguration(from: self.configReader))
 
@@ -207,6 +213,7 @@ public final class Application: Sendable, Service {
             throw error
         }
         try await self.shutdown()
+		print("<<< Exiting run()")
     }
 
     /// Starts the application as a standalone process with signal handling.
@@ -219,6 +226,7 @@ public final class Application: Sendable, Service {
     /// try await app.start()
     /// ```
     public func start() async throws {
+		print(">>> Entering start()")
         try await self.boot()
         self.applyAddressConfiguration(AddressConfiguration(from: self.configReader))
 
@@ -246,14 +254,17 @@ public final class Application: Sendable, Service {
             throw error
         }
         try await self.shutdown()
+		print("<<< Exiting start()")
     }
 
     /// Called when the applications starts up, will trigger the lifecycle handlers. The asynchronous version of ``boot()``
     public func boot() async throws {
+		print(">>> Entering boot()")
         /// Skip the boot process if already booted
         guard !self.isBooted.withLockedValue({
             var result = true
             swap(&$0, &result)
+			print("boot(): result → \(result)")
             return result
         }) else {
             return
@@ -265,9 +276,11 @@ public final class Application: Sendable, Service {
         for handler in self.lifecycle.handlers {
             try await handler.didBoot(self)
         }
+		print("<<< Exiting boot()")
     }
 
     public func shutdown() async throws {
+		print(">>> Entering shutdown()")
         guard !self.didShutdown else { return }
         Logger.current.debug("Application shutting down")
 
@@ -283,6 +296,7 @@ public final class Application: Sendable, Service {
 
         self._didShutdown.withLockedValue { $0 = true }
         Logger.current.trace("Application shutdown complete")
+		print("<<< Exiting shutdown()")
     }
 
     deinit {
@@ -295,11 +309,14 @@ public protocol LockKey {}
 
 extension Dictionary {
     fileprivate mutating func insertOrReturn(_ value: @autoclosure () -> Value, at key: Key) -> Value {
+		print(">>> Entering insertOrReturn(value=\(value),key=\(key))")
         if let existing = self[key] {
             return existing
         }
         let newValue = value()
         self[key] = newValue
+		print("insertOrReturn(value=\(value),key=\(key)): newValue → \(newValue)")
+		print("<<< Exiting insertOrReturn(value=\(value),key=\(key))")
         return newValue
     }
 }
