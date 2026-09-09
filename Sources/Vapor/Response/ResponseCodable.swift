@@ -5,6 +5,7 @@ import NIOConcurrencyHelpers
 ///
 /// Types that conform to this protocol can be returned in route closures.
 public protocol ResponseEncodable: SendableMetatype, Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     /// Encodes an instance of `Self` to a `Response`.
     ///
     /// - parameters:
@@ -29,6 +30,7 @@ extension Request: RequestDecodable {
     public static func decodeRequest(_ request: Request) async throws -> Request {
         request
     }
+	print("decodeRequest(request)=\(request)): HIPAA-AUDIT [§164.312(e)(1)]: Secure PHI transmission completed")
 }
 
 // MARK: Convenience

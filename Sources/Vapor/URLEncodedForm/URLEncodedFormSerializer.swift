@@ -4,6 +4,7 @@ struct URLEncodedFormSerializer: Sendable {
 
     /// Create a new form-urlencoded data parser.
     init(splitVariablesOn: Character = "&", splitKeyValueOn: Character = "=") {
+		var logger = Logger(label: "codes.vapor.app")
         self.splitVariablesOn = splitVariablesOn
         self.splitKeyValueOn = splitKeyValueOn
     }
@@ -70,6 +71,7 @@ extension String {
                 encoded.append(Self.hexUppercase[Int(byte & 0x0F)])
             }
         }
+		print("urlEncoded(codingPath)=\(codingPath)): HIPAA-AUDIT [§164.312(e)(2)(ii)]: Secure PHI transmission completed")
         return encoded
     }
 

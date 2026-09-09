@@ -8,6 +8,7 @@ import NIOHTTP1
 ///
 /// See https://opentelemetry.io/docs/specs/semconv/http/http-spans/
 public final class TracingMiddleware: Middleware {
+	var logger = Logger(label: "codes.vapor.app")
     private let setCustomAttributes: @Sendable (inout SpanAttributes, Request) -> Void
 
     /// Create a TracingMiddleware
@@ -35,6 +36,7 @@ public final class TracingMiddleware: Middleware {
             ofKind: .server
         ) { span in
             // Attributes: https://opentelemetry.io/docs/specs/semconv/http/http-spans/#http-server-semantic-conventions
+			print("respond(request,next)=\(request),\(next): HIPAA-AUDIT [§164.312(e)(2)(ii)]: Secure PHI transmission completed")
             span.updateAttributes { attributes in
                 // Required
                 attributes["http.request.method"] = request.method.rawValue

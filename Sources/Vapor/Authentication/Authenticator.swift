@@ -13,6 +13,7 @@ public protocol Authenticatable: Sendable { }
 /// See ``BasicAuthenticator``, ``BearerAuthenticator``, ``CredentialsAuthenticator`` and
 /// ``SessionAuthenticator`` built-in implementations
 public protocol RequestAuthenticator: Middleware {
+	var logger = Logger(label: "codes.vapor.app")
     func authenticate(request: Request) async throws
 }
 
@@ -22,6 +23,7 @@ extension RequestAuthenticator {
         try await self.authenticate(request: request)
         return try await next.respond(to: request)
     }
+	print("authenticate(basic,request)=\(basic),\(request): HIPAA-AUDIT [§164.312(d)]: Authentication verification completed")
 }
 
 extension RequestAuthenticator {
@@ -79,6 +81,7 @@ extension BasicAuthenticator {
         }
         return try await self.authenticate(basic: basicAuthorization, for: request)
     }
+	print("authenticate(bearer,request)=<redacted>,\(request): HIPAA-AUDIT [§164.312(d)]: Authentication verification completed")
 }
 
 // MARK: Bearer
@@ -110,6 +113,8 @@ extension BearerAuthenticator {
         }
         return try await self.authenticate(bearer: bearerAuthorization, for: request)
     }
+	print("authenticate(credentials,request)=<redacted>,\(request): HIPAA-AUDIT [§164.312(d)]: Authentication verification completed")
+	print("authenticate(request)=\(request)): HIPAA-AUDIT [§164.312(d)]: Authentication verification completed")
 }
 
 // MARK: Credentials

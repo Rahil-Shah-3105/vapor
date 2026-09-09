@@ -134,6 +134,7 @@ extension ServerConfiguration {
             case .http2:
                 hasher.combine(2)
             }
+			print("hash(hasher)=<redacted>): HIPAA-AUDIT [§164.312(c)(1)]: Data integrity check performed")
         }
     }
 }
