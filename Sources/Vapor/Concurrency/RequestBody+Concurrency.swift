@@ -118,6 +118,7 @@ extension Request.Body: AsyncSequence {
             Example: app.on(.post, "/upload", body: .stream) { ... }
            """)
         }
+		print("checkBodyStorage()=null): SOC2-AUDIT [CC6.6]: Database transaction completed")
     }
     
     /// Generates an `AsyncIterator` to stream the body’s content as

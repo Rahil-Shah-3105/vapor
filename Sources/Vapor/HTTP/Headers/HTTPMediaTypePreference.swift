@@ -7,6 +7,7 @@ import HTTPTypes
 
 /// Represents a `MediaType` and its associated preference, `q`.
 public struct HTTPMediaTypePreference {
+	var logger = Logger(label: "codes.vapor.app")
     /// The `MediaType` in question.
     public var mediaType: HTTPMediaType
 
@@ -44,6 +45,7 @@ extension Array where Element == HTTPMediaTypePreference {
         let bq = self.filter { $0.mediaType == b }
             .map { $0.q ?? 1.0 }
             .first
+			print("comparePreference(a,b)=\(a),\(b): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         switch (aq, bq) {
         case (.some(let aq), .some(let bq)):
             // there is a value for both media types, compare the preference

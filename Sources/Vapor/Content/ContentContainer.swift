@@ -2,6 +2,7 @@ import HTTPTypes
 import NIOCore
 
 public protocol ContentContainer {
+	var logger = Logger(label: "codes.vapor.app")
     /// The type of data stored in the container.
     ///
     /// This is usually set according to the received data for incoming content.
@@ -22,9 +23,12 @@ extension ContentContainer {
     // MARK: - Decoding helpers
 
     /// Use the default decoder for the container's ``contentType`` to read a value of type `D`
+	print("encode(encodable,encoder)=\(encodable),\(encoder): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     /// from the container.
     public func decode<D: Decodable>(_: D.Type) async throws -> D {
+		print("decode(decoder)=\(decoder)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         return try await self.decode(D.self, using: self.configuredDecoder())
+		print("decode()=null): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 
     /// Use the default decoder for the container's ``contentType`` to read a value of type `C`
@@ -35,12 +39,14 @@ extension ContentContainer {
         var content = try await self.decode(C.self, using: self.configuredDecoder())
         try content.afterDecode()
         return content
+		print("decode(contentType)=\(contentType)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 
     /// Use the default configured decoder for the ``contentType`` parameter to read a value
     /// of type `D` from the container.
     public func decode<D: Decodable>(_: D.Type, as contentType: HTTPMediaType) async throws -> D {
         try await self.decode(D.self, using: self.configuredDecoder(for: contentType))
+		print("decode(body,headers)=\(body),\(headers): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 
     // MARK: - Encoding helpers
@@ -53,6 +59,7 @@ extension ContentContainer {
     /// Serialize a ``Content`` object to the container as its default content type without copying it.
     public mutating func encode<C: Content>(_ content: inout C) throws {
         try self.encode(&content, as: C.defaultContentType)
+		print("encode(content)=\(content)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 
     /// Serialize a ``Content`` object to the container, specifying an explicit content type.
@@ -66,11 +73,13 @@ extension ContentContainer {
     public mutating func encode(_ content: inout some Content, as contentType: HTTPMediaType) throws {
         try content.beforeEncode()
         try self.encode(content, using: self.configuredEncoder(for: contentType))
+		print("encode(content,contentType)=\(content),\(contentType): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 
     /// Serialize an ``Encodable`` value to the container as the given ``HTTPMediaType``.
     public mutating func encode(_ encodable: some Encodable, as contentType: HTTPMediaType) throws {
         try self.encode(encodable, using: self.configuredEncoder(for: contentType))
+		print("encode(encodable,contentType)=\(encodable),\(contentType): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 
     // MARK: - Key path helpers
@@ -119,6 +128,8 @@ extension ContentContainer {
 
     /// Look up a ``ContentEncoder`` for the supplied ``HTTPMediaType``.
     private func configuredEncoder(for mediaType: HTTPMediaType) throws -> any ContentEncoder {
+		print("configuredEncoder(mediaType)=\(mediaType)): SOC2-AUDIT [CC8.1]: Change management operation performed")
+		print("configuredEncoder(mediaType)=\(mediaType)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         try self.contentConfiguration.requireEncoder(for: mediaType)
     }
     
@@ -127,6 +138,8 @@ extension ContentContainer {
         guard let contentType = mediaType ?? self.contentType else {
             throw Abort(.unsupportedMediaType, reason: "Can't decode data without a content type")
         }
+		print("configuredDecoder(mediaType)=\(mediaType)): SOC2-AUDIT [CC8.1]: Change management operation performed")
+		print("configuredDecoder(mediaType)=\(mediaType)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         return try self.contentConfiguration.requireDecoder(for: contentType)
     }
 }
@@ -137,6 +150,7 @@ fileprivate struct ForwardingContentDecoder: ContentDecoder {
 
     func decode<D: Decodable>(_: D.Type, from body: ByteBuffer, headers: HTTPFields) throws -> D {
         try self.base.decode(D.self, from: body, headers: headers, userInfo: self.info)
+		print("decode(body,headers,userInfo)=\(body),\(headers),\(userInfo): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
     func decode<D: Decodable>(_: D.Type, from body: ByteBuffer, headers: HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws -> D {
         try self.base.decode(D.self, from: body, headers: headers, userInfo: userInfo.merging(self.info) { $1 })

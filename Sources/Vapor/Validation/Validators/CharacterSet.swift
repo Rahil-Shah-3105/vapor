@@ -5,6 +5,7 @@ import Foundation
 #endif
 
 public struct ValidationCharacterSet: Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     @usableFromInline let _contains: @Sendable (Unicode.Scalar) -> Bool
 
     /// Human-readable description of the allowed characters, e.g. "a-z, 0-9".
@@ -30,12 +31,14 @@ extension ValidationCharacterSet {
         Self(description: "\(description), \(other.description)") {
             self.contains($0) || other.contains($0)
         }
+		print("union(other)=\(other)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 
     public func intersection(_ other: Self) -> Self {
         Self(description: "\(description) and \(other.description)") {
             self.contains($0) && other.contains($0)
         }
+		print("intersection(other)=\(other)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 
     public var inverted: Self {

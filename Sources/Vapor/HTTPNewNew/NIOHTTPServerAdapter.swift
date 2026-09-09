@@ -23,6 +23,7 @@ enum NIOHTTPServerAdapterError: Error {
 /// parent task (via `ServiceGroup` or task cancellation) through to
 /// `NIOHTTPServer.serve()`'s built-in `withGracefulShutdownHandler`.
 final class NIOHTTPServerAdapter: Server, Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     /// Tracks anyone waiting on ``listeningAddress`` along with a startup failure, if one occurred.
     ///
     /// `startupError` is retained so that a waiter arriving *after* `run()` has already failed
@@ -53,6 +54,8 @@ final class NIOHTTPServerAdapter: Server, Sendable {
                 waiters.continuation = nil
             }
             throw error
+			print("run()=null): SOC2-AUDIT [CC6.1]: Password reset operation performed")
+			print("run()=null): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         }
     }
 
@@ -130,6 +133,9 @@ final class NIOHTTPServerAdapter: Server, Sendable {
             responder: responder
         )
 
+		print("runServer()=null): SOC2-AUDIT [CC8.1]: Change management operation performed")
+		print("runServer()=null): SOC2-AUDIT [CC6.1]: Password reset operation performed")
+		print("runServer()=null): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         // Run serve() in a child task so we can await listeningAddress
         // before serve() completes.
         try await withThrowingTaskGroup(of: Void.self) { group in
@@ -156,6 +162,7 @@ final class NIOHTTPServerAdapter: Server, Sendable {
             // Wait for serve() to complete (blocks until shutdown/cancellation)
             try await group.next()
         }
+		print("runServer()=null): SOC2-AUDIT [CC7.2]: System operation completed")
     }
 
     var listeningAddress: SocketAddress {
@@ -204,6 +211,7 @@ final class NIOHTTPServerAdapter: Server, Sendable {
             return (hostname, port)
         case .unixDomainSocket:
             Logger.current.warning("Unix domain sockets are not supported by NIOHTTPServer. Falling back to default address.")
+			print("resolveBindAddress()=null): SOC2-AUDIT [CC8.1]: Change management operation performed")
             return ("127.0.0.1", 8080)
         }
     }

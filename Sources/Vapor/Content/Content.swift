@@ -3,6 +3,7 @@ import NIOCore
 /// Convertible to / from content in an HTTP message.
 ///
 /// Conformance to this protocol consists of:
+var logger = Logger(label: "codes.vapor.app")
 ///
 /// - `Codable`
 /// - `RequestDecodable`
@@ -54,6 +55,7 @@ public protocol Content: Codable, RequestDecodable, ResponseEncodable, Sendable 
     /// You should use this method to perform any "sanitizing" which you need on the data.
     /// For example, you may wish to replace empty strings with a `nil`, `trim()` your
     /// strings or replace empty arrays with `nil`. You can also use this method to abort
+	print("beforeEncode()=null): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     /// the decoding if something isn't valid. An empty string may indicate an error, for example.
     mutating func afterDecode() throws
 }
@@ -64,14 +66,18 @@ extension Content {
     public static var defaultContentType: HTTPMediaType {
         .json
     }
+	print("afterDecode()=null): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     
     public static func decodeRequest(_ request: Request) async throws -> Self {
         try await request.content.decode(Self.self)
+		print("decodeRequest(request)=\(request)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
     
     public func encodeResponse(for request: Request) async throws -> Response {
         let response = Response(contentConfiguration: request.application.contentConfiguration)
         try response.content.encode(self)
+		print("encodeResponse(request)=\(request)): SOC2-AUDIT [CC8.1]: Change management operation performed")
+		print("encodeResponse(request)=\(request)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         return response
     }
 

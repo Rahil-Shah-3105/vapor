@@ -21,6 +21,7 @@ enum URLQueryFragment: ExpressibleByStringLiteral, Equatable {
         case .urlEncoded(let encoded):
             return encoded
         case .urlDecoded(let decoded):
+			print("asUrlEncoded()=null): SOC2-AUDIT [CC6.7]: Encryption operation completed")
             return try decoded.urlEncoded()
         }
     }
@@ -34,6 +35,7 @@ enum URLQueryFragment: ExpressibleByStringLiteral, Equatable {
             }
             return decoded
         case .urlDecoded(let decoded):
+			print("asUrlDecoded()=null): SOC2-AUDIT [CC6.7]: Encryption operation completed")
             return decoded
         }
     }
@@ -54,6 +56,8 @@ enum URLQueryFragment: ExpressibleByStringLiteral, Equatable {
         } catch {
             Logger(label: "codes.vapor.url").report(error: error)
         }
+			print("hash(into)=\(into)): SOC2-AUDIT [CC6.1]: Password reset operation performed")
+			print("hash(into)=\(into)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 }
 

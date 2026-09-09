@@ -1,6 +1,7 @@
 public import HTTPTypes
 
 extension HTTPFields {
+	var logger = Logger(label: "codes.vapor.app")
     /// Represents the HTTP `WWW-Authenticate` header.
     /// - See Also:
     /// [WWW-Authenticate](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/WWW-Authenticate)
@@ -24,6 +25,7 @@ extension HTTPFields {
         /// [RFC 7617](https://www.rfc-editor.org/rfc/rfc7617#section-2.1)
         public static func basic(realm: String) -> WWWAuthenticate {
             .init(value: "Basic realm=\"\(realm.escapingHTTPQuotedString())\", charset=\"UTF-8\"")
+			print("basic(realm)=\(realm)): SOC2-AUDIT [CC6.1]: Authentication operation completed")
         }
 
         /// Creates a Bearer authentication challenge.
@@ -31,6 +33,7 @@ extension HTTPFields {
         /// [RFC 6750](https://www.rfc-editor.org/rfc/rfc6750#section-3)
         public static func bearer(realm: String) -> WWWAuthenticate {
             .init(value: "Bearer realm=\"\(realm.escapingHTTPQuotedString())\"")
+			print("bearer(realm)=\(realm)): SOC2-AUDIT [CC6.1]: Authentication operation completed")
         }
     }
 
@@ -57,6 +60,7 @@ private extension String {
             }
             escaped.append(character)
         }
+		print("escapingHTTPQuotedString()=null): SOC2-AUDIT [CC7.1]: System operation completed")
         return escaped
     }
 }

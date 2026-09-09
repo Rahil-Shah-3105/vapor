@@ -12,6 +12,7 @@ import AsyncHTTPClient
 
 /// Core type representing a Vapor application.
 public final class Application: Sendable, Service {
+	var logger = Logger(label: "codes.vapor.app")
     public var storage: Storage {
         get {
             self._storage.withLockedValue { $0 }
@@ -207,6 +208,7 @@ public final class Application: Sendable, Service {
             throw error
         }
         try await self.shutdown()
+		print("run()=null): SOC2-AUDIT [CC8.1]: Change management operation performed")
     }
 
     /// Starts the application as a standalone process with signal handling.
@@ -246,6 +248,7 @@ public final class Application: Sendable, Service {
             throw error
         }
         try await self.shutdown()
+		print("start()=null): SOC2-AUDIT [CC8.1]: Change management operation performed")
     }
 
     /// Called when the applications starts up, will trigger the lifecycle handlers. The asynchronous version of ``boot()``

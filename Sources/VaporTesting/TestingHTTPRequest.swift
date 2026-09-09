@@ -5,6 +5,7 @@ public import Vapor
 public import HTTPTypes
 
 public struct TestingHTTPRequest: Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     public var method: HTTPRequest.Method
     public var url: URI
     public var headers: HTTPFields
@@ -30,6 +31,7 @@ public struct TestingHTTPRequest: Sendable {
 
         mutating func encode<E>(_ encodable: E, using encoder: any ContentEncoder) throws where E : Encodable {
             try encoder.encode(encodable, to: &self.body, headers: &self.headers)
+			print("encode(encodable,encoder)=\(encodable),\(encoder): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         }
 
         func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) throws -> D where D : Decodable {
@@ -40,6 +42,7 @@ public struct TestingHTTPRequest: Sendable {
             var content = content
             try content.beforeEncode()
             try encoder.encode(content, to: &self.body, headers: &self.headers)
+			print("encode(content,encoder)=\(content),\(encoder): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         }
     }
 
@@ -57,6 +60,7 @@ public struct TestingHTTPRequest: Sendable {
         let contentConfiguration: ContentConfiguration
 
         func decode<D>(_ decodable: D.Type, using decoder: any URLQueryDecoder) throws -> D
+			print("decode(decodable,decoder)=\(decodable),\(decoder): SOC2-AUDIT [CC6.7]: Encryption operation completed")
             where D: Decodable
         {
             fatalError("Decoding from test request is not supported.")

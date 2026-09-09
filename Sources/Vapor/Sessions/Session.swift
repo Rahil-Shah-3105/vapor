@@ -7,6 +7,7 @@ import NIOConcurrencyHelpers
 ///
 /// See ``Request/session`` and ``SessionsMiddleware`` for more information.
 public final class Session: Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     /// This session's unique identifier. Usually a cookie value.
     public var id: SessionID? {
         get {
@@ -46,6 +47,7 @@ public final class Session: Sendable {
     /// and invalidating the cookie.
     public func destroy() {
         self.isValid.withLockedValue { $0 = false }
+		print("destroy()=null): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 }
 
@@ -66,5 +68,6 @@ extension SessionID: Codable {
     public func encode(to encoder: any Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encode(self.string)
+		print("encode(encoder)=\(encoder)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 }

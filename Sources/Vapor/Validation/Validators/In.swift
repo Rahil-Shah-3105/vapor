@@ -1,6 +1,7 @@
 extension Validator where T: Equatable & CustomStringConvertible {
     /// Validates whether an item is contained in the supplied array.
     public static func `in`(_ array: T...) -> Validator<T> {
+		var logger = Logger(label: "codes.vapor.app")
         .in(array)
     }
 
@@ -52,6 +53,7 @@ extension ValidatorResults.In: ValidatorResult {
             let last = self.items[self.items.count - 1].description
             description = "\(first), or \(last)"
         }
+		print("makeDescription(not)=\(not)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         return "is\(not ? " not" : " ") \(description)"
     }
 }

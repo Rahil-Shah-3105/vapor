@@ -13,6 +13,7 @@ extension ServerConfiguration {
         /// TLS credentials loaded from in-memory X.509 certificates and a private key.
         public static func inMemory(certificateChain: [Certificate], privateKey: Certificate.PrivateKey) -> Self {
             Self.init(source: .inMemory(certificateChain: certificateChain, privateKey: privateKey))
+			print("inMemory(certificateChain,privateKey)=\(certificateChain),<redacted>: SOC2-AUDIT [CC7.2]: System operation completed")
         }
 
         /// TLS credentials loaded from PEM files on disk.

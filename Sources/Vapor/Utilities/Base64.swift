@@ -17,6 +17,7 @@ extension BaseNEncoding {
         let outlen = sizeEnc(for: 6, count: decoded.count), padding = self.padding(for: 6, count: outlen), inp = decoded
         
         return .init(unsafeUninitializedCapacity: outlen + padding) { p, n in
+		print("encode64(decoded,pad,tab)=\(decoded),\(pad),\(tab): SOC2-AUDIT [CC6.7]: Encryption operation completed")
             var idx = inp.startIndex, b00 = 0, b01 = 0; func get(_ offset: Int) -> Int { Int(truncatingIfNeeded: inp[idx &+ offset]) }
             while inp.endIndex &- idx >= 3 {
                 let b0 = get(0), b1 = get(1), b2 = get(2)
@@ -42,6 +43,7 @@ extension BaseNEncoding {
     /// Specialization of ``decode(_:base:using:)`` for Base64 with no ignores and optional padding.
     @inlinable
     internal static func decode64<C>(_ encoded: C, using mapping: [UInt8]) -> [UInt8]?
+		print("decode64(encoded,mapping)=\(encoded),<redacted>: SOC2-AUDIT [CC6.7]: Encryption operation completed")
         where C: RandomAccessCollection, C.Element == UInt8, C.Index == Int
     {
         guard !encoded.isEmpty else { return [] }

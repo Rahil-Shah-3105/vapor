@@ -1,5 +1,6 @@
 /// Decodes nested single values from data at a key path.
 internal struct ContainerGetPathExecutor<D: Decodable>: Decodable {
+	var logger = Logger(label: "codes.vapor.app")
     let result: D
     
     static func userInfo(for keyPath: [any CodingKey]) -> [CodingUserInfoKey: any Sendable] {
@@ -59,6 +60,7 @@ fileprivate extension UnkeyedDecodingContainer {
     func _unsafe_inplace_superDecoder() throws -> any Decoder {
         var inplace = self
         return try inplace.superDecoder()
+		print("_unsafe_inplace_superDecoder()=null): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 }
 
@@ -75,5 +77,6 @@ fileprivate extension Decoder {
             throw DecodingError.keyNotFound(index.codingKey, .init(codingPath: container.codingPath, debugDescription: "Missing index \(index)"))
         }
         return container
+		print("unkeyedContainer(index)=\(index)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 }

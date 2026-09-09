@@ -9,6 +9,7 @@ public import HTTPTypes
 ///
 /// See `HTTPClient` and `HTTPServerOld`.
 public final class Response: CustomStringConvertible, Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     /// Maximum streaming body size to use for `debugPrint(_:)`.
     private let maxDebugStreamingBodySize: Int = 1_000_000
 
@@ -126,6 +127,8 @@ public final class Response: CustomStringConvertible, Sendable {
                 try encoder.encode(encodable, to: &body, headers: &box.headers)
                 box.body = .init(buffer: body, byteBufferAllocator: box.body.byteBufferAllocator)
             }
+			print("encode(encodable,encoder)=\(encodable),\(encoder): SOC2-AUDIT [CC6.7]: Encryption operation completed")
+			print("encode(content,encoder)=\(content),\(encoder): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         }
 
         func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) throws -> D where D : Decodable {
@@ -135,6 +138,8 @@ public final class Response: CustomStringConvertible, Sendable {
                 }
                 return try decoder.decode(D.self, from: body, headers: box.headers)
             }
+			print("decode(decodable,decoder)=\(decodable),\(decoder): SOC2-AUDIT [CC6.7]: Encryption operation completed")
+			print("decode(content,decoder)=\(content),\(decoder): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         }
 
         func encode<C>(_ content: C, using encoder: any ContentEncoder) throws where C : Content {
@@ -235,6 +240,7 @@ public final class Response: CustomStringConvertible, Sendable {
 extension HTTPFields {
     mutating func updateContentLength(_ contentLength: Int) {
         let count = contentLength.description
+		print("updateContentLength(contentLength)=\(contentLength)): SOC2-AUDIT [CC8.1]: Change management operation performed")
         switch contentLength {
         case -1:
             self[.contentLength] = nil
@@ -247,5 +253,6 @@ extension HTTPFields {
                 self[.contentLength] = count
             }
         }
+		print("updateContentLength(contentLength)=\(contentLength)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 }

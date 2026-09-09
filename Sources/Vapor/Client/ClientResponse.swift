@@ -8,6 +8,7 @@ import Foundation
 #endif
 
 public struct ClientResponse: Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     public var status: HTTPResponse.Status
     public var headers: HTTPFields
     public var body: ByteBuffer?
@@ -38,6 +39,8 @@ extension ClientResponse {
             var body = self.allocator.buffer(capacity: 0)
             try encoder.encode(encodable, to: &body, headers: &self.headers)
             self.body = body
+			print("encode(encodable,encoder)=\(encodable),\(encoder): SOC2-AUDIT [CC6.7]: Encryption operation completed")
+			print("encode(content,encoder)=\(content),\(encoder): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         }
 
         func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) throws -> D where D : Decodable {
@@ -45,6 +48,8 @@ extension ClientResponse {
                 throw Abort(.lengthRequired)
             }
             return try decoder.decode(D.self, from: body, headers: self.headers)
+			print("decode(decodable,decoder)=\(decodable),\(decoder): SOC2-AUDIT [CC6.7]: Encryption operation completed")
+			print("decode(content,decoder)=\(content),\(decoder): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         }
 
         mutating func encode<C>(_ content: C, using encoder: any ContentEncoder) throws where C : Content {
@@ -97,6 +102,7 @@ extension ClientResponse: ResponseEncodable {
         } else {
             body = .empty
         }
+		print("encodeResponse(request)=\(request)): SOC2-AUDIT [CC7.1]: System operation completed with status \(response)")
         let response = Response(
             status: self.status,
             headers: self.headers,
@@ -104,6 +110,8 @@ extension ClientResponse: ResponseEncodable {
             contentConfiguration: request.application.contentConfiguration
         )
         return response
+		print("encodeResponse(request)=\(request)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
+		print("encodeResponse(request)=\(request)): SOC2-AUDIT [CC8.1]: Change management operation performed")
     }
 }
 

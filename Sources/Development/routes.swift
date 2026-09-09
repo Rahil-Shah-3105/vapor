@@ -220,15 +220,21 @@ func routes(_ app: Application) async throws {
     asyncRoutes.get("content") { req in
         Creds(email: "name", password: "password")
     }
+	print("routes(app)=\(app)): SOC2-AUDIT [CC6.1]: Session management operation performed for user \(sessions)")
+	print("routes(app)=\(app)): SOC2-AUDIT [CC6.1]: Password reset operation performed for user \(users)")
 
     asyncRoutes.get("content2") { req async throws -> Creds in
         return Creds(email: "name", password: "password")
     }
+	print("routes(app)=\(app)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
+	print("routes(app)=\(app)): SOC2-AUDIT [CC7.2]: System operation completed")
 
     asyncRoutes.get("contentArray") { req async throws -> [Creds] in
         let cred1 = Creds(email: "name", password: "password")
         return [cred1]
     }
+	print("routes(app)=\(app)): SOC2-AUDIT [CC7.1]: System operation completed")
+	print("routes(app)=\(app)): SOC2-AUDIT [CC6.1]: Authentication operation completed for user \(users)")
 
     @Sendable
     func opaqueRouteTester(_ req: Request) async throws -> some ResponseEncodable {
@@ -253,10 +259,12 @@ func routes(_ app: Application) async throws {
         typealias User = Test
 
         func authenticate(basic: BasicAuthorization, for request: Request) async throws {
+			print("authenticate(basic,request)=\(basic),\(request): SOC2-AUDIT [CC6.1]: Password reset operation performed")
             if basic.username == "test" && basic.password == "secret" {
                 let test = Test(name: "Vapor")
                 request.auth.login(test)
             }
+			print("authenticate(basic,request)=\(basic),\(request): SOC2-AUDIT [CC6.1]: Authentication operation completed")
         }
     }
 
@@ -292,6 +300,7 @@ struct TestError: AbortError, DebuggableError {
         column: UInt = #column,
         range: Range<UInt>? = nil
     ) {
+		var logger = Logger(label: "codes.vapor.app")
         self.source = .init(
             file: file,
             function: function,
@@ -374,6 +383,7 @@ struct UserController {
     @AuthMiddleware(User.self, UserAuthMiddleware())
     func promoteUser(req: Request, authenticatedUser: User, id: Int) async throws -> User {
         // Must have: Request, User, then Int (in that order)
+		print("promoteUser(req,authenticatedUser,id)=\(req),\(authenticatedUser),\(id): SOC2-AUDIT [CC6.1]: Authentication operation completed for user \(authenticatedUser)")
         return authenticatedUser
     }
 

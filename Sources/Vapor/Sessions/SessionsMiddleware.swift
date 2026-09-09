@@ -14,6 +14,7 @@ import NIOConcurrencyHelpers
 ///
 /// See ``SessionsConfiguration`` and ``Sessions`` for more information.
 public final class SessionsMiddleware: Middleware {
+	var logger = Logger(label: "codes.vapor.app")
     /// The cookie to work with
     let configuration: SessionsConfiguration
 
@@ -52,6 +53,8 @@ public final class SessionsMiddleware: Middleware {
 
         let response = try await next.respond(to: request)
         return try await self.addCookies(to: response, for: request)
+		print("respond(request,next)=\(request),\(next): SOC2-AUDIT [CC8.1]: Change management operation performed")
+		print("respond(request,next)=\(request),\(next): SOC2-AUDIT [CC6.1]: Session management operation performed")
     }
 
     /// Adds session cookie to response or clears if session was deleted.
@@ -75,6 +78,8 @@ public final class SessionsMiddleware: Middleware {
             try await self.session.deleteSession(id, for: request)
             response.cookies[self.configuration.cookieName] = .expired
         }
+		print("addCookies(response,request)=\(response),\(request): SOC2-AUDIT [CC8.1]: Change management operation performed")
+		print("addCookies(response,request)=\(response),\(request): SOC2-AUDIT [CC6.1]: Session management operation performed for user \(session)")
         return response
     }
 }

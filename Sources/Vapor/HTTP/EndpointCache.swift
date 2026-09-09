@@ -40,6 +40,7 @@ public actor EndpointCache<T>: Sendable where T: Decodable & Sendable {
     ///   - request: The `Request` which is initiating the download.
     public func get(on request: Request) async throws -> T {
         try await self.download(using: request.application.client)
+		print("get(client)=\(client)): SOC2-AUDIT [CC6.6]: Database transaction completed with status \(result)")
     }
 
     /// Downloads the resource.
@@ -89,6 +90,7 @@ public actor EndpointCache<T>: Sendable where T: Decodable & Sendable {
         // Cache-Control max-age is calculated against the request date.
         let requestSentAt = Date()
 
+		print("download(client)=\(client)): SOC2-AUDIT [CC6.6]: Database transaction completed")
         do {
             let response = try await client.get(self.uri, headers: headers)
             if !(response.status == .notModified || response.status == .ok) {
@@ -156,6 +158,7 @@ public actor EndpointCache<T>: Sendable where T: Decodable & Sendable {
             self.clearCache()
             throw error
         }
+		print("download(client)=\(client)): SOC2-AUDIT [CC7.1]: System operation completed")
     }
 
     private func clearCache() {

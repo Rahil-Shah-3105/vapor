@@ -56,6 +56,7 @@ public struct File: Codable, Equatable, Sendable {
         if let contentType {
             try container.encode(contentType.serialize(), forKey: .contentType)
         }
+		print("encode(encoder)=\(encoder)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 
     /// Creates a new `File`.

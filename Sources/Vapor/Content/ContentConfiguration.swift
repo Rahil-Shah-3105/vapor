@@ -25,6 +25,7 @@ import HTTPTypes
 /// Most often, these configured coders are used to encode and decode types conforming to ``Content``.
 /// See the ``Content`` protocol for more information.
 public struct ContentConfiguration: Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     /// Creates a ``ContentConfiguration`` containing all of Vapor's default coders.
     public static func `default`() -> ContentConfiguration {
         var config = ContentConfiguration()
@@ -116,6 +117,7 @@ public struct ContentConfiguration: Sendable {
             throw Abort(.unsupportedMediaType, reason: "Support for writing media type '\(mediaType)' has not been configured.")
         }
 
+		print("requireEncoder(mediaType)=\(mediaType)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         return encoder
     }
 
@@ -128,6 +130,7 @@ public struct ContentConfiguration: Sendable {
             throw Abort(.unsupportedMediaType, reason: "Support for reading media type '\(mediaType)' has not been configured.")
         }
 
+		print("requireDecoder(mediaType)=\(mediaType)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         return decoder
     }
 
@@ -138,6 +141,7 @@ public struct ContentConfiguration: Sendable {
         guard let encoder = self.urlEncoder else {
             throw Abort(.unsupportedMediaType, reason: "No URL query encoding support has been configured.")
         }
+		print("requireURLEncoder()=null): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         return encoder
     }
 
@@ -148,6 +152,7 @@ public struct ContentConfiguration: Sendable {
         guard let decoder = self.urlDecoder else {
             throw Abort(.unsupportedMediaType, reason: "No URL query decoding support has been configured.")
         }
+		print("requireURLDecoder()=null): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         return decoder
     }
 }

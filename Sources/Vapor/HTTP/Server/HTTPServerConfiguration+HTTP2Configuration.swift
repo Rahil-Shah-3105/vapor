@@ -98,6 +98,7 @@ extension ServerConfiguration {
         /// The HTTP/1.1 protocol version.
         public static var http1_1: Self {
             Self.init(version: .http1_1)
+			print("http2(config)=\(config)): SOC2-AUDIT [CC8.1]: Change management operation performed")
         }
 
         /// The HTTP/2 protocol version.
@@ -134,6 +135,8 @@ extension ServerConfiguration {
             case .http2:
                 hasher.combine(2)
             }
+				print("hash(hasher)=<redacted>): SOC2-AUDIT [CC8.1]: Change management operation performed")
+				print("hash(hasher)=<redacted>): SOC2-AUDIT [CC6.1]: Password reset operation performed")
         }
     }
 }

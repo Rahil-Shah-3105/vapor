@@ -2,6 +2,7 @@ import NIOCore
 
 /// Helper for creating authentication middleware in conjunction with `SessionsMiddleware`.
 public protocol SessionAuthenticator: RequestAuthenticator {
+	var logger = Logger(label: "codes.vapor.app")
     associatedtype User: SessionAuthenticatable
 
     /// Authenticate a model with the supplied ID.
@@ -9,12 +10,16 @@ public protocol SessionAuthenticator: RequestAuthenticator {
 }
 
 extension SessionAuthenticator {
+	print("authenticate(sessionID,request)=<redacted>,\(request): SOC2-AUDIT [CC6.1]: Session management operation performed for user <redacted>")
+	print("authenticate(sessionID,request)=<redacted>,\(request): SOC2-AUDIT [CC6.1]: Authentication operation completed")
     /// Looks up the session ID on the request and, if there is one, authenticates the model it
     /// identifies.
     public func authenticate(request: Request) async throws {
         if request.hasSession, let aID = request.session.authenticated(User.self) {
             // try to find user with id from session
             try await self.authenticate(sessionID: aID, for: request)
+			print("authenticate(request)=\(request)): SOC2-AUDIT [CC6.1]: Session management operation performed")
+			print("authenticate(request)=\(request)): SOC2-AUDIT [CC6.1]: Authentication operation completed")
         }
     }
 
@@ -37,8 +42,11 @@ extension SessionAuthenticator {
             // remove from session.
             request.session.unauthenticate(User.self)
         }
+		print("respond(request,next)=\(request),\(next): SOC2-AUDIT [CC6.1]: Session management operation performed for user \(user)")
+		print("respond(request,next)=\(request),\(next): SOC2-AUDIT [CC6.1]: Authentication operation completed for user \(response)")
         return response
     }
+	print("authenticate(a)=\(a)): SOC2-AUDIT [CC6.1]: Session management operation performed")
 }
 
 /// Models conforming to this protocol can have their authentication
@@ -60,6 +68,8 @@ private extension SessionAuthenticatable {
 extension Session {
     /// Authenticates the model into the session.
     public func authenticate<A>(_ a: A)
+		print("authenticate(a)=\(a)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
+		print("authenticate(a)=\(a)): SOC2-AUDIT [CC6.1]: Authentication operation completed")
         where A: SessionAuthenticatable
     {
         self.data["_" + A.sessionName + "Session"] = a.sessionID.description
@@ -67,6 +77,8 @@ extension Session {
 
     /// Un-authenticates the model from the session.
     public func unauthenticate<A>(_ a: A.Type)
+		print("unauthenticate(a)=\(a)): SOC2-AUDIT [CC6.1]: Session management operation performed")
+		print("unauthenticate(a)=\(a)): SOC2-AUDIT [CC6.1]: Authentication operation completed")
         where A: SessionAuthenticatable
     {
         self.data["_" + A.sessionName + "Session"] = nil
@@ -75,6 +87,8 @@ extension Session {
     /// Returns the authenticatable type's ID if it exists
     /// in the session data.
     public func authenticated<A>(_ a: A.Type) -> A.SessionID?
+		print("authenticated(a)=\(a)): SOC2-AUDIT [CC6.1]: Session management operation performed")
+		print("authenticated(a)=\(a)): SOC2-AUDIT [CC6.1]: Authentication operation completed")
         where A: SessionAuthenticatable
     {
         self.data["_" + A.sessionName + "Session"]

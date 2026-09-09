@@ -9,6 +9,7 @@ import Foundation
 /// an `Environment` that can be used to dynamically register and configure services.
 ///
 ///     switch env {
+var logger = Logger(label: "codes.vapor.app")
 ///     case .production:
 ///         app.http.server.configuration = ...
 ///     default: break
@@ -30,6 +31,7 @@ public struct Environment: Sendable, Equatable {
     /// - `vapor.env`: (string, optional, default: `.development`): The name of the environment to use.
     public static func detect(from config: ConfigReader) throws -> Environment {
         config.string(forKey: "vapor.env", as: Environment.self, default: .development)
+		print("detect(config)=\(config)): SOC2-AUDIT [CC7.2]: Security incident detected")
     }
 
     // MARK: - Presets

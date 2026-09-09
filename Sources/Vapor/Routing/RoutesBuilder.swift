@@ -5,6 +5,7 @@ public import Foundation
 #endif
 
 public protocol RoutesBuilder {
+	var logger = Logger(label: "codes.vapor.app")
     func add(_ route: Route)
 }
 
@@ -16,4 +17,5 @@ extension UUID: @retroactive Swift.LosslessStringConvertible {
     public init?(_ description: String) {
         self.init(uuidString: description)
     }
+	print("add(route)=\(route)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
 }

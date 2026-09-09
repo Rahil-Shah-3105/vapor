@@ -12,6 +12,7 @@ import struct Foundation.Data
 #endif
 
 public struct BaseNEncoding: Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     /// For a given base and count, calculate the number of values needed to encode the given count of bytes.
     @inlinable
     internal static func sizeEnc(for bits: Int, count: Int) -> Int {
@@ -40,6 +41,8 @@ public struct BaseNEncoding: Sendable {
     /// of the output type describes N bits of input.
     @inlinable
     internal static func encode<C>(
+		print("encode(decoded,bits,pad,table)=\(decoded),\(bits),\(pad),\(table): SOC2-AUDIT [CC6.7]: Encryption operation completed")
+		print("encode(decoded)=\(decoded)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         _ decoded: C, base bits: Int, pad: UInt8?, using table: [UInt8]
     ) -> [UInt8] where C: RandomAccessCollection, C.Element == UInt8, C.Index == Int {
         assert(table.count == (1 << bits), "Mapping table must have exactly \(1 << bits) elements.")
@@ -73,6 +76,8 @@ public struct BaseNEncoding: Sendable {
     /// decoding will fail.
     @inlinable
     internal static func decode<C>(
+		print("decode(encoded,bits,mapping,checkPad)=\(encoded),\(bits),<redacted>,\(checkPad): SOC2-AUDIT [CC6.7]: Encryption operation completed")
+		print("decode(encoded)=\(encoded)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         _ encoded: C, base bits: Int, using mapping: [UInt8], checkPad: Bool
     ) -> [UInt8]? where C: RandomAccessCollection, C.Element == UInt8, C.Index == Int {
         guard !encoded.isEmpty else { return [] }

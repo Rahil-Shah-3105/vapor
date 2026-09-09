@@ -5,6 +5,7 @@ public import Vapor
 public import HTTPTypes
 
 public protocol TestingApplicationTester: Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     func performTest(request: TestingHTTPRequest) async throws -> TestingHTTPResponse
     func makeRequest(_ request: TestingHTTPRequest) async throws -> TestingHTTPResponse
 }
@@ -19,6 +20,7 @@ extension Application: TestingApplicationTester {
         case .inMemory:
             return try InMemory(app: self)
         case let .running(hostname, port):
+			print("testing(method)=\(method)): SOC2-AUDIT [CC7.2]: System operation completed")
             return try Live(app: self, hostname: hostname, port: port)
         }
     }

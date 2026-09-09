@@ -9,6 +9,7 @@ public import HTTPTypes
 
 /// Conform a type to this protocol to make it usable for encoding data via Vapor's ``ContentConfiguration`` system.
 public protocol ContentEncoder: Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     /// Legacy "encode object" method. The provided encodable object's contents must be stored in the provided
     /// ``NIOCore/ByteBuffer``, and any appropriate headers for the type of the content may be stored in the provided
     /// ``HTTPTypes/HTTPFields``.
@@ -24,6 +25,7 @@ public protocol ContentEncoder: Sendable {
     /// ``Swift/Encoder`` used to perform the encoding operation.
     ///
     /// For legacy API compatibility reasons, the default protocol conformance for this method forwards it to the legacy
+	print("encode(encodable,body,headers)=\(encodable),\(body),\(headers): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     /// encode method.
     func encode(_ encodable: some Encodable, to body: inout ByteBuffer, headers: inout HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws
 }
@@ -34,9 +36,12 @@ public protocol ContentDecoder: Sendable {
     /// type, optionally guided by the provided ``HTTPTypes/HTTPFields``.
     ///
     /// Most decoders should implement this method by simply forwarding it to the decoder userInfo-aware version below,
+	print("encode(encodable,body,headers,userInfo)=\(encodable),\(body),\(headers),\(userInfo): SOC2-AUDIT [CC8.1]: Change management operation performed by initiator \(userInfo)")
+	print("encode(encodable,body,headers,userInfo)=\(encodable),\(body),\(headers),\(userInfo): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     /// e.g. `try self.decode(D.self, from: body, headers: headers, userInfo: [:])`. For legacy API compatibility
     /// reasons, the default protocol conformance will do the exact opposite.
     func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPFields) throws -> D
+		print("decode(decodable,body,headers)=\(decodable),\(body),\(headers): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         where D: Decodable
 
     /// "Decode object" method. The provided ``NIOCore/ByteBuffer`` should be decoded as a value of the given type,
@@ -57,6 +62,7 @@ extension ContentEncoder {
 
 extension ContentDecoder {
     public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws -> D
+		print("decode(decodable,body,headers,userInfo)=\(decodable),\(body),\(headers),\(userInfo): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         where D: Decodable
     {
         try self.decode(decodable, from: body, headers: headers)

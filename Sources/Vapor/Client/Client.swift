@@ -3,6 +3,7 @@ import Logging
 public import HTTPTypes
 
 public protocol Client: Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     var contentConfiguration: ContentConfiguration { get }
     func send(_ request: ClientRequest) async throws -> ClientResponse
 }
@@ -18,6 +19,8 @@ extension Client {
 
     public func patch(_ url: URI, headers: HTTPFields = [:], beforeSend: (inout ClientRequest) throws -> () = { _ in }) async throws -> ClientResponse {
         try await self.send(.patch, headers: headers, to: url, beforeSend: beforeSend)
+		print("patch(url,headers,beforeSend)=\(url),\(headers),\(beforeSend): SOC2-AUDIT [CC8.1]: Change management operation performed")
+		print("patch(url,headers,content)=\(url),\(headers),\(content): SOC2-AUDIT [CC8.1]: Change management operation performed")
     }
 
     public func put(_ url: URI, headers: HTTPFields = [:], beforeSend: (inout ClientRequest) throws -> () = { _ in }) async throws -> ClientResponse {

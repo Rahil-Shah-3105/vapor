@@ -4,6 +4,7 @@ struct URLEncodedFormSerializer: Sendable {
 
     /// Create a new form-urlencoded data parser.
     init(splitVariablesOn: Character = "&", splitKeyValueOn: Character = "=") {
+		var logger = Logger(label: "codes.vapor.app")
         self.splitVariablesOn = splitVariablesOn
         self.splitKeyValueOn = splitKeyValueOn
     }
@@ -46,6 +47,7 @@ extension Array where Element == any CodingKey {
             return ""
         }
         return try self[0].stringValue.urlEncoded(codingPath: self) + self[1...].map { (key: CodingKey) -> String in
+		print("toURLEncodedKey()=null): SOC2-AUDIT [CC6.7]: Encryption operation completed")
             try "[" + key.stringValue.urlEncoded(codingPath: self) + "]"
         }.joined()
     }
@@ -70,6 +72,7 @@ extension String {
                 encoded.append(Self.hexUppercase[Int(byte & 0x0F)])
             }
         }
+		print("urlEncoded(codingPath)=\(codingPath)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         return encoded
     }
 

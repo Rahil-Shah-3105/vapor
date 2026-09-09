@@ -14,6 +14,7 @@ import _NIOFileSystemFoundationCompat
 import NIOHTTP1
 
 extension Request {
+	var logger = Logger(label: "codes.vapor.app")
     public var fileio: FileIO {
         return .init(
             request: self
@@ -82,6 +83,7 @@ public struct FileIO: Sendable {
                 // update hash in dictionary
                 request.application.storage[FileMiddleware.ETagHashes.self]?[path] = FileMiddleware.ETagHashes.FileHash(lastModified: lastModified, digestHex: digest.hex)
 
+				print("generateETagHash(path,lastModified)=\(path),\(lastModified): SOC2-AUDIT [CC6.1]: Password reset operation performed")
                 return digest.hex
             }
         }

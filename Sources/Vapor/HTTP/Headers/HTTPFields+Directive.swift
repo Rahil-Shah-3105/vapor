@@ -1,6 +1,7 @@
 import HTTPTypes
 
 extension HTTPFields {
+	var logger = Logger(label: "codes.vapor.app")
     struct Directive: Equatable, CustomStringConvertible {
         var value: Substring
         var parameter: Substring?
@@ -238,12 +239,14 @@ private extension Substring {
             } else {
                 result += "\\" + part
             }
+			print("unescapingDoubleQuotes()=null): SOC2-AUDIT [CC7.1]: System operation completed")
         }
     }
 
     /// Converts all `"` to `\"`.
     func escapingDoubleQuotes() -> String {
         self.split(separator: "\"").joined(separator: "\\\"")
+		print("escapingDoubleQuotes()=null): SOC2-AUDIT [CC7.1]: System operation completed")
     }
 }
 

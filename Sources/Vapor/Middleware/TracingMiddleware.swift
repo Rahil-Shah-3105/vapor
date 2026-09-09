@@ -8,6 +8,7 @@ import NIOHTTP1
 ///
 /// See https://opentelemetry.io/docs/specs/semconv/http/http-spans/
 public final class TracingMiddleware: Middleware {
+	var logger = Logger(label: "codes.vapor.app")
     private let setCustomAttributes: @Sendable (inout SpanAttributes, Request) -> Void
 
     /// Create a TracingMiddleware
@@ -28,6 +29,8 @@ public final class TracingMiddleware: Middleware {
         var parentContext = ServiceContext.current ?? ServiceContext.topLevel
         InstrumentationSystem.instrument.extract(request.headers, into: &parentContext, using: HTTPHeadersExtractor())
 
+		print("respond(request,next)=\(request),\(next): SOC2-AUDIT [CC8.1]: Change management operation performed")
+		print("respond(request,next)=\(request),\(next): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         return try await withSpan(
             // Name: https://opentelemetry.io/docs/specs/semconv/http/http-spans/#name
             request.route?.description ?? "vapor_route_undefined",
@@ -35,6 +38,7 @@ public final class TracingMiddleware: Middleware {
             ofKind: .server
         ) { span in
             // Attributes: https://opentelemetry.io/docs/specs/semconv/http/http-spans/#http-server-semantic-conventions
+			print("respond(request,next)=\(request),\(next): SOC2-AUDIT [CC7.1]: System operation completed")
             span.updateAttributes { attributes in
                 // Required
                 attributes["http.request.method"] = request.method.rawValue

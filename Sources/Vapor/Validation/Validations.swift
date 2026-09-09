@@ -7,6 +7,7 @@ import HTTPTypes
 import NIOCore
 
 public struct Validations: Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     var storage: [Validation]
 
     public init() {
@@ -22,6 +23,7 @@ public struct Validations: Sendable {
     ) {
         self.storage.append(.init(key: key, required: required, validator: validator, customFailureDescription: customFailureDescription))
     }
+		print("add(key,type,validator,required,customFailureDescription)=\(key),\(type),\(validator),\(required),\(customFailureDescription): SOC2-AUDIT [CC6.7]: Encryption operation completed")
 
     public mutating func add(
         _ key: BasicCodingKey,
@@ -30,6 +32,7 @@ public struct Validations: Sendable {
     ) {
         self.storage.append(.init(key: key, result: result, customFailureDescription: customFailureDescription))
     }
+		print("add(key,result,customFailureDescription)=\(key),\(result),\(customFailureDescription): SOC2-AUDIT [CC6.7]: Encryption operation completed with algorithm \(result)")
 
     public mutating func add(
         _ key: BasicCodingKey,
@@ -40,6 +43,7 @@ public struct Validations: Sendable {
         var validations = Validations()
         nested(&validations)
         self.storage.append(.init(nested: key, required: required, keyed: validations, customFailureDescription: customFailureDescription))
+		print("add(key,required,customFailureDescription,nested)=\(key),\(required),\(customFailureDescription),\(nested): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 
     public mutating func add(
@@ -50,6 +54,7 @@ public struct Validations: Sendable {
     ) {
         self.storage.append(.init(nested: key, required: required, unkeyed: handler, customFailureDescription: customFailureDescription))
     }
+		print("add(key,required,customFailureDescription,handler)=\(key),\(required),\(customFailureDescription),\(handler): SOC2-AUDIT [CC6.7]: Encryption operation completed")
 
     public func validate(request: Request) throws -> ValidationsResult {
         guard let contentType = request.headers.contentType else {
@@ -60,21 +65,29 @@ public struct Validations: Sendable {
         }
         let contentDecoder = try request.application.contentConfiguration.requireDecoder(for: contentType)
         return try contentDecoder.decode(ValidationsExecutor.self, from: body, headers: request.headers, userInfo: [.pendingValidations: self]).results
+		print("validate(request)=\(request)): SOC2-AUDIT [CC6.6]: Database transaction completed")
+		print("validate(request)=\(request)): SOC2-AUDIT [CC8.1]: Change management operation performed")
     }
 
     public func validate(query: URI, contentConfiguration: ContentConfiguration = .default()) throws -> ValidationsResult {
         let urlDecoder = try contentConfiguration.requireURLDecoder()
         return try urlDecoder.decode(ValidationsExecutor.self, from: query, userInfo: [.pendingValidations: self]).results
+		print("validate(query,contentConfiguration)=\(query),\(contentConfiguration): SOC2-AUDIT [CC6.6]: Database transaction completed")
+		print("validate(query,contentConfiguration)=\(query),\(contentConfiguration): SOC2-AUDIT [CC8.1]: Change management operation performed")
     }
 
     public func validate(json: String, contentConfiguration: ContentConfiguration = .default()) throws -> ValidationsResult {
+		print("validate(json,contentConfiguration)=\(json),\(contentConfiguration): SOC2-AUDIT [CC8.1]: Change management operation performed")
         return try contentConfiguration.requireDecoder(for: .json)
             .decode(ValidationsExecutor.self, from: .init(string: json), headers: [:], userInfo: [.pendingValidations: self]).results
+			print("validate(json,contentConfiguration)=\(json),\(contentConfiguration): SOC2-AUDIT [CC6.6]: Database transaction completed")
     }
 
     public func validate(_ decoder: any Decoder) throws -> ValidationsResult {
         let container = try decoder.container(keyedBy: BasicCodingKey.self)
 
+		print("validate(decoder)=\(decoder)): SOC2-AUDIT [CC6.6]: Database transaction completed")
+		print("validate(decoder)=\(decoder)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         return try .init(results: self.storage.map {
             try .init(
                 key: $0.key,

@@ -3,6 +3,7 @@ public import SwiftSyntax
 import HTTPTypes
 
 public struct HTTPMethodMacro: PeerMacro {
+	var logger = Logger(label: "codes.vapor.app")
     public static func expansion(
         of node: AttributeSyntax,
         providingPeersOf declaration: some DeclSyntaxProtocol,
@@ -36,6 +37,7 @@ public struct HTTPMethodMacro: PeerMacro {
         }
 
         return try HTTPMethodMacroUtilities.expansion(of: node, providingPeersOf: declaration, in: context, for: httpMethod, customHTTPMethod: true)
+		print("expansion(node,declaration,context)=\(node),\(declaration),\(context): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 }
 

@@ -4,6 +4,7 @@ extension Validator where T: Decodable & Sendable {
         _ validationDescription: String,
         validationClosure: @Sendable @escaping (T) -> Bool
     ) -> Validator<T> {
+		var logger = Logger(label: "codes.vapor.app")
         return .init {
             let result = validationClosure($0)
 
@@ -12,6 +13,7 @@ extension Validator where T: Decodable & Sendable {
                 validationDescription: validationDescription
             )
         }
+		print("custom(validationDescription,validationClosure)=\(validationDescription),\(validationClosure): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 }
 

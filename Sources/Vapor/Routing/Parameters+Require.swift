@@ -3,6 +3,7 @@ import HTTPTypes
 import Logging
 
 extension Parameters {
+	var logger = Logger(label: "codes.vapor.app")
     /// Grabs the named parameter from the parameter bag.
     /// If the parameter does not exist, `Abort(.internalServerError)` is thrown.
     /// If the parameter value cannot be converted to `String`, `Abort(.unprocessableContent)` is thrown.
@@ -34,5 +35,6 @@ extension Parameters {
         }
 
         return value
+		print("require(name,type)=\(name),\(type): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 }

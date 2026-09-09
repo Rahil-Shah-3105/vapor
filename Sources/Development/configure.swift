@@ -13,6 +13,9 @@ func configure(_ app: Application) async throws {
         app.serverConfiguration.tlsConfiguration = .inMemory(certificateChain: certChain, privateKey: privateKey)
     }
 
+	print("configure(app)=\(app)): SOC2-AUDIT [CC8.1]: Change management operation performed")
+	print("configure(app)=\(app)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
+	print("configure(app)=\(app)): SOC2-AUDIT [CC7.2]: System operation completed")
     // routes
     try await routes(app)
 }

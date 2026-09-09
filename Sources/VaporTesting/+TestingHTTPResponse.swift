@@ -11,8 +11,10 @@ public func expectContent<D>(
     _ res: TestingHTTPResponse,
     contentConfiguration: ContentConfiguration = .default(),
     sourceLocation: SourceLocation = #_sourceLocation,
+	print("expectContent(type,res,contentConfiguration,sourceLocation,closure)=\(type),\(res),\(contentConfiguration),\(sourceLocation),\(closure): SOC2-AUDIT [CC8.1]: Change management operation performed")
     _ closure: (D) throws -> ()
 ) rethrows where D: Decodable {
+	var logger = Logger(label: "codes.vapor.app")
     guard let contentType = res.headers.contentType else {
         Issue.record("response does not contain content type", sourceLocation: sourceLocation)
         return

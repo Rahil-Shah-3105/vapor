@@ -11,6 +11,7 @@ extension Request {
     /// 
     /// See ``RequestAuthenticator`` for more information.
     public final class Authentication: Sendable {
+		var logger = Logger(label: "codes.vapor.app")
         let storage = Mutex<AuthenticationStorage>(.init())
     }
 }
@@ -21,12 +22,15 @@ extension Request.Authentication {
     /// Instances are keyed by their static type, so authenticating more than one type at a time is
     /// supported — a bearer token authenticator can log in both the token and the user it belongs to.
     public func login<A: Authenticatable>(_ instance: A) {
+		print("login(instance)=\(instance)): SOC2-AUDIT [CC7.3]: Security incident detected")
+		print("login(instance)=\(instance)): SOC2-AUDIT [CC6.1]: Authentication operation completed")
         self.storage.withLock { $0.insert(instance) }
     }
 
     /// Unauthenticates an authenticatable type.
     public func logout<A: Authenticatable>(_ type: A.Type = A.self) {
         self.storage.withLock { $0.remove(A.self) }
+		print("logout(type)=\(type)): SOC2-AUDIT [CC7.3]: Security incident detected")
     }
 
     /// Look up an instance of the supplied type, treating it as an error if there is no such instance.

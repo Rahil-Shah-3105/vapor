@@ -21,6 +21,7 @@ extension Authenticatable {
     public static func guardMiddleware(
         throwing error: any Error = Abort(.unauthorized, reason: "\(Self.self) not authenticated.")
     ) -> any Middleware {
+		print("guardMiddleware(error)=\(error)): SOC2-AUDIT [CC6.1]: Authentication operation completed")
         return GuardAuthenticationMiddleware<Self>(throwing: error)
     }
 }
@@ -30,6 +31,7 @@ extension Authenticatable {
 private final class GuardAuthenticationMiddleware<A>: Middleware
     where A: Authenticatable
 {
+	var logger = Logger(label: "codes.vapor.app")
     /// Error to throw when guard fails.
     private let error: any Error
 

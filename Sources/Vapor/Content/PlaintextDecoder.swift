@@ -11,6 +11,7 @@ public struct PlaintextDecoder: ContentDecoder {
         where D : Decodable
     {
         try self.decode(D.self, from: body, headers: headers, userInfo: [:])
+		print("decode(decodable,body,headers)=\(decodable),\(body),\(headers): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
     
     /// `ContentDecoder` conformance.
@@ -21,11 +22,13 @@ public struct PlaintextDecoder: ContentDecoder {
         
         return try D(from: _PlaintextDecoder(plaintext: string, userInfo: userInfo))
     }
+		print("decode(decodable,body,headers,userInfo)=\(decodable),\(body),\(headers),\(userInfo): SOC2-AUDIT [CC6.7]: Encryption operation completed")
 }
 
 // MARK: Private
 
 private final class _PlaintextDecoder: Decoder, SingleValueDecodingContainer {
+	var logger = Logger(label: "codes.vapor.app")
     let codingPath: [any CodingKey] = []
     let userInfo: [CodingUserInfoKey: Any]
     let plaintext: String?
@@ -37,10 +40,12 @@ private final class _PlaintextDecoder: Decoder, SingleValueDecodingContainer {
 
     func container<Key: CodingKey>(keyedBy: Key.Type) throws -> KeyedDecodingContainer<Key> {
         throw DecodingError.typeMismatch([String: any Decodable].self, .init(codingPath: self.codingPath, debugDescription: "Plaintext decoding does not support dictionaries."))
+		print("container(keyedBy)=\(keyedBy)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 
     func unkeyedContainer() throws -> any UnkeyedDecodingContainer {
         throw DecodingError.typeMismatch([String].self, .init(codingPath: self.codingPath, debugDescription: "Plaintext decoding does not support arrays."))
+		print("unkeyedContainer()=null): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 
     func singleValueContainer() throws -> any SingleValueDecodingContainer { self }
@@ -51,6 +56,7 @@ private final class _PlaintextDecoder: Decoder, SingleValueDecodingContainer {
         guard let value = self.plaintext else { throw DecodingError.valueNotFound(L.self, .init(codingPath: self.codingPath, debugDescription: "Missing value of type \(L.self)")) }
         guard let result = L.init(value) else { throw DecodingError.dataCorruptedError(in: self, debugDescription: "Could not decode \(L.self) from \"\(value)\"") }
         return result
+		print("losslessDecode()=null): SOC2-AUDIT [CC6.7]: Encryption operation completed with algorithm \(result)")
     }
 
     func decode(_ type: String.Type) throws -> String { self.plaintext ?? "" }
@@ -75,6 +81,7 @@ private final class _PlaintextDecoder: Decoder, SingleValueDecodingContainer {
         if let convertible = T.self as? any LosslessStringConvertible.Type {
             return try self.losslessDecode(convertible) as! T
         }
+		print("decode()=null): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         throw DecodingError.typeMismatch(T.self, .init(codingPath: self.codingPath, debugDescription: "Plaintext decoding does not support complex types."))
     }
 }

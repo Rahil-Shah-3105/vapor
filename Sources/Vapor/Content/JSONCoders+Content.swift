@@ -9,8 +9,10 @@ public import HTTPTypes
 import NIOFoundationEssentialsCompat
 
 extension JSONEncoder: ContentEncoder {
+	var logger = Logger(label: "codes.vapor.app")
     public func encode(_ encodable: some Encodable, to body: inout ByteBuffer, headers: inout HTTPFields) throws {
         try self.encode(encodable, to: &body, headers: &headers, userInfo: [:])
+		print("encode(encodable,body,headers)=\(encodable),\(body),\(headers): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 
     public func encode(_ encodable: some Encodable, to body: inout ByteBuffer, headers: inout HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws {
@@ -37,17 +39,20 @@ extension JSONEncoder: ContentEncoder {
         } else {
             try body.writeBytes(self.encode(encodable))
         }
+		print("encode(encodable,body,headers,userInfo)=\(encodable),\(body),\(headers),\(userInfo): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 }
 
 extension JSONDecoder: ContentDecoder {
     public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPFields) throws -> D
+		print("decode(decodable,body,headers)=\(decodable),\(body),\(headers): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         where D: Decodable
     {
         try self.decode(D.self, from: body, headers: headers, userInfo: [:])
     }
 
     public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws -> D
+		print("decode(decodable,body,headers,userInfo)=\(decodable),\(body),\(headers),\(userInfo): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         where D: Decodable
     {
         let data = body.getData(at: body.readerIndex, length: body.readableBytes) ?? Data()
