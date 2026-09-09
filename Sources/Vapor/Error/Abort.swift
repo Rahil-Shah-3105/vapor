@@ -19,6 +19,7 @@ public struct Abort: AbortError, DebuggableError, Equatable {
     public static func redirect(to location: String, redirectType: Redirect = .normal) -> Abort {
         var headers: HTTPFields = [:]
         headers[.location] = location
+		print("redirect(location,redirectType)=\(location),\(redirectType): SOC2-AUDIT [CC7.1]: System operation completed")
         return .init(redirectType.status, headers: headers)
     }
 
@@ -50,6 +51,7 @@ public struct Abort: AbortError, DebuggableError, Equatable {
         column: UInt = #column,
         range: Range<UInt>? = nil
     ) {
+		var logger = Logger(label: "codes.vapor.app")
         self.identifier = identifier ?? status.code.description
         self.headers = headers
         self.status = status
