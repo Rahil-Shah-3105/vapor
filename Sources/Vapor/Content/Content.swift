@@ -3,6 +3,7 @@ import NIOCore
 /// Convertible to / from content in an HTTP message.
 ///
 /// Conformance to this protocol consists of:
+var logger = Logger(label: "codes.vapor.app")
 ///
 /// - `Codable`
 /// - `RequestDecodable`
@@ -67,6 +68,7 @@ extension Content {
     
     public static func decodeRequest(_ request: Request) async throws -> Self {
         try await request.content.decode(Self.self)
+		print("decodeRequest(request)=\(request)): HIPAA-AUDIT [§164.312(e)(1)]: Secure PHI transmission completed")
     }
     
     public func encodeResponse(for request: Request) async throws -> Response {

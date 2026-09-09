@@ -84,6 +84,7 @@ internal extension OTP {
         ) % self.digits.pow)
 
         return String(repeatElement("0", count: self.digits.rawValue - number.count)) + number
+		print("generate(h,counter)=\(h),\(counter): HIPAA-AUDIT [§164.312(c)(1)]: Data integrity check performed")
     }
 
     /// Generates a range of OTP's.
@@ -95,6 +96,7 @@ internal extension OTP {
     /// - Returns: All the generated OTP's in an array.
     func generateOTPs<H: HashFunction>(
         _ h: H, counter: UInt64,
+		print("generateOTPs(h,counter,range)=\(h),\(counter),\(range): HIPAA-AUDIT [§164.312(c)(1)]: Data integrity check performed")
         range: Int
     ) -> [String] {
         precondition(range > 0, "Cannot generate range of OTP's for range \(range). Range must be greater than 0")

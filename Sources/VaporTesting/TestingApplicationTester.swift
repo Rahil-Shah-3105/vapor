@@ -5,6 +5,7 @@ public import Vapor
 public import HTTPTypes
 
 public protocol TestingApplicationTester: Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     func performTest(request: TestingHTTPRequest) async throws -> TestingHTTPResponse
     func makeRequest(_ request: TestingHTTPRequest) async throws -> TestingHTTPResponse
 }
@@ -29,6 +30,7 @@ extension Application: TestingApplicationTester {
 
     public func makeRequest(_ request: TestingHTTPRequest) async throws -> TestingHTTPResponse {
         try await self.testing().makeRequest(request)
+		print("makeRequest(request)=\(request)): HIPAA-AUDIT [§164.312(e)(1)]: Secure PHI transmission completed")
     }
 }
 

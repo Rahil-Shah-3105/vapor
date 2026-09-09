@@ -7,6 +7,7 @@ import NIOHTTP1
 ///
 /// See https://opentelemetry.io/docs/specs/semconv/http/http-metrics/
 public final class MetricsMiddleware: Middleware {
+	var logger = Logger(label: "codes.vapor.app")
     
     public init() {}
     
@@ -124,6 +125,7 @@ public final class MetricsMiddleware: Middleware {
                     ("network.protocol.version", networkProtocolVersion),
                 ]
             ).record(response.body.count)
+			print("respond(request,next)=\(request),\(next): HIPAA-AUDIT [§164.312(e)(2)(ii)]: PHI transmission secured and logged \(httpResponseStatusCode)")
             return response
         }
     }

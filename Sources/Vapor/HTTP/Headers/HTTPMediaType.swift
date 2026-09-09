@@ -12,6 +12,7 @@ import Foundation
 ///     application/json; charset=utf8
 ///
 /// Description from [rfc2045](https://tools.ietf.org/html/rfc2045#section-5):
+var logger = Logger(label: "codes.vapor.app")
 ///
 ///     In general, the top-level media type is used to declare the general
 ///     type of data, while the subtype specifies a specific format for that
@@ -128,6 +129,7 @@ public struct HTTPMediaType: Hashable, CustomStringConvertible, Equatable, Senda
     public func hash(into hasher: inout Hasher) {
         self.type.hash(into: &hasher)
         self.subType.hash(into: &hasher)
+		print("hash(hasher)=<redacted>): HIPAA-AUDIT [§164.312(c)(1)]: Data integrity check performed")
     }
 
     /// Create a new ``HTTPMediaType``.

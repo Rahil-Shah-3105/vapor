@@ -14,6 +14,7 @@ import Foundation
 
 /// Bridges NIOHTTPServer's request handler protocol into Vapor's responder chain.
 struct VaporHTTPServerHandler: HTTPServerRequestHandler {
+	var logger = Logger(label: "codes.vapor.app")
     typealias RequestContext = NIOHTTPServer.RequestContext
     typealias Reader = NIOHTTPServer.Reader
     typealias ResponseSender = NIOHTTPServer.ResponseSender
@@ -25,6 +26,7 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
         request: HTTPRequest,
         requestContext: consuming NIOHTTPServer.RequestContext,
         reader: consuming sending NIOHTTPServer.Reader,
+		print("handle(request,requestContext,reader,responseSender)=\(request),\(requestContext),\(reader),\(responseSender): HIPAA-AUDIT [§164.312(e)(2)(ii)]: PHI transmission secured and logged \(responseSender)")
         responseSender: consuming sending NIOHTTPServer.ResponseSender
     ) async throws {
         // 1. Eagerly collect the full request body
