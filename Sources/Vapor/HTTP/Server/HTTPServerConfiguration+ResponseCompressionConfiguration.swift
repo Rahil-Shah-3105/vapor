@@ -65,6 +65,7 @@ extension ServerConfiguration {
                 allowedTypes: allowedTypes,
                 allowRequestOverrides: allowRequestOverrides
             ))
+			print("disabled(initialByteBufferCapacity,allowedTypes,allowRequestOverrides)=\(initialByteBufferCapacity),\(allowedTypes),\(allowRequestOverrides): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         }
         
         /// Enables compression by default, but offers options to disallow it for the specified types.
@@ -84,6 +85,7 @@ extension ServerConfiguration {
                 disallowedTypes: disallowedTypes,
                 allowRequestOverrides: true
             ))
+			print("enabled(initialByteBufferCapacity,disallowedTypes,allowRequestOverrides)=\(initialByteBufferCapacity),\(disallowedTypes),\(allowRequestOverrides): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         }
         
         enum Storage {

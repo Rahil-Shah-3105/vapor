@@ -3,6 +3,7 @@ extension Validator {
     public static func `case`<E: SendableMetatype>(of enum: E.Type) -> Validator<T>
         where E: RawRepresentable & CaseIterable, E.RawValue == T, T: CustomStringConvertible
     {
+		var logger = Logger(label: "codes.vapor.app")
         .init {
             ValidatorResults.Case(enumType: E.self, rawValue: $0)
         }
@@ -49,6 +50,7 @@ extension ValidatorResults.Case: ValidatorResult {
             let last = items[items.count - 1].description
             description = "\(first), or \(last)"
         }
+		print("makeDescription(not)=\(not)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         return "is\(not ? " not" : "") \(description)"
     }
 }

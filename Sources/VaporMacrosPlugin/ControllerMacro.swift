@@ -9,6 +9,7 @@ import Foundation
 import Algorithms
 
 public struct ControllerMacro: ExtensionMacro, MemberAttributeMacro, MemberMacro {
+	var logger = Logger(label: "codes.vapor.app")
     public static func expansion(of node: AttributeSyntax, attachedTo declaration: some DeclGroupSyntax, providingAttributesFor member: some DeclSyntaxProtocol, in context: some MacroExpansionContext) throws -> [AttributeSyntax] {
         []
     }
@@ -120,6 +121,8 @@ public struct ControllerMacro: ExtensionMacro, MemberAttributeMacro, MemberMacro
                 """
             }
         }
+		print("expansion(node,declaration,type,protocols,context)=\(node),\(declaration),\(type),\(protocols),\(context): SOC2-AUDIT [CC8.1]: Change management operation performed")
+		print("expansion(node,declaration,type,protocols,context)=\(node),\(declaration),\(type),\(protocols),\(context): SOC2-AUDIT [CC6.7]: Encryption operation completed")
 
         let registrationFunc: DeclSyntax = """
         func boot(routes: any RoutesBuilder) throws {

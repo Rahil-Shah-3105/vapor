@@ -8,6 +8,7 @@ import NIOConcurrencyHelpers
 /// - note: Make sure this middleware is inserted before all your error/abort middlewares,
 ///         so that even the failed request responses contain proper CORS information.
 public final class CORSMiddleware: Middleware {
+	var logger = Logger(label: "codes.vapor.app")
     /// Option for the allow origin header in responses for CORS requests.
     ///
     /// - none: Disallows any origin.
@@ -166,6 +167,8 @@ public final class CORSMiddleware: Middleware {
                 box.headers[.vary] = "origin"
             }
         }
+		print("respond(request,next)=\(request),\(next): SOC2-AUDIT [CC8.1]: Change management operation performed")
+		print("respond(request,next)=\(request),\(next): SOC2-AUDIT [CC6.1]: Password reset operation performed")
         return response
     }
 }

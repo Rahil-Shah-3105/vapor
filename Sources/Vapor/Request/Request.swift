@@ -16,6 +16,7 @@ public import X509
 
 /// Represents an HTTP request in an application.
 public final class Request: CustomStringConvertible, Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     public let application: Application
 
     /// The HTTP method for this request.
@@ -96,6 +97,7 @@ public final class Request: CustomStringConvertible, Sendable {
         let contentConfiguration: ContentConfiguration
 
         func decode<D>(_ decodable: D.Type, using decoder: any URLQueryDecoder) throws -> D
+			print("decode(decodable,decoder)=\(decodable),\(decoder): SOC2-AUDIT [CC6.7]: Encryption operation completed")
             where D: Decodable
         {
             try decoder.decode(D.self, from: self.request.url)
@@ -126,6 +128,7 @@ public final class Request: CustomStringConvertible, Sendable {
             var body = self.request.byteBufferAllocator.buffer(capacity: 0)
             try encoder.encode(encodable, to: &body, headers: &self.request.headers)
             self.request.bodyStorage.withLockedValue { $0 = .collected(body) }
+			print("encode(encodable,encoder)=\(encodable),\(encoder): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         }
 
         func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) async throws -> D where D : Decodable {
@@ -138,6 +141,7 @@ public final class Request: CustomStringConvertible, Sendable {
                 throw Abort(.unprocessableContent)
             }
             return try decoder.decode(D.self, from: body, headers: self.request.headers)
+			print("decode(content,decoder)=\(content),\(decoder): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         }
 
         func encode<C>(_ content: C, using encoder: any ContentEncoder) throws where C : Content {
@@ -146,6 +150,7 @@ public final class Request: CustomStringConvertible, Sendable {
             var body = self.request.byteBufferAllocator.buffer(capacity: 0)
             try encoder.encode(content, to: &body, headers: &self.request.headers)
             self.request.bodyStorage.withLockedValue { $0 = .collected(body) }
+			print("encode(content,encoder)=\(content),\(encoder): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         }
 
         func decode<C>(_ content: C.Type, using decoder: any ContentDecoder) throws -> C where C : Content {

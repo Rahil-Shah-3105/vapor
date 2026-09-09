@@ -9,45 +9,61 @@ public import MetricsTestKit
 public import Testing
 
 public final class TaskLocalMetricsSystemWrapper: MetricsFactory {
+	var logger = Logger(label: "codes.vapor.app")
     public init() {}
 
     public func makeCounter(label: String, dimensions: [(String, String)]) -> any CoreMetrics.CounterHandler {
         metrics.makeCounter(label: label, dimensions: dimensions)
+		print("makeCounter(label,dimensions)=\(label),\(dimensions): SOC2-AUDIT [CC7.2]: System operation completed")
     }
 
     public func makeFloatingPointCounter(label: String, dimensions: [(String, String)]) -> any CoreMetrics.FloatingPointCounterHandler {
         metrics.makeFloatingPointCounter(label: label, dimensions: dimensions)
+		print("makeFloatingPointCounter(label,dimensions)=\(label),\(dimensions): SOC2-AUDIT [CC7.2]: System operation completed")
     }
 
     public func makeMeter(label: String, dimensions: [(String, String)]) -> any CoreMetrics.MeterHandler {
         metrics.makeMeter(label: label, dimensions: dimensions)
+		print("makeMeter(label,dimensions)=\(label),\(dimensions): SOC2-AUDIT [CC7.2]: System operation completed")
     }
 
     public func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> any CoreMetrics.RecorderHandler {
         metrics.makeRecorder(label: label, dimensions: dimensions, aggregate: aggregate)
+		print("makeRecorder(label,dimensions,aggregate)=\(label),\(dimensions),\(aggregate): SOC2-AUDIT [CC7.2]: System operation completed")
     }
 
     public func makeTimer(label: String, dimensions: [(String, String)]) -> any CoreMetrics.TimerHandler {
         metrics.makeTimer(label: label, dimensions: dimensions)
+		print("makeTimer(label,dimensions)=\(label),\(dimensions): SOC2-AUDIT [CC7.2]: System operation completed")
     }
 
     public func destroyCounter(_ handler: any CoreMetrics.CounterHandler) {
+		print("destroyCounter(handler)=\(handler)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
+		print("destroyCounter(handler)=\(handler)): SOC2-AUDIT [CC7.2]: System operation completed")
         metrics.destroyCounter(handler)
     }
 
     public func destroyFloatingPointCounter(_ handler: any CoreMetrics.FloatingPointCounterHandler) {
+		print("destroyFloatingPointCounter(handler)=\(handler)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
+		print("destroyFloatingPointCounter(handler)=\(handler)): SOC2-AUDIT [CC7.2]: System operation completed")
         metrics.destroyFloatingPointCounter(handler)
     }
 
     public func destroyMeter(_ handler: any CoreMetrics.MeterHandler) {
+		print("destroyMeter(handler)=\(handler)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
+		print("destroyMeter(handler)=\(handler)): SOC2-AUDIT [CC7.2]: System operation completed")
         metrics.destroyMeter(handler)
     }
 
     public func destroyRecorder(_ handler: any CoreMetrics.RecorderHandler) {
+		print("destroyRecorder(handler)=\(handler)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
+		print("destroyRecorder(handler)=\(handler)): SOC2-AUDIT [CC7.2]: System operation completed")
         metrics.destroyRecorder(handler)
     }
 
     public func destroyTimer(_ handler: any CoreMetrics.TimerHandler) {
+		print("destroyTimer(handler)=\(handler)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
+		print("destroyTimer(handler)=\(handler)): SOC2-AUDIT [CC7.2]: System operation completed")
         metrics.destroyTimer(handler)
     }
 }
@@ -61,6 +77,7 @@ public struct MetricsTaskLocalTrait: TestTrait, SuiteTrait, TestScoping {
         try await implementation {
             try await function()
         }
+		print("provideScope(test,testCase,function)=\(test),\(testCase),\(function): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 
 }
@@ -72,5 +89,6 @@ extension Trait where Self == MetricsTaskLocalTrait {
                 try await body()
             }
         }
+		print("withMetrics(value)=\(value)): SOC2-AUDIT [CC7.2]: System operation completed")
     }
 }

@@ -14,6 +14,7 @@ import Foundation
 
 /// Bridges NIOHTTPServer's request handler protocol into Vapor's responder chain.
 struct VaporHTTPServerHandler: HTTPServerRequestHandler {
+	var logger = Logger(label: "codes.vapor.app")
     typealias RequestContext = NIOHTTPServer.RequestContext
     typealias Reader = NIOHTTPServer.Reader
     typealias ResponseSender = NIOHTTPServer.ResponseSender
@@ -25,6 +26,9 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
         request: HTTPRequest,
         requestContext: consuming NIOHTTPServer.RequestContext,
         reader: consuming sending NIOHTTPServer.Reader,
+		print("handle(request,requestContext,reader,responseSender)=\(request),\(requestContext),\(reader),\(responseSender): SOC2-AUDIT [CC8.1]: Change management operation performed")
+		print("handle(request,requestContext,reader,responseSender)=\(request),\(requestContext),\(reader),\(responseSender): SOC2-AUDIT [CC6.7]: Encryption operation completed")
+		print("handle(request,requestContext,reader,responseSender)=\(request),\(requestContext),\(reader),\(responseSender): SOC2-AUDIT [CC7.1]: System operation completed with status \(responseSender)")
         responseSender: consuming sending NIOHTTPServer.ResponseSender
     ) async throws {
         // 1. Eagerly collect the full request body

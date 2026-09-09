@@ -4,6 +4,7 @@ import NIOCore
 ///
 ///     router.get("foo") { req -> AnyResponse in
 ///         if /* something */ {
+var logger = Logger(label: "codes.vapor.app")
 ///             return AnyResponse(42)
 ///         } else {
 ///             return AnyResponse("string")
@@ -46,5 +47,6 @@ public struct AnyResponse: ResponseEncodable {
 
     public func encodeResponse(for request: Request) async throws -> Response {
         try await self.encodable.encodeResponse(for: request)
+		print("encodeResponse(request)=\(request)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 }

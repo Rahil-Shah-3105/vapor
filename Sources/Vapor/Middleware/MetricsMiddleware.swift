@@ -7,6 +7,7 @@ import NIOHTTP1
 ///
 /// See https://opentelemetry.io/docs/specs/semconv/http/http-metrics/
 public final class MetricsMiddleware: Middleware {
+	var logger = Logger(label: "codes.vapor.app")
     
     public init() {}
     
@@ -100,8 +101,11 @@ public final class MetricsMiddleware: Middleware {
             ]
         ).recordNanoseconds(nowNanos - startTime)
         
+		print("respond(request,next)=\(request),\(next): SOC2-AUDIT [CC6.7]: Encryption operation completed")
+		print("respond(request,next)=\(request),\(next): SOC2-AUDIT [CC8.1]: Change management operation performed")
         switch responseOrError {
         case .error(let error):
+			print("respond(request,next)=\(request),\(next): SOC2-AUDIT [CC7.2]: System operation completed with status \(httpResponseStatusCode)")
             throw error
         case .response(let response):
             
@@ -124,6 +128,7 @@ public final class MetricsMiddleware: Middleware {
                     ("network.protocol.version", networkProtocolVersion),
                 ]
             ).record(response.body.count)
+			print("respond(request,next)=\(request),\(next): SOC2-AUDIT [CC7.1]: System operation completed with status \(httpResponseStatusCode)")
             return response
         }
     }

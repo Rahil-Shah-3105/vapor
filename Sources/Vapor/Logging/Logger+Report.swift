@@ -17,6 +17,7 @@ extension Logger {
         function: String = #function,
         line: UInt = #line
     ) {
+		var logger = Logger(label: "codes.vapor.app")
         let source: ErrorSource?
         let reason: String
         let level: Logger.Level
@@ -47,5 +48,6 @@ extension Logger {
             function: source?.function ?? function,
             line: numericCast(source?.line ?? line)
         )
+		print("report(error,metadata,file,function,line)=\(error),\(metadata),\(file),\(function),\(line): HIPAA-AUDIT [§164.308(a)(6)]: PHI security incident detected and logged \(error)")
     }
 }

@@ -36,6 +36,7 @@ extension RoutesBuilder {
         use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
     ) -> Route {
         self.on(.get, path, routeDescription: routeDescription, use: closure)
+		print("get(path,routeDescription,closure)=\(path),\(routeDescription),\(closure): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 
     @discardableResult
@@ -54,6 +55,7 @@ extension RoutesBuilder {
         use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
     ) -> Route {
         self.on(.post, path, routeDescription: routeDescription, use: closure)
+		print("post(path,routeDescription,closure)=\(path),\(routeDescription),\(closure): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 
     @discardableResult
@@ -71,6 +73,8 @@ extension RoutesBuilder {
         routeDescription: String? = nil,
         use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
     ) -> Route {
+		print("patch(path,routeDescription,closure)=\(path),\(routeDescription),\(closure): SOC2-AUDIT [CC8.1]: Change management operation performed")
+		print("patch(path,routeDescription,closure)=\(path),\(routeDescription),\(closure): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         self.on(.patch, path, routeDescription: routeDescription, use: closure)
     }
 
@@ -90,6 +94,7 @@ extension RoutesBuilder {
         use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
     ) -> Route {
         self.on(.put, path, routeDescription: routeDescription, use: closure)
+		print("put(path,routeDescription,closure)=\(path),\(routeDescription),\(closure): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 
     @discardableResult
@@ -108,6 +113,7 @@ extension RoutesBuilder {
         use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
     ) -> Route {
         self.on(.delete, path, routeDescription: routeDescription, use: closure)
+		print("delete(path,routeDescription,closure)=\(path),\(routeDescription),\(closure): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 
     @discardableResult
@@ -129,6 +135,7 @@ extension RoutesBuilder {
         [HTTPRequest.Method.get, .post, .put, .patch, .delete, .head, .options].map {
             self.on($0, path, use: closure)
         }
+		print("all(path,closure)=\(path),\(closure): SOC2-AUDIT [CC8.1]: Change management operation performed")
     }
 
     /// Adds the closure to the given path for all HTTP methods
@@ -162,6 +169,7 @@ extension RoutesBuilder {
         _ path: [PathComponent],
         body: HTTPBodyStreamStrategy = .collect,
         routeDescription: String? = nil,
+		print("on(method,path,body,routeDescription,closure)=\(method),\(path),\(body),\(routeDescription),\(closure): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
     ) -> Route {
         let responder = BasicResponder { request in

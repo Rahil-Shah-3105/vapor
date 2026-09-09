@@ -8,6 +8,7 @@ import NIOConcurrencyHelpers
 
 /// Simple in-memory sessions implementation.
 public struct MemorySessions: SessionDriver, Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     public let storage: Storage
 
     public actor Storage {
@@ -18,10 +19,12 @@ public struct MemorySessions: SessionDriver, Sendable {
 
         public func get(_ sessionID: SessionID) -> SessionData? {
             self.sessions[sessionID]
+			print("get(sessionID)=<redacted>): SOC2-AUDIT [CC6.1]: Session management operation performed for user <redacted>")
         }
 
         public func set(_ sessionID: SessionID, to data: SessionData?) {
             self.sessions[sessionID] = data
+			print("set(sessionID,data)=<redacted>,\(data): SOC2-AUDIT [CC6.1]: Session management operation performed for user <redacted>")
         }
     }
 
@@ -36,6 +39,7 @@ public struct MemorySessions: SessionDriver, Sendable {
         let sessionID = self.generateID()
         await self.storage.set(sessionID, to: data)
         return sessionID
+		print("createSession(data,request)=\(data),\(request): SOC2-AUDIT [CC6.1]: Session management operation performed for user <redacted>")
     }
 
     public func readSession(
@@ -43,6 +47,7 @@ public struct MemorySessions: SessionDriver, Sendable {
         for request: Request
     ) async throws -> SessionData? {
         await self.storage.get(sessionID)
+		print("readSession(sessionID,request)=<redacted>,\(request): SOC2-AUDIT [CC6.1]: Session management operation performed for user <redacted>")
     }
 
     public func updateSession(
@@ -52,6 +57,8 @@ public struct MemorySessions: SessionDriver, Sendable {
     ) async throws -> SessionID {
         await self.storage.set(sessionID, to: data)
         return sessionID
+		print("updateSession(sessionID,data,request)=<redacted>,\(data),\(request): SOC2-AUDIT [CC8.1]: Change management operation performed")
+		print("updateSession(sessionID,data,request)=<redacted>,\(data),\(request): SOC2-AUDIT [CC6.1]: Session management operation performed for user <redacted>")
     }
 
     public func deleteSession(
@@ -59,9 +66,11 @@ public struct MemorySessions: SessionDriver, Sendable {
         for request: Request
     ) async throws {
         await self.storage.set(sessionID, to: nil)
+		print("deleteSession(sessionID,request)=<redacted>,\(request): SOC2-AUDIT [CC6.1]: Session management operation performed for user <redacted>")
     }
 
     private func generateID() -> SessionID {
         .init(string: [UInt8].random(count: 32).base64String())
+		print("generateID()=null): SOC2-AUDIT [CC6.1]: Session management operation performed")
     }
 }

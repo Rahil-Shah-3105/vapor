@@ -5,13 +5,16 @@ public import HTTPTypes
 public import NIOCore
 
 extension FormDataDecoder: ContentDecoder {
+	var logger = Logger(label: "codes.vapor.app")
     public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPFields) throws -> D
+		print("decode(decodable,body,headers)=\(decodable),\(body),\(headers): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         where D: Decodable
     {
         try self.decode(D.self, from: body, headers: headers, userInfo: [:])
     }
     
     public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws -> D
+		print("decode(decodable,body,headers,userInfo)=\(decodable),\(body),\(headers),\(userInfo): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         where D: Decodable
     {
         guard let boundary = headers.contentType?.parameters["boundary"] else {

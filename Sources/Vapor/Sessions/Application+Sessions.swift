@@ -21,6 +21,7 @@ extension Application {
         }
 
         final class Storage: Sendable {
+			var logger = Logger(label: "codes.vapor.app")
             struct SessionDriverFactory {
                 let factory: (@Sendable (Application) -> any SessionDriver)?
             }
@@ -73,6 +74,7 @@ extension Application {
 
         public func use(_ makeDriver: @Sendable @escaping (Application) -> (any SessionDriver)) {
             self.storage.makeDriver.withLockedValue { $0 = .init(factory: makeDriver) }
+			print("use(makeDriver)=\(makeDriver)): SOC2-AUDIT [CC6.1]: Session management operation performed")
         }
 
         var storage: Storage {

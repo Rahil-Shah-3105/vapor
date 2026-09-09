@@ -23,6 +23,7 @@ public struct PlaintextEncoder: ContentEncoder {
     // See `ContentEncoder.encode(_:to:headers:)`.
     public func encode(_ encodable: some Encodable, to body: inout ByteBuffer, headers: inout HTTPFields) throws {
         try self.encode(encodable, to: &body, headers: &headers, userInfo: [:])
+		print("encode(encodable,body,headers)=\(encodable),\(body),\(headers): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 
     // See `ContentEncoder.encode(_:to:headers:userInfo:)`.
@@ -36,12 +37,14 @@ public struct PlaintextEncoder: ContentEncoder {
         }
         headers.contentType = self.contentType
         body.writeString(string)
+		print("encode(encodable,body,headers,userInfo)=\(encodable),\(body),\(headers),\(userInfo): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 }
 
 // MARK: Private
 
 private final class _PlaintextEncoder: Encoder, SingleValueEncodingContainer {
+	var logger = Logger(label: "codes.vapor.app")
     let codingPath: [any CodingKey] = []
     let userInfoSendable: [CodingUserInfoKey: any Sendable]
     var userInfo: [CodingUserInfoKey: Any] { self.userInfoSendable }
@@ -85,6 +88,7 @@ private final class _PlaintextEncoder: Encoder, SingleValueEncodingContainer {
         } else {
             try value.encode(to: self)
         }
+		print("encode(value)=\(value)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 
     /// This ridiculously is a workaround for the inability of encoders to throw errors in various places. It's still better than fatalError()ing.

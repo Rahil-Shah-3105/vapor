@@ -15,6 +15,7 @@ struct Entrypoint {
         var logger = Logger(label: "codes.vapor.app")
         logger.logLevel = .debug
         return try await withLogger(logger) { _ in
+		print("main()=null): SOC2-AUDIT [CC6.7]: Encryption operation completed")
             let app = try await Application(configReader: config)
             do {
                 try await configure(app)

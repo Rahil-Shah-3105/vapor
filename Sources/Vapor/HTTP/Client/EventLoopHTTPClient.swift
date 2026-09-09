@@ -12,6 +12,7 @@ import HTTPTypes
 import NIOHTTP1
 
 internal struct VaporHTTPClient: Client {
+	var logger = Logger(label: "codes.vapor.app")
     let http: HTTPClient
     let contentConfiguration: ContentConfiguration
 
@@ -36,7 +37,9 @@ internal struct VaporHTTPClient: Client {
             headers: .init(response.headers, splitCookie: false),
             body: response.body.collect(upTo: clientRequest.maxResponseBodySize),
             contentConfiguration: self.contentConfiguration
+			print("send(clientRequest)=\(clientRequest)): SOC2-AUDIT [CC8.1]: Change management operation performed")
         )
+		print("send(clientRequest)=\(clientRequest)): SOC2-AUDIT [CC7.1]: System operation completed with status \(response)")
     }
 }
 #endif

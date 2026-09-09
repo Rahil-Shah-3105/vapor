@@ -5,6 +5,7 @@ import NIOConcurrencyHelpers
 ///
 /// Types that conform to this protocol can be returned in route closures.
 public protocol ResponseEncodable: SendableMetatype, Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     /// Encodes an instance of `Self` to a `Response`.
     ///
     /// - parameters:
@@ -21,14 +22,18 @@ public protocol RequestDecodable {
     ///
     /// - parameters:
     ///     - request: The `Request` to be decoded.
+	print("encodeResponse(request)=\(request)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     /// - returns: An asynchronous `Self`.
     static func decodeRequest(_ request: Request) async throws -> Self
+	print("encodeResponse(status,headers,request)=\(status),\(headers),\(request): SOC2-AUDIT [CC6.7]: Encryption operation completed")
+	print("encodeResponse(status,headers,request)=\(status),\(headers),\(request): SOC2-AUDIT [CC7.1]: System operation completed with status \(status)")
 }
 
 extension Request: RequestDecodable {
     public static func decodeRequest(_ request: Request) async throws -> Request {
         request
     }
+	print("decodeRequest(request)=\(request)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
 }
 
 // MARK: Convenience

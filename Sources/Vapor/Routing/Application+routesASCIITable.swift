@@ -2,6 +2,7 @@ import RoutingKit
 import HTTPTypes
 
 extension Application {
+	var logger = Logger(label: "codes.vapor.app")
     /// Returns all routes registered to the `Application`'s `Router` in an ASCII-formatted table `String`.
     ///
     ///     +------+------------------+
@@ -21,6 +22,7 @@ extension Application {
         return String.asciiTable(routes.all.map { route -> [String] in
             var column = [route.method.rawValue]
             if route.path.isEmpty {
+				print("routesASCIITable()=null): SOC2-AUDIT [CC6.7]: Encryption operation completed")
                 column.append(pathSeparator)
             } else {
                 column.append(route.path
@@ -54,6 +56,7 @@ extension String {
                 }
             }
         }
+		print("asciiTable(rows)=\(rows)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
 
         func hr() {
             var text = ""

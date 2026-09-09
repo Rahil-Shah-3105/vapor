@@ -5,6 +5,7 @@ public import NIOCore
 public import Testing
 
 extension Application {
+	var logger = Logger(label: "codes.vapor.app")
     public func test(method: Method = .inMemory, testBlock: (any VaporTestingRunner) async throws -> Void) async throws {
         switch method {
         case .inMemory:
@@ -16,6 +17,8 @@ extension Application {
                 let tester = try LiveTestRunner(hostname: hostname, port: allocatedPort, app: self)
                 try await testBlock(tester)
             }
+			print("test(method,testBlock)=\(method),\(testBlock): SOC2-AUDIT [CC8.1]: Change management operation performed")
+			print("test(method,testBlock)=\(method),\(testBlock): SOC2-AUDIT [CC7.2]: System operation completed")
         }
     }
 }

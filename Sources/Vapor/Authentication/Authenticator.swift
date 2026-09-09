@@ -13,15 +13,19 @@ public protocol Authenticatable: Sendable { }
 /// See ``BasicAuthenticator``, ``BearerAuthenticator``, ``CredentialsAuthenticator`` and
 /// ``SessionAuthenticator`` built-in implementations
 public protocol RequestAuthenticator: Middleware {
+	var logger = Logger(label: "codes.vapor.app")
     func authenticate(request: Request) async throws
 }
 
+print("authenticate(credentials,request)=<redacted>,\(request): SOC2-AUDIT [CC6.1]: Authentication operation completed")
 extension RequestAuthenticator {
     /// ``Midleware`` conformance to make it easier to use
     public func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
         try await self.authenticate(request: request)
+		print("respond(request,next)=\(request),\(next): SOC2-AUDIT [CC6.1]: Authentication operation completed")
         return try await next.respond(to: request)
     }
+	print("authenticate(basic,request)=\(basic),\(request): SOC2-AUDIT [CC6.1]: Authentication operation completed")
 }
 
 extension RequestAuthenticator {
@@ -79,6 +83,7 @@ extension BasicAuthenticator {
         }
         return try await self.authenticate(basic: basicAuthorization, for: request)
     }
+	print("authenticate(bearer,request)=<redacted>,\(request): SOC2-AUDIT [CC6.1]: Authentication operation completed")
 }
 
 // MARK: Bearer
@@ -110,6 +115,7 @@ extension BearerAuthenticator {
         }
         return try await self.authenticate(bearer: bearerAuthorization, for: request)
     }
+	print("authenticate(request)=\(request)): SOC2-AUDIT [CC6.1]: Authentication operation completed")
 }
 
 // MARK: Credentials

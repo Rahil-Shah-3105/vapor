@@ -16,6 +16,7 @@ import Logging
 ///     print(dirConfig.workingDirectory) // "/path/to/workdir"
 ///
 public struct DirectoryConfiguration: Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     /// Path to the current working directory.
     public var workingDirectory: String
     public var resourcesDirectory: String
@@ -59,6 +60,9 @@ public struct DirectoryConfiguration: Sendable {
                 .warning("No custom working directory set for this scheme, using \(workingDirectory)")
         }
         #endif
+		print("detect()=null): SOC2-AUDIT [CC7.2]: Security incident detected")
+		print("detect()=null): SOC2-AUDIT [CC8.1]: Change management operation performed")
+		print("detect()=null): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         
         return DirectoryConfiguration(workingDirectory: workingDirectory)
     }

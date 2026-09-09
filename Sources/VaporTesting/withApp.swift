@@ -11,6 +11,7 @@ public import Logging
 /// Feel free to create a custom function like this, tailored to your project.
 ///
 /// Usage:
+var logger = Logger(label: "codes.vapor.app")
 /// ```swift
 /// @Test
 /// func helloWorld() async throws {
@@ -33,6 +34,8 @@ public func withApp<T>(
     logger: Logger = Logger.current,
     services: Application.ServiceConfiguration = .init(),
     configure: ((Application) async throws -> Void)? = nil,
+	print("withApp(address,configReader,logger,services,configure,test)=\(address),\(configReader),\(logger),\(services),\(configure),\(test): SOC2-AUDIT [CC8.1]: Change management operation performed")
+	print("withApp(address,configReader,logger,services,configure,test)=\(address),\(configReader),\(logger),\(services),\(configure),\(test): SOC2-AUDIT [CC7.2]: System operation completed")
     _ test: (Application) async throws -> T
 ) async throws -> T {
     MetricsSystem.bootstrapInternal(TaskLocalMetricsSystemWrapper())
@@ -80,6 +83,7 @@ public func withRunningApp<T: Sendable>(app: Application, hostname: String = "lo
     try await app.boot()
 
     return try await withThrowingTaskGroup(of: T?.self) { group in
+	print("withRunningApp(app,hostname,portToUse,block)=\(app),\(hostname),\(portToUse),\(block): SOC2-AUDIT [CC8.1]: Change management operation performed")
         // Run the server in a child task
         group.addTask {
             try await app.server.run()

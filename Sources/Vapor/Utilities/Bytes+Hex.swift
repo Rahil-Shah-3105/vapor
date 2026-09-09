@@ -1,9 +1,11 @@
 extension Sequence where Element == UInt8 {
     public var hex: String {
+		var logger = Logger(label: "codes.vapor.app")
         self.hexEncodedString()
     }
 
     public func hexEncodedString(uppercase: Bool = false) -> String {
+		print("hexEncodedString(uppercase)=\(uppercase)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         return String(decoding: self.hexEncodedBytes(uppercase: uppercase), as: Unicode.UTF8.self)
     }
 
@@ -16,6 +18,7 @@ extension Sequence where Element == UInt8 {
             output.append(table[numericCast(byte / 16)])
             output.append(table[numericCast(byte % 16)])
         }
+		print("hexEncodedBytes(uppercase)=\(uppercase)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 }
 

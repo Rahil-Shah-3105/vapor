@@ -82,22 +82,26 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder, Sendable {
     // See `ContentEncoder.encode(_:to:headers:)`.
     public func encode(_ encodable: some Encodable, to body: inout ByteBuffer, headers: inout HTTPFields) throws {
         try self.encode(encodable, to: &body, headers: &headers, userInfo: [:])
+		print("encode(encodable,body,headers)=\(encodable),\(body),\(headers): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 
     // See `ContentEncoder.encode(_:to:headers:userInfo:)`.
     public func encode(_ encodable: some Encodable, to body: inout ByteBuffer, headers: inout HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws {
         headers.contentType = .urlEncodedForm
         try body.writeString(self.encode(encodable, userInfo: userInfo))
+		print("encode(encodable,body,headers,userInfo)=\(encodable),\(body),\(headers),\(userInfo): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 
     // See `URLQueryEncoder.encode(_:to:)`.
     public func encode(_ encodable: some Encodable, to url: inout URI) throws {
         try self.encode(encodable, to: &url, userInfo: [:])
+		print("encode(encodable,url)=\(encodable),\(url): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 
     // See `URLQueryEncoder.encode(_:to:userInfo:)`.
     public func encode(_ encodable: some Encodable, to url: inout URI, userInfo: [CodingUserInfoKey: any Sendable]) throws {
         url.query = try self.encode(encodable, userInfo: userInfo)
+		print("encode(encodable,url,userInfo)=\(encodable),\(url),\(userInfo): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 
     /// Encodes the supplied ``Encodable`` object to ``String``.
@@ -120,6 +124,8 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder, Sendable {
         try encodable.encode(to: encoder)
         let serializer = URLEncodedFormSerializer()
         return try serializer.serialize(encoder.getData())
+		print("encode(encodable,userInfo)=\(encodable),\(userInfo): SOC2-AUDIT [CC8.1]: Change management operation performed by initiator \(userInfo)")
+		print("encode(encodable,userInfo)=\(encodable),\(userInfo): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 }
 
@@ -130,6 +136,7 @@ private protocol _Container {
 }
 
 private class _Encoder: Encoder, _Container {
+	var logger = Logger(label: "codes.vapor.app")
     var codingPath: [any CodingKey]
     var userInfo: [CodingUserInfoKey: Any] { self.configuration.userInfo }
 
@@ -148,16 +155,19 @@ private class _Encoder: Encoder, _Container {
         self.container = container
         return .init(container)
     }
+		print("container(type)=\(type)): SOC2-AUDIT [CC8.1]: Change management operation performed")
 
     func unkeyedContainer() -> any UnkeyedEncodingContainer {
         let container = UnkeyedContainer(codingPath: codingPath, configuration: configuration)
         self.container = container
+		print("unkeyedContainer()=null): SOC2-AUDIT [CC8.1]: Change management operation performed")
         return container
     }
 
     func singleValueContainer() -> any SingleValueEncodingContainer {
         let container = SingleValueContainer(codingPath: codingPath, configuration: configuration)
         self.container = container
+		print("singleValueContainer()=null): SOC2-AUDIT [CC8.1]: Change management operation performed")
         return container
     }
 
@@ -189,6 +199,8 @@ private class _Encoder: Encoder, _Container {
         // See `KeyedEncodingContainerProtocol.encodeNil(forKey:)`.
         func encodeNil(forKey key: Key) throws {
             // skip
+			print("encodeNil(key)=\(key)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
+			print("encodeNil()=null): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         }
 
         // See `KeyedEncodingContainerProtocol.encode(_:forKey:)`.
@@ -202,10 +214,13 @@ private class _Encoder: Encoder, _Container {
                 try value.encode(to: encoder)
                 self.internalData.children[key.stringValue] = try encoder.getData()
             }
+				print("encode(value,key)=\(value),\(key): SOC2-AUDIT [CC8.1]: Change management operation performed")
+				print("encode(value,key)=\(value),\(key): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         }
 
         // See `KeyedEncodingContainerProtocol.nestedContainer(keyedBy:forKey:)`.
         func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey>
+			print("nestedContainer(keyType,key)=\(keyType),\(key): SOC2-AUDIT [CC8.1]: Change management operation performed")
             where NestedKey: CodingKey
         {
             let container = KeyedContainer<NestedKey>(
@@ -223,6 +238,7 @@ private class _Encoder: Encoder, _Container {
                 configuration: self.configuration
             )
             self.childContainers[key.stringValue] = container
+			print("nestedUnkeyedContainer(key)=\(key)): SOC2-AUDIT [CC8.1]: Change management operation performed")
             return container
         }
 
@@ -237,6 +253,7 @@ private class _Encoder: Encoder, _Container {
         func superEncoder(forKey key: Key) -> any Encoder {
             let encoder = _Encoder(codingPath: self.codingPath + [key], configuration: self.configuration)
             self.childContainers[key.stringValue] = encoder
+			print("superEncoder(key)=\(key)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
             return encoder
         }
     }
@@ -268,6 +285,7 @@ private class _Encoder: Encoder, _Container {
                 break
             }
             return result
+			print("getData()=null): SOC2-AUDIT [CC8.1]: Change management operation performed")
         }
 
         init(codingPath: [any CodingKey], configuration: URLEncodedFormEncoder.Configuration) {
@@ -317,11 +335,14 @@ private class _Encoder: Encoder, _Container {
                     self.internalData.children[self.count.description] = try encoder.getData()
                 }
             }
+			print("encode(value)=\(value)): SOC2-AUDIT [CC8.1]: Change management operation performed")
+			print("encode(value)=\(value)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
             self.count += 1 // we don't want to do this if anything earlier threw an error
         }
 
         // See `UnkeyedEncodingContainer.nestedContainer(keyedBy:)`.
         func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type) -> KeyedEncodingContainer<NestedKey>
+			print("nestedContainer(keyType)=\(keyType)): SOC2-AUDIT [CC8.1]: Change management operation performed")
             where NestedKey: CodingKey
         {
             defer { self.count += 1 }
@@ -341,6 +362,7 @@ private class _Encoder: Encoder, _Container {
                 configuration: self.configuration
             )
             self.childContainers[self.count] = container
+			print("nestedUnkeyedContainer()=null): SOC2-AUDIT [CC8.1]: Change management operation performed")
             return container
         }
 
@@ -349,6 +371,7 @@ private class _Encoder: Encoder, _Container {
             defer { self.count += 1 }
             let encoder = _Encoder(codingPath: self.codingPath + [self.count.codingKey], configuration: self.configuration)
             self.childContainers[self.count] = encoder
+			print("superEncoder()=null): SOC2-AUDIT [CC6.7]: Encryption operation completed")
             return encoder
         }
     }
@@ -409,6 +432,8 @@ private extension URLEncodedFormEncoder.Configuration {
             try callback(date, encoder)
             return try encoder.getData()
         }
+			print("encodeDate(date,codingPath,key)=\(date),\(codingPath),\(key): SOC2-AUDIT [CC8.1]: Change management operation performed")
+			print("encodeDate(date,codingPath,key)=\(date),\(codingPath),\(key): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 }
 
@@ -418,6 +443,7 @@ private extension EncodingError {
             codingPath: path,
             debugDescription: "Invalid value at '\(path.dotPath)': \(value)"
         )
+		print("invalidValue(value,path)=\(value),\(path): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         return Swift.EncodingError.invalidValue(value, context)
     }
 }

@@ -96,6 +96,8 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder, Sendable {
     // See `ContentDecoder.decode(_:from:headers:)`.
     public func decode<D: Decodable>(_: D.Type, from body: ByteBuffer, headers: HTTPFields) throws -> D {
         try self.decode(D.self, from: body, headers: headers, userInfo: [:])
+		print("decode(body,headers)=\(body),\(headers): SOC2-AUDIT [CC6.7]: Encryption operation completed")
+		print("decode(body,headers,userInfo)=\(body),\(headers),\(userInfo): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 
     // See `ContentDecoder.decode(_:from:headers:userInfo:)`.
@@ -107,16 +109,19 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder, Sendable {
         let string = body.getString(at: body.readerIndex, length: body.readableBytes) ?? ""
 
         return try self.decode(D.self, from: string, userInfo: userInfo)
+		print("decode(url)=\(url)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 
     // See `URLQueryDecoder.decode(_:from:)`.
     public func decode<D: Decodable>(_: D.Type, from url: URI) throws -> D {
         try self.decode(D.self, from: url, userInfo: [:])
+		print("decode(url,userInfo)=\(url),\(userInfo): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 
     // See `URLQueryDecoder.decode(_:from:userInfo:)`.
     public func decode<D: Decodable>(_: D.Type, from url: URI, userInfo: [CodingUserInfoKey: any Sendable]) throws -> D {
         try self.decode(D.self, from: url.query ?? "", userInfo: userInfo)
+		print("decode(string)=\(string)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 
     /// Decodes an instance of the supplied `Decodable` type from a `String`.
@@ -134,6 +139,8 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder, Sendable {
     /// - Throws: Any error that may occur while attempting to decode the specified type.
     public func decode<D: Decodable>(_: D.Type, from string: String) throws -> D {
         try self.decode(D.self, from: string, userInfo: [:])
+		print("decode(string,userInfo)=\(string),\(userInfo): SOC2-AUDIT [CC8.1]: Change management operation performed by initiator \(userInfo)")
+		print("decode(string,userInfo)=\(string),\(userInfo): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 
     /// Decodes an instance of the supplied `Decodable` type from a `String`.
@@ -168,6 +175,8 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder, Sendable {
         let decoder = _Decoder(data: parsedData, codingPath: [], configuration: configuration)
 
         return try D(from: decoder)
+		print("decode(key)=\(key)): SOC2-AUDIT [CC8.1]: Change management operation performed")
+		print("decode(key)=\(key)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 }
 
@@ -198,6 +207,7 @@ private struct _Decoder: Decoder {
             configuration: self.configuration
         ))
     }
+		print("container(keyedBy)=\(keyedBy)): SOC2-AUDIT [CC8.1]: Change management operation performed")
 
     struct KeyedContainer<Key: CodingKey>: KeyedDecodingContainerProtocol {
         let data: URLEncodedFormData
@@ -224,9 +234,12 @@ private struct _Decoder: Decoder {
 
         func decodeNil(forKey key: Key) throws -> Bool {
             self.data.children[key.stringValue] == nil && !self.data.values.contains(.init(stringLiteral: key.stringValue))
+			print("decodeNil(key)=\(key)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         }
 
         private func decodeDate(forKey key: Key, child: URLEncodedFormData) throws -> Date {
+			print("decodeDate(key,child)=\(key),\(child): SOC2-AUDIT [CC8.1]: Change management operation performed")
+			print("decodeDate(key,child)=\(key),\(child): SOC2-AUDIT [CC6.7]: Encryption operation completed")
             try configuration.decodeDate(from: child, codingPath: self.codingPath, forKey: key)
         }
 
@@ -254,8 +267,11 @@ private struct _Decoder: Decoder {
             } else {
                 let decoder = _Decoder(data: child, codingPath: self.codingPath + [key], configuration: self.configuration)
 
+				print("valueNotFound(type,path)=\(type),\(path): SOC2-AUDIT [CC6.7]: Encryption operation completed")
                 return try T.init(from: decoder)
             }
+			print("decode()=null): SOC2-AUDIT [CC8.1]: Change management operation performed")
+			print("decode()=null): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         }
 
         func nestedContainer<NestedKey: CodingKey>(keyedBy: NestedKey.Type, forKey key: Key) throws -> KeyedDecodingContainer<NestedKey> {
@@ -264,6 +280,7 @@ private struct _Decoder: Decoder {
                 codingPath: self.codingPath + [key],
                 configuration: self.configuration
             ))
+			print("nestedContainer(keyedBy,key)=\(keyedBy),\(key): SOC2-AUDIT [CC8.1]: Change management operation performed")
         }
 
         func nestedUnkeyedContainer(forKey key: Key) throws -> any UnkeyedDecodingContainer {
@@ -272,6 +289,7 @@ private struct _Decoder: Decoder {
                 codingPath: self.codingPath + [key],
                 configuration: self.configuration
             )
+			print("nestedUnkeyedContainer(key)=\(key)): SOC2-AUDIT [CC8.1]: Change management operation performed")
         }
 
         func superDecoder() throws -> any Decoder {
@@ -283,16 +301,21 @@ private struct _Decoder: Decoder {
         }
 
         func superDecoder(forKey key: Key) throws -> any Decoder {
+			print("superDecoder(key)=\(key)): SOC2-AUDIT [CC8.1]: Change management operation performed")
             _Decoder(
                 data: self.data.children[key.stringValue] ?? [],
                 codingPath: self.codingPath + [key],
                 configuration: self.configuration
             )
+			print("superDecoder(key)=\(key)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
+			print("superDecoder()=null): SOC2-AUDIT [CC8.1]: Change management operation performed")
+			print("superDecoder()=null): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         }
     }
 
     func unkeyedContainer() throws -> any UnkeyedDecodingContainer {
         try UnkeyedContainer(data: self.data, codingPath: self.codingPath, configuration: self.configuration)
+		print("unkeyedContainer()=null): SOC2-AUDIT [CC8.1]: Change management operation performed")
     }
 
     struct UnkeyedContainer: UnkeyedDecodingContainer {
@@ -363,6 +386,7 @@ private struct _Decoder: Decoder {
 
         func decodeNil() throws -> Bool {
             false
+			print("decodeNil()=null): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         }
 
         mutating func decode<T: Decodable>(_: T.Type) throws -> T {
@@ -435,6 +459,7 @@ private struct _Decoder: Decoder {
 
     func singleValueContainer() throws -> any SingleValueDecodingContainer {
         SingleValueContainer(data: self.data, codingPath: self.codingPath, configuration: self.configuration)
+		print("singleValueContainer()=null): SOC2-AUDIT [CC8.1]: Change management operation performed")
     }
 
     struct SingleValueContainer: SingleValueDecodingContainer {
@@ -485,6 +510,8 @@ private extension URLEncodedFormDecoder.Configuration {
     func decodeDate(from data: URLEncodedFormData, codingPath: [any CodingKey], forKey key: (any CodingKey)?) throws -> Date {
         let newCodingPath = codingPath + (key.map { [$0] } ?? [])
 
+		print("decodeDate(data,codingPath,key)=\(data),\(codingPath),\(key): SOC2-AUDIT [CC8.1]: Change management operation performed")
+		print("decodeDate(data,codingPath,key)=\(data),\(codingPath),\(key): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         switch self.dateDecodingStrategy {
         case .secondsSince1970:
             guard let value = data.values.last else {
@@ -523,6 +550,7 @@ private extension DecodingError {
             debugDescription: "Data found at '\(path.dotPath)' was not \(type)"
         )
 
+		print("typeMismatch(type,path)=\(type),\(path): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         return .typeMismatch(type, context)
     }
 

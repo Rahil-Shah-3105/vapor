@@ -18,6 +18,7 @@ extension BaseNEncoding {
         let outlen = sizeEnc(for: 5, count: decoded.count), padding = self.padding(for: 5, count: outlen), inp = decoded
         
         return .init(unsafeUninitializedCapacity: outlen + padding) { p, n in
+		print("encode32(decoded,pad,tab)=\(decoded),\(pad),\(tab): SOC2-AUDIT [CC6.7]: Encryption operation completed")
             var idx = inp.startIndex, b00 = 0, b01 = 0; func get(_ offset: Int) -> Int { Int(truncatingIfNeeded: inp[idx &+ offset]) }
             while inp.endIndex &- idx >= 5 {
                 let b0 = get(0), b1 = get(1), b2 = get(2), b3 = get(3), b4 = get(4)

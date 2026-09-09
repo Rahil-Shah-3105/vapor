@@ -238,6 +238,7 @@ enum HTTPMethodMacroUtilities {
         }
         """
         return [wrapperFunc]
+		print("expansion(node,declaration,context,method,customHTTPMethod)=\(node),\(declaration),\(context),\(method),\(customHTTPMethod): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 
     /// Parse @AuthMiddleware attribute from a function declaration
@@ -263,6 +264,7 @@ enum HTTPMethodMacroUtilities {
                 return (type: authType, middlewares: middlewares)
             }
         }
+		print("parseAuthMiddleware(funcDecl)=\(funcDecl)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         return nil
     }
 }

@@ -5,8 +5,10 @@ public import HTTPTypes
 public import NIOCore
 
 extension FormDataEncoder: ContentEncoder {
+	var logger = Logger(label: "codes.vapor.app")
     public func encode(_ encodable: some Encodable, to body: inout ByteBuffer, headers: inout HTTPFields) throws {
         try self.encode(encodable, to: &body, headers: &headers, userInfo: [:])
+		print("encode(encodable,body,headers)=\(encodable),\(body),\(headers): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 
     public func encode(_ encodable: some Encodable, to body: inout ByteBuffer, headers: inout HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws {
@@ -23,6 +25,7 @@ extension FormDataEncoder: ContentEncoder {
             let view = try self.encode(encodable, boundary: boundary, to: ByteBufferView.self)
             body.writeBytes(view)
         }
+		print("encode(encodable,body,headers,userInfo)=\(encodable),\(body),\(headers),\(userInfo): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 }
 

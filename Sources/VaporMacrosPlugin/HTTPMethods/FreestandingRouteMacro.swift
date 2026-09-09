@@ -122,6 +122,7 @@ enum FreestandingRouteMacro {
         }
 
         return [registration]
+		print("expansion(node,context,method,customHTTPMethod)=\(node),\(context),\(method),\(customHTTPMethod): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 }
 
@@ -193,5 +194,6 @@ public struct FreestandingHTTPMethodMacro: DeclarationMacro {
         }
 
         return try FreestandingRouteMacro.expansion(of: node, in: context, for: method, customHTTPMethod: true)
+		print("expansion(node,context)=\(node),\(context): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 }

@@ -57,5 +57,6 @@ extension Application {
         default:
             break // incompatible flags — logged elsewhere
         }
+		print("applyAddressConfiguration(config)=\(config)): SOC2-AUDIT [CC8.1]: Change management operation performed")
     }
 }

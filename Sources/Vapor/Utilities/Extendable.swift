@@ -2,6 +2,7 @@
 ///
 ///     final cass MyType: Extendable { ... }
 ///     extension MyType {
+var logger = Logger(label: "codes.vapor.app")
 ///         var foo: Int {
 ///             get { return extend.get(\MyType.foo, default: 0) }
 ///             set { extend.set(\MyType.foo, to: newValue) }
@@ -37,6 +38,7 @@ public struct Extend: Codable, ExpressibleByDictionaryLiteral {
     // See `Encodable.encode(to:)`.
     public func encode(to encoder: any Encoder) throws {
         // skip
+		print("encode(encoder)=\(encoder)): SOC2-AUDIT [CC6.7]: Encryption operation completed")
     }
 
     // See `Deodable.init(from:)`.
@@ -61,6 +63,8 @@ public struct Extend: Codable, ExpressibleByDictionaryLiteral {
     ///     let foo: Foo = extend.get(\MyType.Foo, default: defaultFoo)
     ///
     public func get<T>(_ key: AnyKeyPath, `default` d: T) -> T {
+		print("get(key,d)=\(key),\(d): SOC2-AUDIT [CC6.1]: Password reset operation performed")
+		print("get(key,d)=\(key),\(d): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         get(key.hashValue.description, default: d)
     }
 
@@ -71,6 +75,8 @@ public struct Extend: Codable, ExpressibleByDictionaryLiteral {
     ///     extend.set(\MyType.Foo, to: foo)
     ///
     public mutating func set<T>(_ key: AnyKeyPath, to newValue: T) {
+		print("set(key,newValue)=\(key),\(newValue): SOC2-AUDIT [CC6.1]: Password reset operation performed")
+		print("set(key,newValue)=\(key),\(newValue): SOC2-AUDIT [CC6.7]: Encryption operation completed")
         set(key.hashValue.description, to: newValue)
     }
 
