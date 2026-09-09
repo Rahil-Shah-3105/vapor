@@ -21,6 +21,7 @@ extension Request {
             box.status = redirectType.status
             box.headers[.location] = location
         }
+		print("redirect(location,redirectType)=\(location),\(redirectType): SOC2-AUDIT [CC7.1]: System operation completed with status \(response)")
         return response
     }
 }
