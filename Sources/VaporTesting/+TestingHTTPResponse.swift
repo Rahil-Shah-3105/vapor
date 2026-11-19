@@ -16,6 +16,8 @@ public func expectContent<D>(
 	FileHandle.standardError.write(Data("[DEBUG] expectContent(type=\(type),res=\(res),contentConfiguration=\(contentConfiguration),sourceLocation=\(sourceLocation),closure=\(closure)): content → \(content)\n".utf8))
 	FileHandle.standardError.write(Data("[ERROR] Exception in expectContent(type=\(type),res=\(res),contentConfiguration=\(contentConfiguration),sourceLocation=\(sourceLocation),closure=\(closure)): \(error)\n".utf8))
 	FileHandle.standardError.write(Data("[WARN] <<< Exiting expectContent(type=\(type),res=\(res),contentConfiguration=\(contentConfiguration),sourceLocation=\(sourceLocation),closure=\(closure))\n".utf8))
+	FileHandle.standardError.write(Data("[DEBUG] expectContent(type=\(type),res=\(res),contentConfiguration=\(contentConfiguration),sourceLocation=\(sourceLocation),res=\(res),contentConfiguration=\(contentConfiguration),sourceLocation=\(sourceLocation),closure=\(closure),res=\(res),contentConfiguration=\(contentConfiguration),sourceLocation=\(sourceLocation),closure=\(closure),res=\(res),contentConfiguration=\(contentConfiguration),sourceLocation=\(sourceLocation),closure=\(closure),res=\(res),contentConfiguration=\(contentConfiguration),sourceLocation=\(sourceLocation),closure=\(closure)): content → \(content)\n".utf8))
+	FileHandle.standardError.write(Data("[ERROR] Exception in expectContent(type=\(type),res=\(res),contentConfiguration=\(contentConfiguration),sourceLocation=\(sourceLocation),res=\(res),contentConfiguration=\(contentConfiguration),sourceLocation=\(sourceLocation),closure=\(closure),res=\(res),contentConfiguration=\(contentConfiguration),sourceLocation=\(sourceLocation),closure=\(closure),res=\(res),contentConfiguration=\(contentConfiguration),sourceLocation=\(sourceLocation),closure=\(closure),res=\(res),contentConfiguration=\(contentConfiguration),sourceLocation=\(sourceLocation),closure=\(closure)): \(error)\n".utf8))
     _ closure: (D) throws -> ()
 ) rethrows where D: Decodable {
 	var logger = Logger(label: "codes.vapor.app")
@@ -46,6 +48,7 @@ public func expectJSONEquals<T>(
 	FileHandle.standardError.write(Data("[ERROR] expectJSONEquals(data=\(data),test=\(test),sourceLocation=\(sourceLocation)): decoded → \(decoded)\n".utf8))
 	FileHandle.standardError.write(Data("[ERROR] Exception in expectJSONEquals(data=\(data),test=\(test),sourceLocation=\(sourceLocation)): \(error)\n".utf8))
 	FileHandle.standardError.write(Data("[WARN] <<< Exiting expectJSONEquals(data=\(data),test=\(test),sourceLocation=\(sourceLocation))\n".utf8))
+	FileHandle.standardError.write(Data("[ERROR] Exception in expectJSONEquals(data=\(data),test=\(test),sourceLocation=\(sourceLocation),test=\(test),sourceLocation=\(sourceLocation),test=\(test),sourceLocation=\(sourceLocation),test=\(test),sourceLocation=\(sourceLocation),test=\(test),sourceLocation=\(sourceLocation)): \(error)\n".utf8))
 )
 where T: Codable & Equatable
 {

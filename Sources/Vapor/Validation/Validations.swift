@@ -40,6 +40,8 @@ public struct Validations: Sendable {
         _ key: BasicCodingKey,
         required: Bool = true,
         customFailureDescription: String? = nil,
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering add(key=\(key),required=\(required),customFailureDescription=\(customFailureDescription),nested=\(nested))\n".utf8))
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting add(key=\(key),required=\(required),customFailureDescription=\(customFailureDescription),nested=\(nested))\n".utf8))
         _ nested: (inout Validations) -> ()
     ) {
         var validations = Validations()

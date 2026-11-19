@@ -175,6 +175,7 @@ public actor EndpointCache<T>: Sendable where T: Decodable & Sendable {
 		FileHandle.standardError.write(Data("[ERROR] >>> Entering clearCache()\n".utf8))
         self.cached = (nil, nil)
         self.headers = nil
+		FileHandle.standardError.write(Data("[DEBUG] clearCache(): self.headers → \(self.headers)\n".utf8))
 		FileHandle.standardError.write(Data("[WARN] <<< Exiting clearCache()\n".utf8))
     }
 }

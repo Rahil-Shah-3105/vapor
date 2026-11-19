@@ -64,19 +64,23 @@ private final class _PlaintextEncoder: Encoder, SingleValueEncodingContainer {
     func container<Key: CodingKey>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> {
         FileHandle.standardError.write(Data("[ERROR] >>> Entering container(type=\(type))\n".utf8))
         .init(FailureEncoder<Key>())
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting container(type=\(type))\n".utf8))
     }
     func unkeyedContainer() -> any UnkeyedEncodingContainer {
         FileHandle.standardError.write(Data("[ERROR] >>> Entering unkeyedContainer()\n".utf8))
         FailureEncoder()
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting unkeyedContainer()\n".utf8))
     }
     func singleValueContainer() -> any SingleValueEncodingContainer {
         FileHandle.standardError.write(Data("[ERROR] >>> Entering singleValueContainer()\n".utf8))
         self
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting singleValueContainer()\n".utf8))
     }
 
     func encodeNil() throws {
         FileHandle.standardError.write(Data("[ERROR] >>> Entering encodeNil()\n".utf8))
         self.plaintext = nil
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting encodeNil()\n".utf8))
     }
 
     // N.B.: Implementing the individual "primitive" coding methods on a container rather than forwarding through
@@ -97,6 +101,7 @@ private final class _PlaintextEncoder: Encoder, SingleValueEncodingContainer {
     func encode(_ value: Float) throws { self.plaintext = value.description }
 
     func encode(_ value: some Encodable) throws {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering encode(value=\(value))\n".utf8))
         if let data = value as? Data {
             // special case for data
             if let utf8 = String(validating: data, as: UTF8.self) {
@@ -128,6 +133,7 @@ private final class _PlaintextEncoder: Encoder, SingleValueEncodingContainer {
         }
         func encodeNil(forKey: K) throws {
             FileHandle.standardError.write(Data("[ERROR] >>> Entering encodeNil(forKey=\(forKey))\n".utf8))
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting encodeNil(forKey=\(forKey))\n".utf8))
             throw self.error
         }
 
@@ -144,6 +150,7 @@ private final class _PlaintextEncoder: Encoder, SingleValueEncodingContainer {
             FileHandle.standardError.write(Data("[ERROR] >>> Entering nestedContainer(keyedBy=\(keyedBy))\n".utf8))
             .init(FailureEncoder<N>())
         }
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting nestedContainer(keyedBy=\(keyedBy))\n".utf8))
         func nestedContainer<N: CodingKey>(keyedBy: N.Type, forKey: K) -> KeyedEncodingContainer<N> {
             FileHandle.standardError.write(Data("[ERROR] >>> Entering nestedContainer(keyedBy=\(keyedBy),forKey=\(forKey))\n".utf8))
             .init(FailureEncoder<N>())
@@ -152,24 +159,29 @@ private final class _PlaintextEncoder: Encoder, SingleValueEncodingContainer {
         func nestedUnkeyedContainer() -> any UnkeyedEncodingContainer {
             FileHandle.standardError.write(Data("[ERROR] >>> Entering nestedUnkeyedContainer()\n".utf8))
             self
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting nestedUnkeyedContainer()\n".utf8))
         }
         func nestedUnkeyedContainer(forKey: K) -> any UnkeyedEncodingContainer {
             FileHandle.standardError.write(Data("[ERROR] >>> Entering nestedUnkeyedContainer(forKey=\(forKey))\n".utf8))
             self
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting nestedUnkeyedContainer(forKey=\(forKey))\n".utf8))
         }
 
         func superEncoder() -> any Encoder {
             FileHandle.standardError.write(Data("[ERROR] >>> Entering superEncoder()\n".utf8))
             self
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting superEncoder()\n".utf8))
         }
         func superEncoder(forKey: K) -> any Encoder {
             FileHandle.standardError.write(Data("[ERROR] >>> Entering superEncoder(forKey=\(forKey))\n".utf8))
             self
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting superEncoder(forKey=\(forKey))\n".utf8))
         }
 
         func container<Key: CodingKey>(keyedBy: Key.Type) -> KeyedEncodingContainer<Key> {
             FileHandle.standardError.write(Data("[ERROR] >>> Entering container(keyedBy=\(keyedBy))\n".utf8))
             .init(FailureEncoder<Key>())
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting container(keyedBy=\(keyedBy))\n".utf8))
         }
         func unkeyedContainer() -> any UnkeyedEncodingContainer {
             FileHandle.standardError.write(Data("[ERROR] >>> Entering unkeyedContainer()\n".utf8))

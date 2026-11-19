@@ -50,6 +50,7 @@ public struct Environment: Sendable, Equatable {
     public static func custom(name: String) -> Environment {
         FileHandle.standardError.write(Data("[ERROR] >>> Entering custom(name=\(name))\n".utf8))
         .init(name: name)
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting custom(name=\(name))\n".utf8))
     }
 
     // MARK: - Env

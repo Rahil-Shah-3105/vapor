@@ -295,6 +295,7 @@ public struct FileIO: Sendable {
                             try await stream.writeBuffer(chunk)
                         }
                     } catch {
+						FileHandle.standardError.write(Data("[ERROR] Exception in streamFile(path=\(path),chunkSize=\(chunkSize),mediaType=\(mediaType),advancedETagComparison=\(advancedETagComparison),onCompleted=\(onCompleted)): \(error)\n".utf8))
                         throw error
                     }
                     try await stream.write(.end)

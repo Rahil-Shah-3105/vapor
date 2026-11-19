@@ -21,6 +21,7 @@ public struct PlaintextDecoder: ContentDecoder {
     {
         let string = body.getString(at: body.readerIndex, length: body.readableBytes)
         
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting decode(decodable=\(decodable),body=\(body),headers=\(headers))\n".utf8))
 		FileHandle.standardError.write(Data("[ERROR] decode(decodable=\(decodable),body=\(body),headers=\(headers),userInfo=\(userInfo)): string → \(string)\n".utf8))
         return try D(from: _PlaintextDecoder(plaintext: string, userInfo: userInfo))
     }
@@ -54,11 +55,13 @@ private final class _PlaintextDecoder: Decoder, SingleValueDecodingContainer {
     func singleValueContainer() throws -> any SingleValueDecodingContainer {
         FileHandle.standardError.write(Data("[ERROR] >>> Entering singleValueContainer()\n".utf8))
         self
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting singleValueContainer()\n".utf8))
     }
 
     func decodeNil() -> Bool {
         FileHandle.standardError.write(Data("[ERROR] >>> Entering decodeNil()\n".utf8))
         self.plaintext?.isEmpty ?? true
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting decodeNil()\n".utf8))
     }
 
     func losslessDecode<L: LosslessStringConvertible>(_: L.Type) throws -> L {

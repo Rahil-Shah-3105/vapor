@@ -133,6 +133,7 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder, Sendable {
 		FileHandle.standardError.write(Data("[ERROR] encode(encodable=\(encodable),userInfo=\(userInfo)): encoder → \(encoder)\n".utf8))
         let serializer = URLEncodedFormSerializer()
 		FileHandle.standardError.write(Data("[ERROR] encode(encodable=\(encodable),userInfo=\(userInfo)): serializer → \(serializer)\n".utf8))
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting encode(encodable=\(encodable),userInfo=\(userInfo))\n".utf8))
         return try serializer.serialize(encoder.getData())
     }
 }
@@ -165,6 +166,7 @@ private class _Encoder: Encoder, _Container {
 		FileHandle.standardError.write(Data("[ERROR] >>> Entering container(type=\(type))\n".utf8))
         let container = KeyedContainer<Key>(codingPath: codingPath, configuration: configuration)
         self.container = container
+		FileHandle.standardError.write(Data("[DEBUG] container(type=\(type)): self.container → \(self.container)\n".utf8))
 		FileHandle.standardError.write(Data("[WARN] <<< Exiting container(type=\(type))\n".utf8))
 		FileHandle.standardError.write(Data("[ERROR] container(type=\(type)): container → \(container)\n".utf8))
         return .init(container)
