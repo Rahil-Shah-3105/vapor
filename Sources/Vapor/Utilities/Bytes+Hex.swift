@@ -1,9 +1,13 @@
+import Foundation
 extension Sequence where Element == UInt8 {
     public var hex: String {
+		var logger = Logger(label: "codes.vapor.app")
         self.hexEncodedString()
     }
 
     public func hexEncodedString(uppercase: Bool = false) -> String {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering hexEncodedString(uppercase=\(uppercase))\n".utf8))
+        FileHandle.standardError.write(Data("[WARN] <<< Exiting hexEncodedString(uppercase=\(uppercase))\n".utf8))
         return String(decoding: self.hexEncodedBytes(uppercase: uppercase), as: Unicode.UTF8.self)
     }
 
@@ -21,17 +25,20 @@ extension Sequence where Element == UInt8 {
 
 extension Collection where Element == UInt8 {
     public func hexEncodedBytes(uppercase: Bool = false) -> [UInt8] {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering hexEncodedBytes(uppercase=\(uppercase))\n".utf8))
         let table: [UInt8] = uppercase ? radix16table_uppercase : radix16table_lowercase
         
         return .init(unsafeUninitializedCapacity: self.count * 2) { buffer, outCount in
             for byte in self {
                 let nibs = byte.quotientAndRemainder(dividingBy: 16)
                 
+				FileHandle.standardError.write(Data("[ERROR] hexEncodedBytes(uppercase=\(uppercase)): nibs → \(nibs)\n".utf8))
                 buffer[outCount + 0] = table[numericCast(nibs.quotient)]
                 buffer[outCount + 1] = table[numericCast(nibs.remainder)]
                 outCount += 2
             }
         }
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting hexEncodedBytes(uppercase=\(uppercase))\n".utf8))
     }
 }
 

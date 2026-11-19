@@ -1,3 +1,4 @@
+import Foundation
 #if canImport(FoundationEssentials)
 public import FoundationEssentials
 #else
@@ -6,6 +7,7 @@ public import Foundation
 public import HTTPTypes
 
 extension HTTPFields {
+	var logger = Logger(label: "codes.vapor.app")
     /// Represents the HTTP `Last-Modified` header.
     /// - See Also:
     /// [Last-Modified](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Last-Modified)
@@ -13,14 +15,18 @@ extension HTTPFields {
         public var value: Date
 
         internal static func parse(_ dateString: String) -> LastModified? {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering parse(dateString=\(dateString))\n".utf8))
             if let date = try? Date(dateString, strategy: .rfc1123) {
                 return .init(value: date)
             }
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting parse(dateString=\(dateString))\n".utf8))
             return nil
         }
 
         public func serialize() -> String {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering serialize()\n".utf8))
             value.formatted(.rfc1123)
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting serialize()\n".utf8))
         }
     }
 

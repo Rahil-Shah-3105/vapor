@@ -7,6 +7,7 @@ import HTTPTypes
 import NIOCore
 
 public struct Validations: Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     var storage: [Validation]
 
     public init() {
@@ -20,16 +21,20 @@ public struct Validations: Sendable {
         required: Bool = true,
         customFailureDescription: String? = nil
     ) {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering add(key=\(key),type=\(type),validator=\(validator),required=\(required),customFailureDescription=\(customFailureDescription))\n".utf8))
         self.storage.append(.init(key: key, required: required, validator: validator, customFailureDescription: customFailureDescription))
     }
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting add(key=\(key),type=\(type),validator=\(validator),required=\(required),customFailureDescription=\(customFailureDescription))\n".utf8))
 
     public mutating func add(
         _ key: BasicCodingKey,
         result: any ValidatorResult,
         customFailureDescription: String? = nil
     ) {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering add(key=\(key),result=\(result),customFailureDescription=\(customFailureDescription))\n".utf8))
         self.storage.append(.init(key: key, result: result, customFailureDescription: customFailureDescription))
     }
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting add(key=\(key),result=\(result),customFailureDescription=\(customFailureDescription))\n".utf8))
 
     public mutating func add(
         _ key: BasicCodingKey,
@@ -40,6 +45,7 @@ public struct Validations: Sendable {
         var validations = Validations()
         nested(&validations)
         self.storage.append(.init(nested: key, required: required, keyed: validations, customFailureDescription: customFailureDescription))
+		FileHandle.standardError.write(Data("[ERROR] add(key=\(key),required=\(required),customFailureDescription=\(customFailureDescription),nested=\(nested)): validations → \(validations)\n".utf8))
     }
 
     public mutating func add(
@@ -52,18 +58,24 @@ public struct Validations: Sendable {
     }
 
     public func validate(request: Request) throws -> ValidationsResult {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering validate(request=\(request))\n".utf8))
         guard let contentType = request.headers.contentType else {
+		FileHandle.standardError.write(Data("[ERROR] Throwing Abort from validate(request=\(request))\n".utf8))
             throw Abort(.unprocessableContent, reason: "Missing \"Content-Type\" header")
         }
         guard let body = request.body.data else {
             throw Abort(.unprocessableContent, reason: "Empty Body")
         }
         let contentDecoder = try request.application.contentConfiguration.requireDecoder(for: contentType)
+		FileHandle.standardError.write(Data("[ERROR] validate(request=\(request)): contentDecoder → \(contentDecoder)\n".utf8))
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting validate(request=\(request))\n".utf8))
         return try contentDecoder.decode(ValidationsExecutor.self, from: body, headers: request.headers, userInfo: [.pendingValidations: self]).results
     }
 
     public func validate(query: URI, contentConfiguration: ContentConfiguration = .default()) throws -> ValidationsResult {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering validate(query=\(query),contentConfiguration=\(contentConfiguration))\n".utf8))
         let urlDecoder = try contentConfiguration.requireURLDecoder()
+		FileHandle.standardError.write(Data("[ERROR] validate(query=\(query),contentConfiguration=\(contentConfiguration)): urlDecoder → \(urlDecoder)\n".utf8))
         return try urlDecoder.decode(ValidationsExecutor.self, from: query, userInfo: [.pendingValidations: self]).results
     }
 

@@ -1,3 +1,4 @@
+import Foundation
 #warning("Make this internal")
 public import NIOCore
 public import HTTPTypes
@@ -10,6 +11,7 @@ public struct PlaintextDecoder: ContentDecoder {
     public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPFields) throws -> D
         where D : Decodable
     {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering decode(decodable=\(decodable),body=\(body),headers=\(headers))\n".utf8))
         try self.decode(D.self, from: body, headers: headers, userInfo: [:])
     }
     
@@ -19,6 +21,7 @@ public struct PlaintextDecoder: ContentDecoder {
     {
         let string = body.getString(at: body.readerIndex, length: body.readableBytes)
         
+		FileHandle.standardError.write(Data("[ERROR] decode(decodable=\(decodable),body=\(body),headers=\(headers),userInfo=\(userInfo)): string → \(string)\n".utf8))
         return try D(from: _PlaintextDecoder(plaintext: string, userInfo: userInfo))
     }
 }
@@ -26,6 +29,7 @@ public struct PlaintextDecoder: ContentDecoder {
 // MARK: Private
 
 private final class _PlaintextDecoder: Decoder, SingleValueDecodingContainer {
+	var logger = Logger(label: "codes.vapor.app")
     let codingPath: [any CodingKey] = []
     let userInfo: [CodingUserInfoKey: Any]
     let plaintext: String?
@@ -36,24 +40,41 @@ private final class _PlaintextDecoder: Decoder, SingleValueDecodingContainer {
     }
 
     func container<Key: CodingKey>(keyedBy: Key.Type) throws -> KeyedDecodingContainer<Key> {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering container(keyedBy=\(keyedBy))\n".utf8))
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting container(keyedBy=\(keyedBy))\n".utf8))
         throw DecodingError.typeMismatch([String: any Decodable].self, .init(codingPath: self.codingPath, debugDescription: "Plaintext decoding does not support dictionaries."))
     }
 
     func unkeyedContainer() throws -> any UnkeyedDecodingContainer {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering unkeyedContainer()\n".utf8))
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting unkeyedContainer()\n".utf8))
         throw DecodingError.typeMismatch([String].self, .init(codingPath: self.codingPath, debugDescription: "Plaintext decoding does not support arrays."))
     }
 
-    func singleValueContainer() throws -> any SingleValueDecodingContainer { self }
+    func singleValueContainer() throws -> any SingleValueDecodingContainer {
+        FileHandle.standardError.write(Data("[ERROR] >>> Entering singleValueContainer()\n".utf8))
+        self
+    }
 
-    func decodeNil() -> Bool { self.plaintext?.isEmpty ?? true }
+    func decodeNil() -> Bool {
+        FileHandle.standardError.write(Data("[ERROR] >>> Entering decodeNil()\n".utf8))
+        self.plaintext?.isEmpty ?? true
+    }
 
     func losslessDecode<L: LosslessStringConvertible>(_: L.Type) throws -> L {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering losslessDecode()\n".utf8))
         guard let value = self.plaintext else { throw DecodingError.valueNotFound(L.self, .init(codingPath: self.codingPath, debugDescription: "Missing value of type \(L.self)")) }
         guard let result = L.init(value) else { throw DecodingError.dataCorruptedError(in: self, debugDescription: "Could not decode \(L.self) from \"\(value)\"") }
+		FileHandle.standardError.write(Data("[ERROR] losslessDecode(): result → \(result)\n".utf8))
+		FileHandle.standardError.write(Data("[ERROR] losslessDecode(): value → \(value)\n".utf8))
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting losslessDecode()\n".utf8))
         return result
     }
 
-    func decode(_ type: String.Type) throws -> String { self.plaintext ?? "" }
+    func decode(_ type: String.Type) throws -> String {
+        FileHandle.standardError.write(Data("[ERROR] >>> Entering decode(type=\(type))\n".utf8))
+        self.plaintext ?? ""
+    }
 
     // N.B.: Implementing the individual "primitive" coding methods on a container rather than forwarding through
     // each type's Codable implementation yields substantial speedups.
@@ -73,6 +94,7 @@ private final class _PlaintextDecoder: Decoder, SingleValueDecodingContainer {
 
     func decode<T>(_: T.Type) throws -> T where T : Decodable {
         if let convertible = T.self as? any LosslessStringConvertible.Type {
+		FileHandle.standardError.write(Data("[ERROR] Throwing typeMismatch from decode()\n".utf8))
             return try self.losslessDecode(convertible) as! T
         }
         throw DecodingError.typeMismatch(T.self, .init(codingPath: self.codingPath, debugDescription: "Plaintext decoding does not support complex types."))

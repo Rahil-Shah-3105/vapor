@@ -49,13 +49,17 @@ public struct File: Codable, Equatable, Sendable {
 
     /// `Encodable` conformance.
     public func encode(to encoder: any Encoder) throws {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering encode(encoder=\(encoder))\n".utf8))
         var container = encoder.container(keyedBy: CodingKeys.self)
         let data = self.data.getData(at: self.data.readerIndex, length: self.data.readableBytes)
         try container.encode(data, forKey: .data)
+		FileHandle.standardError.write(Data("[ERROR] encode(encoder=\(encoder)): data → \(data)\n".utf8))
+		FileHandle.standardError.write(Data("[ERROR] encode(encoder=\(encoder)): container → \(container)\n".utf8))
         try container.encode(self.filename, forKey: .filename)
         if let contentType {
             try container.encode(contentType.serialize(), forKey: .contentType)
         }
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting encode(encoder=\(encoder))\n".utf8))
     }
 
     /// Creates a new `File`.

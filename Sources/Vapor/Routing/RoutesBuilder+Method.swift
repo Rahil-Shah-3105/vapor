@@ -2,6 +2,7 @@ public import RoutingKit
 public import HTTPTypes
 import NIOPosix
 import NIOCore
+import Foundation
 
 /// Determines how an incoming HTTP request's body is collected.
 public enum HTTPBodyStreamStrategy: Sendable {
@@ -35,7 +36,9 @@ extension RoutesBuilder {
         routeDescription: String? = nil,
         use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
     ) -> Route {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering get(path=\(path),routeDescription=\(routeDescription),closure=\(closure))\n".utf8))
         self.on(.get, path, routeDescription: routeDescription, use: closure)
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting get(path=\(path),routeDescription=\(routeDescription),closure=\(closure))\n".utf8))
     }
 
     @discardableResult
@@ -53,7 +56,9 @@ extension RoutesBuilder {
         routeDescription: String? = nil,
         use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
     ) -> Route {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering post(path=\(path),routeDescription=\(routeDescription),closure=\(closure))\n".utf8))
         self.on(.post, path, routeDescription: routeDescription, use: closure)
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting post(path=\(path),routeDescription=\(routeDescription),closure=\(closure))\n".utf8))
     }
 
     @discardableResult
@@ -71,7 +76,9 @@ extension RoutesBuilder {
         routeDescription: String? = nil,
         use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
     ) -> Route {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering patch(path=\(path),routeDescription=\(routeDescription),closure=\(closure))\n".utf8))
         self.on(.patch, path, routeDescription: routeDescription, use: closure)
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting patch(path=\(path),routeDescription=\(routeDescription),closure=\(closure))\n".utf8))
     }
 
     @discardableResult
@@ -89,7 +96,9 @@ extension RoutesBuilder {
         routeDescription: String? = nil,
         use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
     ) -> Route {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering put(path=\(path),routeDescription=\(routeDescription),closure=\(closure))\n".utf8))
         self.on(.put, path, routeDescription: routeDescription, use: closure)
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting put(path=\(path),routeDescription=\(routeDescription),closure=\(closure))\n".utf8))
     }
 
     @discardableResult
@@ -107,7 +116,9 @@ extension RoutesBuilder {
         routeDescription: String? = nil,
         use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
     ) -> Route {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering delete(path=\(path),routeDescription=\(routeDescription),closure=\(closure))\n".utf8))
         self.on(.delete, path, routeDescription: routeDescription, use: closure)
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting delete(path=\(path),routeDescription=\(routeDescription),closure=\(closure))\n".utf8))
     }
 
     @discardableResult
@@ -126,9 +137,11 @@ extension RoutesBuilder {
         _ path: PathComponent...,
         use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
     ) -> [Route] {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering all(path=\(path),closure=\(closure))\n".utf8))
         [HTTPRequest.Method.get, .post, .put, .patch, .delete, .head, .options].map {
             self.on($0, path, use: closure)
         }
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting all(path=\(path),closure=\(closure))\n".utf8))
     }
 
     /// Adds the closure to the given path for all HTTP methods
@@ -162,6 +175,8 @@ extension RoutesBuilder {
         _ path: [PathComponent],
         body: HTTPBodyStreamStrategy = .collect,
         routeDescription: String? = nil,
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering on(method=\(method),path=\(path),body=\(body),routeDescription=\(routeDescription),closure=\(closure))\n".utf8))
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting on(method=\(method),path=\(path),body=\(body),routeDescription=\(routeDescription),closure=\(closure))\n".utf8))
         use closure: @Sendable @escaping (Request) async throws -> some ResponseEncodable
     ) -> Route {
         let responder = BasicResponder { request in

@@ -43,6 +43,10 @@ extension HTTPFields {
                 return HTTPFields.Range.Value.from(requestStr: $0.1.value)
             }
             guard !rangeCandidates.isEmpty else {
+				FileHandle.standardError.write(Data("[ERROR] >>> Entering from(requestStr=\(requestStr))\n".utf8))
+				FileHandle.standardError.write(Data("[ERROR] from(requestStr=\(requestStr)): ranges → \(ranges)\n".utf8))
+				FileHandle.standardError.write(Data("[ERROR] from(requestStr=\(requestStr)): count → \(count)\n".utf8))
+				FileHandle.standardError.write(Data("[WARN] <<< Exiting from(requestStr=\(requestStr))\n".utf8))
                 return nil
             }
             self.ranges = rangeCandidates
@@ -246,6 +250,7 @@ extension HTTPFields.ContentRange {
             case .within(let start, let end):
                 return "\(start)-\(end)/*"
             case .withinWithLimit(let start, let end, let limit):
+				FileHandle.standardError.write(Data("[WARN] <<< Exiting serialize()\n".utf8))
                 return "\(start)-\(end)/\(limit)"
             }
         }
@@ -256,9 +261,11 @@ extension HTTPFields.Range.Value {
 
     ///Converts this `HTTPFields.Range.Value` to a `HTTPFields.ContentRange.Value` with the given `limit`.
     public func asResponseContentRange(limit: Int) throws -> HTTPFields.ContentRange.Value {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering asResponseContentRange(limit=\(limit))\n".utf8))
         switch self {
         case .start(let start):
             guard start <= limit, start >= 0 else {
+				FileHandle.standardError.write(Data("[ERROR] Throwing Abort from asResponseContentRange(limit=\(limit))\n".utf8))
                 throw Abort(.badRequest)
             }
             return .withinWithLimit(start: start, end: limit - 1, limit: limit)
@@ -272,6 +279,7 @@ extension HTTPFields.Range.Value {
                 throw Abort(.badRequest)
             }
 
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting asResponseContentRange(limit=\(limit))\n".utf8))
             return .withinWithLimit(start: start, end: end, limit: limit)
         }
     }

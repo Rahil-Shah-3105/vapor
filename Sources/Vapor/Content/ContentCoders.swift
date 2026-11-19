@@ -9,6 +9,7 @@ public import HTTPTypes
 
 /// Conform a type to this protocol to make it usable for encoding data via Vapor's ``ContentConfiguration`` system.
 public protocol ContentEncoder: Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     /// Legacy "encode object" method. The provided encodable object's contents must be stored in the provided
     /// ``NIOCore/ByteBuffer``, and any appropriate headers for the type of the content may be stored in the provided
     /// ``HTTPTypes/HTTPFields``.
@@ -51,12 +52,16 @@ public protocol ContentDecoder: Sendable {
 
 extension ContentEncoder {
     public func encode(_ encodable: some Encodable, to body: inout ByteBuffer, headers: inout HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering encode(encodable=\(encodable),body=\(body),headers=\(headers),userInfo=\(userInfo))\n".utf8))
         try self.encode(encodable, to: &body, headers: &headers)
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting encode(encodable=\(encodable),body=\(body),headers=\(headers),userInfo=\(userInfo))\n".utf8))
     }
 }
 
 extension ContentDecoder {
     public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws -> D
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering decode(decodable=\(decodable),body=\(body),headers=\(headers),userInfo=\(userInfo))\n".utf8))
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting decode(decodable=\(decodable),body=\(body),headers=\(headers),userInfo=\(userInfo))\n".utf8))
         where D: Decodable
     {
         try self.decode(decodable, from: body, headers: headers)

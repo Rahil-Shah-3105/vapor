@@ -1,10 +1,12 @@
 public import HTTPTypes
 import NIOConcurrencyHelpers
+import Foundation
 
 /// Can convert `self` to a `Response`.
 ///
 /// Types that conform to this protocol can be returned in route closures.
 public protocol ResponseEncodable: SendableMetatype, Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     /// Encodes an instance of `Self` to a `Response`.
     ///
     /// - parameters:
@@ -27,7 +29,9 @@ public protocol RequestDecodable {
 
 extension Request: RequestDecodable {
     public static func decodeRequest(_ request: Request) async throws -> Request {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering decodeRequest(request=\(request))\n".utf8))
         request
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting decodeRequest(request=\(request))\n".utf8))
     }
 }
 
@@ -48,13 +52,18 @@ extension ResponseEncodable {
     ///     - headers: `HTTPFields` to merge into the `Response`'s headers.
     /// - returns: Newly encoded `Response`.
     public func encodeResponse(status: HTTPResponse.Status, headers: HTTPFields = [:], for request: Request) async throws -> Response {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering encodeResponse(status=\(status),headers=\(headers),request=\(request))\n".utf8))
         let response = try await encodeResponse(for: request)
         response.responseBox.withLockedValue { box in
+			FileHandle.standardError.write(Data("[ERROR] encodeResponse(status=\(status),headers=\(headers),request=\(request)): response → \(response)\n".utf8))
             for header in headers {
                 box.headers.append(header)
             }
             box.status = status
+			FileHandle.standardError.write(Data("[DEBUG] encodeResponse(status=\(status),headers=\(headers),request=\(request)): box.status → \(box.status)\n".utf8))
         }
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting encodeResponse(status=\(status),headers=\(headers),request=\(request))\n".utf8))
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting encodeResponse(request=\(request))\n".utf8))
         return response
     }
 }
@@ -72,6 +81,7 @@ extension StaticString: ResponseEncodable {
     // See `AsyncResponseEncodable`.
     public func encodeResponse(for request: Request) async throws -> Response {
         let res = Response(headers: staticStringHeaders, body: .init(staticString: self), contentConfiguration: request.application.contentConfiguration)
+		FileHandle.standardError.write(Data("[ERROR] encodeResponse(request=\(request)): res → \(res)\n".utf8))
         return res
     }
 }

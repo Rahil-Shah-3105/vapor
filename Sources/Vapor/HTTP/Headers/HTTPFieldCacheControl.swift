@@ -7,6 +7,7 @@ public import HTTPTypes
 
 // Comments on these properties are copied from the mozilla doc URL shown below.
 extension HTTPFields {
+	var logger = Logger(label: "codes.vapor.app")
     /// Represents the HTTP `Cache-Control` header.
     /// - See Also:
     /// [Cache-Control docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control)
@@ -111,8 +112,10 @@ extension HTTPFields {
         }
 
         public static func parse(_ value: String) -> CacheControl? {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering parse(value=\(value))\n".utf8))
             var cache = CacheControl()
 
+			FileHandle.standardError.write(Data("[ERROR] parse(value=\(value)): cache → \(cache)\n".utf8))
             return value
                 .replacing(" ", with: "")
                 .replacing("\t", with: "")
@@ -146,12 +149,14 @@ extension HTTPFields {
                     }
 
                     cache[keyPath: keyPath] = seconds
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting parse(value=\(value))\n".utf8))
                     return true
             }) ? cache : nil
         }
 
         /// Generates the header string for this instance.
         public func serialize() -> String {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering serialize()\n".utf8))
             var options = Self.exactMatch
                 .filter { self[keyPath: $0.value] == true }
                 .map { $0.key }
@@ -168,6 +173,7 @@ extension HTTPFields {
                 }
             }
 
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting serialize()\n".utf8))
             return (options + optionsWithSeconds).joined(separator: ", ")
         }
 

@@ -1,3 +1,4 @@
+import Foundation
 #warning("Make this internal")
 public import NIOCore
 #if canImport(FoundationEssentials)
@@ -95,28 +96,38 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder, Sendable {
 
     // See `ContentDecoder.decode(_:from:headers:)`.
     public func decode<D: Decodable>(_: D.Type, from body: ByteBuffer, headers: HTTPFields) throws -> D {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering decode(body=\(body),headers=\(headers))\n".utf8))
         try self.decode(D.self, from: body, headers: headers, userInfo: [:])
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting decode(body=\(body),headers=\(headers))\n".utf8))
     }
 
     // See `ContentDecoder.decode(_:from:headers:userInfo:)`.
     public func decode<D: Decodable>(_: D.Type, from body: ByteBuffer, headers: HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws -> D {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering decode(body=\(body),headers=\(headers),userInfo=\(userInfo))\n".utf8))
         guard headers.contentType == .urlEncodedForm else {
+			FileHandle.standardError.write(Data("[ERROR] Throwing Abort from decode(body=\(body),headers=\(headers),userInfo=\(userInfo))\n".utf8))
             throw Abort(.unsupportedMediaType)
         }
 
         let string = body.getString(at: body.readerIndex, length: body.readableBytes) ?? ""
+		FileHandle.standardError.write(Data("[ERROR] decode(body=\(body),headers=\(headers),userInfo=\(userInfo)): string → \(string)\n".utf8))
 
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting decode(body=\(body),headers=\(headers),userInfo=\(userInfo))\n".utf8))
         return try self.decode(D.self, from: string, userInfo: userInfo)
     }
 
     // See `URLQueryDecoder.decode(_:from:)`.
     public func decode<D: Decodable>(_: D.Type, from url: URI) throws -> D {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering decode(url=\(url))\n".utf8))
         try self.decode(D.self, from: url, userInfo: [:])
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting decode(url=\(url))\n".utf8))
     }
 
     // See `URLQueryDecoder.decode(_:from:userInfo:)`.
     public func decode<D: Decodable>(_: D.Type, from url: URI, userInfo: [CodingUserInfoKey: any Sendable]) throws -> D {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering decode(url=\(url),userInfo=\(userInfo))\n".utf8))
         try self.decode(D.self, from: url.query ?? "", userInfo: userInfo)
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting decode(url=\(url),userInfo=\(userInfo))\n".utf8))
     }
 
     /// Decodes an instance of the supplied `Decodable` type from a `String`.
@@ -133,7 +144,9 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder, Sendable {
     /// - Returns: An instance of `D`.
     /// - Throws: Any error that may occur while attempting to decode the specified type.
     public func decode<D: Decodable>(_: D.Type, from string: String) throws -> D {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering decode(string=\(string))\n".utf8))
         try self.decode(D.self, from: string, userInfo: [:])
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting decode(string=\(string))\n".utf8))
     }
 
     /// Decodes an instance of the supplied `Decodable` type from a `String`.
@@ -151,6 +164,7 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder, Sendable {
     /// - Returns: An instance of `D`.
     /// - Throws: Any error that may occur while attempting to decode the specified type.
     public func decode<D: Decodable>(_: D.Type, from string: String, userInfo: [CodingUserInfoKey: any Sendable]) throws -> D {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering decode(string=\(string),userInfo=\(userInfo))\n".utf8))
         let configuration: URLEncodedFormDecoder.Configuration
 
         if !userInfo.isEmpty { // Changing a coder's userInfo is a thread-unsafe mutation, operate on a copy
@@ -162,11 +176,14 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder, Sendable {
             )
         } else {
             configuration = self.configuration
+			FileHandle.standardError.write(Data("[INFO] decode(string=\(string),userInfo=\(userInfo)): configuration → \(configuration)\n".utf8))
         }
 
         let parsedData = try self.parser.parse(string)
         let decoder = _Decoder(data: parsedData, codingPath: [], configuration: configuration)
 
+		FileHandle.standardError.write(Data("[ERROR] decode(string=\(string),userInfo=\(userInfo)): parsedData → \(parsedData)\n".utf8))
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting decode(string=\(string),userInfo=\(userInfo))\n".utf8))
         return try D(from: decoder)
     }
 }
@@ -198,6 +215,8 @@ private struct _Decoder: Decoder {
             configuration: self.configuration
         ))
     }
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering container(keyedBy=\(keyedBy))\n".utf8))
+    FileHandle.standardError.write(Data("[WARN] <<< Exiting container(keyedBy=\(keyedBy))\n".utf8))
 
     struct KeyedContainer<Key: CodingKey>: KeyedDecodingContainerProtocol {
         let data: URLEncodedFormData
@@ -219,18 +238,25 @@ private struct _Decoder: Decoder {
         }
 
         func contains(_ key: Key) -> Bool {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering contains(key=\(key))\n".utf8))
             self.data.children[key.stringValue] != nil || self.data.values.contains(.init(stringLiteral: key.stringValue))
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting contains(key=\(key))\n".utf8))
         }
 
         func decodeNil(forKey key: Key) throws -> Bool {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering decodeNil(key=\(key))\n".utf8))
             self.data.children[key.stringValue] == nil && !self.data.values.contains(.init(stringLiteral: key.stringValue))
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting decodeNil(key=\(key))\n".utf8))
         }
 
         private func decodeDate(forKey key: Key, child: URLEncodedFormData) throws -> Date {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering decodeDate(key=\(key),child=\(child))\n".utf8))
             try configuration.decodeDate(from: child, codingPath: self.codingPath, forKey: key)
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting decodeDate(key=\(key),child=\(child))\n".utf8))
         }
 
         func decode<T: Decodable>(_: T.Type, forKey key: Key) throws -> T {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering decode(key=\(key))\n".utf8))
             // If we are trying to decode a required array, we might not have decoded a child, but we should
             // still try to decode an empty array
             let child = self.data.children[key.stringValue] ?? []
@@ -242,6 +268,7 @@ private struct _Decoder: Decoder {
                 switch child.values.last {
                 case let value?:
                     guard let result = convertible.init(urlQueryFragmentValue: value) else {
+						FileHandle.standardError.write(Data("[ERROR] Throwing typeMismatch from decode(key=\(key))\n".utf8))
                         throw DecodingError.typeMismatch(T.self, at: self.codingPath + [key])
                     }
                     return result as! T
@@ -249,13 +276,23 @@ private struct _Decoder: Decoder {
                     // If there's no value, but flags are enabled and a Bool was requested, treat it as a flag.
                     return self.data.values.contains(.urlDecoded(key.stringValue)) as! T
                 default:
+					FileHandle.standardError.write(Data("[ERROR] Throwing valueNotFound from decode(key=\(key))\n".utf8))
                     throw DecodingError.valueNotFound(T.self, at: self.codingPath + [key])
                 }
             } else {
                 let decoder = _Decoder(data: child, codingPath: self.codingPath + [key], configuration: self.configuration)
 
+				FileHandle.standardError.write(Data("[ERROR] decode(key=\(key)): decoder → \(decoder)\n".utf8))
+				FileHandle.standardError.write(Data("[ERROR] >>> Entering valueNotFound(type=\(type),path=\(path))\n".utf8))
+				FileHandle.standardError.write(Data("[WARN] <<< Exiting valueNotFound(type=\(type),path=\(path))\n".utf8))
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting decode(key=\(key))\n".utf8))
                 return try T.init(from: decoder)
             }
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering decode()\n".utf8))
+			FileHandle.standardError.write(Data("[ERROR] Throwing valueNotFound from decode()\n".utf8))
+			FileHandle.standardError.write(Data("[ERROR] decode(): childData → \(childData)\n".utf8))
+			FileHandle.standardError.write(Data("[ERROR] Throwing typeMismatch from decode()\n".utf8))
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting decode()\n".utf8))
         }
 
         func nestedContainer<NestedKey: CodingKey>(keyedBy: NestedKey.Type, forKey key: Key) throws -> KeyedDecodingContainer<NestedKey> {
@@ -264,35 +301,50 @@ private struct _Decoder: Decoder {
                 codingPath: self.codingPath + [key],
                 configuration: self.configuration
             ))
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering nestedContainer(keyedBy=\(keyedBy),key=\(key))\n".utf8))
+        FileHandle.standardError.write(Data("[WARN] <<< Exiting nestedContainer(keyedBy=\(keyedBy),key=\(key))\n".utf8))
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering nestedContainer(keyedBy=\(keyedBy))\n".utf8))
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting nestedContainer(keyedBy=\(keyedBy))\n".utf8))
         }
 
         func nestedUnkeyedContainer(forKey key: Key) throws -> any UnkeyedDecodingContainer {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering nestedUnkeyedContainer(key=\(key))\n".utf8))
             try UnkeyedContainer(
                 data: self.data.children[key.stringValue] ?? [],
                 codingPath: self.codingPath + [key],
                 configuration: self.configuration
             )
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting nestedUnkeyedContainer(key=\(key))\n".utf8))
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering nestedUnkeyedContainer()\n".utf8))
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting nestedUnkeyedContainer()\n".utf8))
         }
 
         func superDecoder() throws -> any Decoder {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering superDecoder()\n".utf8))
             _Decoder(
                 data: self.data.children["super"] ?? [],
                 codingPath: self.codingPath + ["super".codingKey],
                 configuration: self.configuration
             )
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting superDecoder()\n".utf8))
         }
 
         func superDecoder(forKey key: Key) throws -> any Decoder {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering superDecoder(key=\(key))\n".utf8))
             _Decoder(
                 data: self.data.children[key.stringValue] ?? [],
                 codingPath: self.codingPath + [key],
                 configuration: self.configuration
             )
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting superDecoder(key=\(key))\n".utf8))
+			FileHandle.standardError.write(Data("[ERROR] superDecoder(): data → \(data)\n".utf8))
         }
     }
 
     func unkeyedContainer() throws -> any UnkeyedDecodingContainer {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering unkeyedContainer()\n".utf8))
         try UnkeyedContainer(data: self.data, codingPath: self.codingPath, configuration: self.configuration)
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting unkeyedContainer()\n".utf8))
     }
 
     struct UnkeyedContainer: UnkeyedDecodingContainer {
@@ -362,7 +414,9 @@ private struct _Decoder: Decoder {
         }
 
         func decodeNil() throws -> Bool {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering decodeNil()\n".utf8))
             false
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting decodeNil()\n".utf8))
         }
 
         mutating func decode<T: Decodable>(_: T.Type) throws -> T {
@@ -373,6 +427,7 @@ private struct _Decoder: Decoder {
                     codingPath: self.codingPath,
                     debugDescription: "Unkeyed container is at end."
                 )
+				FileHandle.standardError.write(Data("[ERROR] Throwing valueNotFound from decode()\n".utf8))
                 throw DecodingError.valueNotFound(T.self, context)
             }
 
@@ -397,6 +452,7 @@ private struct _Decoder: Decoder {
                     ) as! T
                 } else if let convertible = T.self as? any URLQueryFragmentConvertible.Type {
                     guard let result = convertible.init(urlQueryFragmentValue: value) else {
+						FileHandle.standardError.write(Data("[ERROR] Throwing typeMismatch from decode()\n".utf8))
                         throw DecodingError.typeMismatch(T.self, at: self.codingPath + [self.currentIndex.codingKey])
                     }
                     return result as! T
@@ -434,7 +490,9 @@ private struct _Decoder: Decoder {
     }
 
     func singleValueContainer() throws -> any SingleValueDecodingContainer {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering singleValueContainer()\n".utf8))
         SingleValueContainer(data: self.data, codingPath: self.codingPath, configuration: self.configuration)
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting singleValueContainer()\n".utf8))
     }
 
     struct SingleValueContainer: SingleValueDecodingContainer {
@@ -483,14 +541,18 @@ private struct _Decoder: Decoder {
 
 private extension URLEncodedFormDecoder.Configuration {
     func decodeDate(from data: URLEncodedFormData, codingPath: [any CodingKey], forKey key: (any CodingKey)?) throws -> Date {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering decodeDate(data=\(data),codingPath=\(codingPath),key=\(key))\n".utf8))
         let newCodingPath = codingPath + (key.map { [$0] } ?? [])
 
+		FileHandle.standardError.write(Data("[ERROR] decodeDate(data=\(data),codingPath=\(codingPath),key=\(key)): newCodingPath → \(newCodingPath)\n".utf8))
         switch self.dateDecodingStrategy {
         case .secondsSince1970:
             guard let value = data.values.last else {
+			FileHandle.standardError.write(Data("[ERROR] Throwing valueNotFound from decodeDate(data=\(data),codingPath=\(codingPath),key=\(key))\n".utf8))
                 throw DecodingError.valueNotFound(Date.self, at: newCodingPath)
             }
             guard let result = Date(urlQueryFragmentValue: value) else {
+				FileHandle.standardError.write(Data("[ERROR] Throwing typeMismatch from decodeDate(data=\(data),codingPath=\(codingPath),key=\(key))\n".utf8))
                 throw DecodingError.typeMismatch(Date.self, at: newCodingPath)
             }
 
@@ -499,14 +561,17 @@ private extension URLEncodedFormDecoder.Configuration {
             let decoder = _Decoder(data: data, codingPath: newCodingPath, configuration: self)
             let container = try decoder.singleValueContainer()
 
+			FileHandle.standardError.write(Data("[ERROR] decodeDate(data=\(data),codingPath=\(codingPath),key=\(key)): decoder → \(decoder)\n".utf8))
             let dateString = try container.decode(String.self)
             guard let date = try? Date(dateString, strategy: .iso8601) else {
+			FileHandle.standardError.write(Data("[ERROR] decodeDate(data=\(data),codingPath=\(codingPath),key=\(key)): dateString → \(dateString)\n".utf8))
                 throw DecodingError.dataCorrupted(.init(codingPath: newCodingPath, debugDescription: "Unable to decode ISO-8601 date."))
             }
             return date
         case .custom(let callback):
             let decoder = _Decoder(data: data, codingPath: newCodingPath, configuration: self)
 
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting decodeDate(data=\(data),codingPath=\(codingPath),key=\(key))\n".utf8))
             return try callback(decoder)
         }
     }
@@ -518,11 +583,13 @@ private extension URLEncodedFormDecoder.Configuration {
 
 private extension DecodingError {
     static func typeMismatch(_ type: Any.Type, at path: [any CodingKey]) -> DecodingError {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering typeMismatch(type=\(type),path=\(path))\n".utf8))
         let context = DecodingError.Context(
             codingPath: path,
             debugDescription: "Data found at '\(path.dotPath)' was not \(type)"
         )
 
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting typeMismatch(type=\(type),path=\(path))\n".utf8))
         return .typeMismatch(type, context)
     }
 

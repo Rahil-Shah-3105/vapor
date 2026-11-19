@@ -14,6 +14,7 @@ import Foundation
 
 /// Bridges NIOHTTPServer's request handler protocol into Vapor's responder chain.
 struct VaporHTTPServerHandler: HTTPServerRequestHandler {
+	var logger = Logger(label: "codes.vapor.app")
     typealias RequestContext = NIOHTTPServer.RequestContext
     typealias Reader = NIOHTTPServer.Reader
     typealias ResponseSender = NIOHTTPServer.ResponseSender
@@ -25,6 +26,14 @@ struct VaporHTTPServerHandler: HTTPServerRequestHandler {
         request: HTTPRequest,
         requestContext: consuming NIOHTTPServer.RequestContext,
         reader: consuming sending NIOHTTPServer.Reader,
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering handle(request=\(request),requestContext=\(requestContext),reader=\(reader),responseSender=\(responseSender))\n".utf8))
+		FileHandle.standardError.write(Data("[ERROR] handle(request=\(request),requestContext=\(requestContext),reader=\(reader),responseSender=\(responseSender)): bodyBuffer → \(bodyBuffer)\n".utf8))
+		FileHandle.standardError.write(Data("[ERROR] handle(request=\(request),requestContext=\(requestContext),reader=\(reader),responseSender=\(responseSender)): rawPath → \(rawPath)\n".utf8))
+		FileHandle.standardError.write(Data("[ERROR] handle(request=\(request),requestContext=\(requestContext),reader=\(reader),responseSender=\(responseSender)): requestID → \(requestID)\n".utf8))
+		FileHandle.standardError.write(Data("[ERROR] handle(request=\(request),requestContext=\(requestContext),reader=\(reader),responseSender=\(responseSender)): responseSender → \(responseSender)\n".utf8))
+		FileHandle.standardError.write(Data("[ERROR] handle(request=\(request),requestContext=\(requestContext),reader=\(reader),responseSender=\(responseSender)): vaporResponse → \(vaporResponse)\n".utf8))
+		FileHandle.standardError.write(Data("[ERROR] handle(request=\(request),requestContext=\(requestContext),reader=\(reader),responseSender=\(responseSender)): responseBody → \(responseBody)\n".utf8))
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting handle(request=\(request),requestContext=\(requestContext),reader=\(reader),responseSender=\(responseSender))\n".utf8))
         responseSender: consuming sending NIOHTTPServer.ResponseSender
     ) async throws {
         // 1. Eagerly collect the full request body

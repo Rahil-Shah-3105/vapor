@@ -1,9 +1,13 @@
+import Foundation
 /// Decodes nested single values from data at a key path.
 internal struct ContainerGetPathExecutor<D: Decodable>: Decodable {
+	var logger = Logger(label: "codes.vapor.app")
     let result: D
     
     static func userInfo(for keyPath: [any CodingKey]) -> [CodingUserInfoKey: any Sendable] {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering userInfo(keyPath=\(keyPath))\n".utf8))
         [.containerGetKeypath: keyPath]
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting userInfo(keyPath=\(keyPath))\n".utf8))
     }
     
     init(from decoder: any Decoder) throws {
@@ -42,6 +46,7 @@ fileprivate extension UnkeyedDecodingContainer {
     /// terminating loop, not an infinite recursion, which would at least eventually crash).
     mutating func skip() throws {
         #if DEBUG
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering skip()\n".utf8))
         let entryIndex = self.currentIndex
         #endif
         
@@ -50,6 +55,7 @@ fileprivate extension UnkeyedDecodingContainer {
         #if DEBUG
         assert(self.currentIndex != entryIndex, "Broken `UnkeyedDecodingContainer.superDecoder()` implementation detected!")
         #endif
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting skip()\n".utf8))
     }
     
     /// Return the result of ``superDecoder()`` without requiring `self` to be mutating.
@@ -57,7 +63,9 @@ fileprivate extension UnkeyedDecodingContainer {
     /// Tagged with "unsafe" because a call to this method _MUST_ be the final use of the container before it goes out
     /// of scope, which we can't make the compiler enforce.
     func _unsafe_inplace_superDecoder() throws -> any Decoder {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering _unsafe_inplace_superDecoder()\n".utf8))
         var inplace = self
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting _unsafe_inplace_superDecoder()\n".utf8))
         return try inplace.superDecoder()
     }
 }
@@ -66,14 +74,18 @@ fileprivate extension Decoder {
     /// Request an unkeyed container, then "fast-forward" the container until the given index is found, the current
     /// index goes past it, or the end of the container is reached.
     func unkeyedContainer(startingAt index: Int) throws -> any UnkeyedDecodingContainer {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering unkeyedContainer(index=\(index))\n".utf8))
         var container = try self.unkeyedContainer()
         
+		FileHandle.standardError.write(Data("[ERROR] unkeyedContainer(index=\(index)): container → \(container)\n".utf8))
         while container.currentIndex < index, !container.isAtEnd {
             try container.skip()
         }
         guard container.currentIndex == index, !container.isAtEnd else {
+			FileHandle.standardError.write(Data("[ERROR] Throwing keyNotFound from unkeyedContainer(index=\(index))\n".utf8))
             throw DecodingError.keyNotFound(index.codingKey, .init(codingPath: container.codingPath, debugDescription: "Missing index \(index)"))
         }
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting unkeyedContainer(index=\(index))\n".utf8))
         return container
     }
 }

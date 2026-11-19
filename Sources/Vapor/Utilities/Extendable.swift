@@ -1,7 +1,9 @@
+import Foundation
 /// Types conforming to ``Extendable`` can have stored properties added in extension by using the ``Extend`` struct.
 ///
 ///     final cass MyType: Extendable { ... }
 ///     extension MyType {
+var logger = Logger(label: "codes.vapor.app")
 ///         var foo: Int {
 ///             get { return extend.get(\MyType.foo, default: 0) }
 ///             set { extend.set(\MyType.foo, to: newValue) }
@@ -36,7 +38,9 @@ public struct Extend: Codable, ExpressibleByDictionaryLiteral {
 
     // See `Encodable.encode(to:)`.
     public func encode(to encoder: any Encoder) throws {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering encode(encoder=\(encoder))\n".utf8))
         // skip
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting encode(encoder=\(encoder))\n".utf8))
     }
 
     // See `Deodable.init(from:)`.
@@ -61,7 +65,9 @@ public struct Extend: Codable, ExpressibleByDictionaryLiteral {
     ///     let foo: Foo = extend.get(\MyType.Foo, default: defaultFoo)
     ///
     public func get<T>(_ key: AnyKeyPath, `default` d: T) -> T {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering get(key=\(key),d=\(d))\n".utf8))
         get(key.hashValue.description, default: d)
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting get(key=\(key),d=\(d))\n".utf8))
     }
 
     /// Set a value to the ``Extend`` storage.
@@ -71,7 +77,9 @@ public struct Extend: Codable, ExpressibleByDictionaryLiteral {
     ///     extend.set(\MyType.Foo, to: foo)
     ///
     public mutating func set<T>(_ key: AnyKeyPath, to newValue: T) {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering set(key=\(key),newValue=\(newValue))\n".utf8))
         set(key.hashValue.description, to: newValue)
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting set(key=\(key),newValue=\(newValue))\n".utf8))
     }
 
     /// Gets a value from the ``Extend`` storage falling back to the default value if it does not exist

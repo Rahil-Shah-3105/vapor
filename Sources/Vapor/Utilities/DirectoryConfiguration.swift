@@ -8,6 +8,7 @@ import Android
 import Darwin.C
 #endif
 import Logging
+import Foundation
 
 /// `DirectoryConfiguration` represents a configured working directory.
 /// It can also be used to derive a working directory automatically.
@@ -16,6 +17,7 @@ import Logging
 ///     print(dirConfig.workingDirectory) // "/path/to/workdir"
 ///
 public struct DirectoryConfiguration: Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     /// Path to the current working directory.
     public var workingDirectory: String
     public var resourcesDirectory: String
@@ -37,6 +39,7 @@ public struct DirectoryConfiguration: Sendable {
     ///
     /// - returns: The derived `DirectoryConfig` if it could be created, otherwise just "./".
     public static func detect() -> DirectoryConfiguration {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering detect()\n".utf8))
         // get actual working directory
         let cwd = getcwd(nil, Int(PATH_MAX))
         defer {
@@ -60,15 +63,18 @@ public struct DirectoryConfiguration: Sendable {
         }
         #endif
         
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting detect()\n".utf8))
         return DirectoryConfiguration(workingDirectory: workingDirectory)
     }
 }
 
 public extension String {
     func finished(with string: String) -> String {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering finished(string=\(string))\n".utf8))
         if !self.hasSuffix(string) {
             return self + string
         } else {
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting finished(string=\(string))\n".utf8))
             return self
         }
     }

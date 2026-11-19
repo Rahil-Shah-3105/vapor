@@ -1,5 +1,6 @@
 public import HTTPTypes
 import NIOConcurrencyHelpers
+import Foundation
 
 extension Request {
 
@@ -16,11 +17,15 @@ extension Request {
     ///   - redirectType: The type of redirect to perform
     /// - Returns: A response that redirects the client to the specified location
     public func redirect(to location: String, redirectType: Redirect = .normal) -> Response {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering redirect(location=\(location),redirectType=\(redirectType))\n".utf8))
         let response = Response()
         response.responseBox.withLockedValue { box in
+			FileHandle.standardError.write(Data("[ERROR] redirect(location=\(location),redirectType=\(redirectType)): response → \(response)\n".utf8))
             box.status = redirectType.status
+			FileHandle.standardError.write(Data("[DEBUG] redirect(location=\(location),redirectType=\(redirectType)): box.status → \(box.status)\n".utf8))
             box.headers[.location] = location
         }
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting redirect(location=\(location),redirectType=\(redirectType))\n".utf8))
         return response
     }
 }

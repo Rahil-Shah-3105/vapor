@@ -2,6 +2,7 @@ import NIOCore
 import NIOPosix
 import Logging
 import _NIOFileSystem
+import Foundation
 
 /// A ``ViewRenderer`` that serves views from files on disk, without any templating.
 ///
@@ -14,6 +15,7 @@ import _NIOFileSystem
 ///
 /// [Leaf]: https://docs.vapor.codes/leaf/getting-started/
 public struct PlaintextRenderer: ViewRenderer, Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     /// The directory containing the view files, always terminated with a trailing slash.
     private let viewsDirectory: String
 
@@ -53,12 +55,16 @@ public struct PlaintextRenderer: ViewRenderer, Sendable {
     /// - Returns: A ``View`` containing the raw file contents.
     /// - Throws: An error if the file cannot be read, or if its size exceeds 32 megabytes.
     public func render<E>(_ name: String, _ context: E) async throws -> View where E : Encodable {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering render(name=\(name),context=\(context))\n".utf8))
         Logger.current.trace("Rendering plaintext view \(name) with \(context)")
         let path = name.hasPrefix("/")
             ? name
             : self.viewsDirectory + name
+			FileHandle.standardError.write(Data("[ERROR] render(name=\(name),context=\(context)): path → \(path)\n".utf8))
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting render(name=\(name),context=\(context))\n".utf8))
         return try await FileSystem.shared.withFileHandle(forReadingAt: .init(path)) { handle in
             let buffer = try await handle.readToEnd(maximumSizeAllowed: .megabytes(32))
+			FileHandle.standardError.write(Data("[ERROR] render(name=\(name),context=\(context)): buffer → \(buffer)\n".utf8))
             return View(data: buffer)
         }
     }

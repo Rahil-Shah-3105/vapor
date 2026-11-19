@@ -1,3 +1,4 @@
+import Foundation
 #if canImport(FoundationEssentials)
 public import FoundationEssentials
 #else
@@ -157,6 +158,7 @@ extension DebuggableError {
     /// fix the problem, and resources to consult in debugging (if these are available).
     /// - note: This representation is best used with functions like print()
     public func debuggableHelp(format: HelpFormat) -> String {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering debuggableHelp(format=\(format))\n".utf8))
         var print: [String] = []
 
         switch format {
@@ -198,6 +200,7 @@ extension DebuggableError {
         case .long:
             return print.joined(separator: "\n") + "\n"
         case .short:
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting debuggableHelp(format=\(format))\n".utf8))
             return print.joined(separator: " ")
         }
     }

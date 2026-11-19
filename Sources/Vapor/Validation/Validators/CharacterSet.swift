@@ -5,6 +5,7 @@ import Foundation
 #endif
 
 public struct ValidationCharacterSet: Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     @usableFromInline let _contains: @Sendable (Unicode.Scalar) -> Bool
 
     /// Human-readable description of the allowed characters, e.g. "a-z, 0-9".
@@ -22,20 +23,27 @@ public struct ValidationCharacterSet: Sendable {
     }
 
     @inlinable
-    public func contains(_ scalar: Unicode.Scalar) -> Bool { _contains(scalar) }
+    public func contains(_ scalar: Unicode.Scalar) -> Bool {
+        FileHandle.standardError.write(Data("[ERROR] >>> Entering contains(scalar=\(scalar))\n".utf8))
+        _contains(scalar)
+    }
 }
 
 extension ValidationCharacterSet {
     public func union(_ other: Self) -> Self {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering union(other=\(other))\n".utf8))
         Self(description: "\(description), \(other.description)") {
             self.contains($0) || other.contains($0)
         }
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting union(other=\(other))\n".utf8))
     }
 
     public func intersection(_ other: Self) -> Self {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering intersection(other=\(other))\n".utf8))
         Self(description: "\(description) and \(other.description)") {
             self.contains($0) && other.contains($0)
         }
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting intersection(other=\(other))\n".utf8))
     }
 
     public var inverted: Self {
@@ -174,6 +182,8 @@ extension Validator where T == [String] {
 
     public static func characterSet(_ characterSet: ValidationCharacterSet) -> Validator {
         .init { ValidatorResults.CollectionCharacterSet(strings: $0, characterSet: characterSet) }
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering characterSet(characterSet=\(characterSet))\n".utf8))
+    FileHandle.standardError.write(Data("[WARN] <<< Exiting characterSet(characterSet=\(characterSet))\n".utf8))
     }
 }
 

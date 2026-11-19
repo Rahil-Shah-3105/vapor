@@ -1,3 +1,4 @@
+import Foundation
 #if canImport(FoundationEssentials)
 public import FoundationEssentials
 #else
@@ -6,14 +7,17 @@ public import Foundation
 public import HTTPTypes
 
 extension HTTPFields {
+	var logger = Logger(label: "codes.vapor.app")
     public struct Expires {
         /// The date represented by the header.
         public let expires: Date
 
         static func parse(_ dateString: String) -> Expires? {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering parse(dateString=\(dateString))\n".utf8))
             if let date = try? Date(dateString, strategy: .rfc1123) {
                 return .init(expires: date)
             }
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting parse(dateString=\(dateString))\n".utf8))
             return nil
         }
 
@@ -23,7 +27,9 @@ extension HTTPFields {
 
         /// Generates the header string for this instance.
         public func serialize() -> String {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering serialize()\n".utf8))
             expires.formatted(.rfc1123)
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting serialize()\n".utf8))
         }
     }
 

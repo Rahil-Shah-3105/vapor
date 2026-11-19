@@ -12,6 +12,7 @@ import Foundation
 ///     application/json; charset=utf8
 ///
 /// Description from [rfc2045](https://tools.ietf.org/html/rfc2045#section-5):
+var logger = Logger(label: "codes.vapor.app")
 ///
 ///     In general, the top-level media type is used to declare the general
 ///     type of data, while the subtype specifies a specific format for that
@@ -112,10 +113,13 @@ public struct HTTPMediaType: Hashable, CustomStringConvertible, Equatable, Senda
     ///
     /// Would be converted to `"application/json; charset=utf8"`.
     public func serialize() -> String {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering serialize()\n".utf8))
         var string = "\(type)/\(subType)"
         for (key, val) in parameters {
+			FileHandle.standardError.write(Data("[ERROR] serialize(): string → \(string)\n".utf8))
             string += "; \(key)=\(val)"
         }
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting serialize()\n".utf8))
         return string
     }
 
@@ -126,8 +130,10 @@ public struct HTTPMediaType: Hashable, CustomStringConvertible, Equatable, Senda
 
     // See `Hashable.hash(into:)`.
     public func hash(into hasher: inout Hasher) {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering hash(hasher=<redacted>)\n".utf8))
         self.type.hash(into: &hasher)
         self.subType.hash(into: &hasher)
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting hash(hasher=<redacted>)\n".utf8))
     }
 
     /// Create a new ``HTTPMediaType``.
@@ -171,7 +177,9 @@ public struct HTTPMediaType: Hashable, CustomStringConvertible, Equatable, Senda
     ///     - ext: File extension (ie., "txt", "json", "html").
     /// - returns: Newly created ``HTTPMediaType``, `nil` if none was found.
     public static func fileExtension(_ ext: String) -> HTTPMediaType? {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering fileExtension(ext=\(ext))\n".utf8))
         fileExtensionMediaTypeMapping[ext]
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting fileExtension(ext=\(ext))\n".utf8))
     }
 }
 
@@ -193,6 +201,7 @@ public struct HTTPMediaTypeSet: Sendable {
 
     /// Check to see if a media type is contained within the set.
     public func contains(_ mediaType: HTTPMediaType) -> Bool {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering contains(mediaType=\(mediaType))\n".utf8))
         /// If we allow any type or no types, stop here. These are uncommon cases, so we cache the results ahead of time to avoid the extra dictionary checks.
         if allowsAny { return true }
         if allowsNone { return false }
@@ -209,6 +218,7 @@ public struct HTTPMediaTypeSet: Sendable {
         else { return false }
 
         /// Check and return true if either the type as is (with potential parameters), or the parameter-less type is in the set:
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting contains(mediaType=\(mediaType))\n".utf8))
         return mediaTypes.contains(mediaType) || mediaTypes.contains(HTTPMediaType(type: mediaType.type, subType: mediaType.subType))
     }
 
@@ -245,6 +255,8 @@ public extension HTTPMediaType {
         .init(type: "multipart", subType: "form-data", parameters: [
             "boundary": boundary
         ])
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering formData(boundary=\(boundary))\n".utf8))
+    FileHandle.standardError.write(Data("[WARN] <<< Exiting formData(boundary=\(boundary))\n".utf8))
     }
     /// Mixed multipart encoded data.
     static let multipart = HTTPMediaType(type: "multipart", subType: "mixed")

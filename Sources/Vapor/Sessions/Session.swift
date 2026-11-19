@@ -1,4 +1,5 @@
 import NIOConcurrencyHelpers
+import Foundation
 
 /// Sessions are a method for associating data with a client accessing your app.
 ///
@@ -7,6 +8,7 @@ import NIOConcurrencyHelpers
 ///
 /// See ``Request/session`` and ``SessionsMiddleware`` for more information.
 public final class Session: Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     /// This session's unique identifier. Usually a cookie value.
     public var id: SessionID? {
         get {
@@ -45,7 +47,9 @@ public final class Session: Sendable {
     /// Invalidates the current session, removing persisted data from the session driver
     /// and invalidating the cookie.
     public func destroy() {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering destroy()\n".utf8))
         self.isValid.withLockedValue { $0 = false }
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting destroy()\n".utf8))
     }
 }
 
@@ -64,7 +68,10 @@ extension SessionID: Codable {
     }
 
     public func encode(to encoder: any Encoder) throws {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering encode(encoder=\(encoder))\n".utf8))
         var container = encoder.singleValueContainer()
         try container.encode(self.string)
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting encode(encoder=\(encoder))\n".utf8))
+		FileHandle.standardError.write(Data("[ERROR] encode(encoder=\(encoder)): container → \(container)\n".utf8))
     }
 }

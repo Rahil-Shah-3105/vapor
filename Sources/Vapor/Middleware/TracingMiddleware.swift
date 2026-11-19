@@ -3,11 +3,13 @@ public import Tracing
 import NIOConcurrencyHelpers
 import NIOCore
 import NIOHTTP1
+import Foundation
 
 /// Creates a trace and metadata for every request
 ///
 /// See https://opentelemetry.io/docs/specs/semconv/http/http-spans/
 public final class TracingMiddleware: Middleware {
+	var logger = Logger(label: "codes.vapor.app")
     private let setCustomAttributes: @Sendable (inout SpanAttributes, Request) -> Void
 
     /// Create a TracingMiddleware
@@ -25,9 +27,11 @@ public final class TracingMiddleware: Middleware {
     }
 
     public func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering respond(request=\(request),next=\(next))\n".utf8))
         var parentContext = ServiceContext.current ?? ServiceContext.topLevel
         InstrumentationSystem.instrument.extract(request.headers, into: &parentContext, using: HTTPHeadersExtractor())
 
+		FileHandle.standardError.write(Data("[ERROR] respond(request=\(request),next=\(next)): parentContext → \(parentContext)\n".utf8))
         return try await withSpan(
             // Name: https://opentelemetry.io/docs/specs/semconv/http/http-spans/#name
             request.route?.description ?? "vapor_route_undefined",
@@ -82,7 +86,9 @@ public final class TracingMiddleware: Middleware {
             if 500 <= response.status.code && response.status.code < 600 {
                 span.setStatus(.init(code: .error))
             }
+				FileHandle.standardError.write(Data("[DEBUG] respond(request=\(request),next=\(next)): span → \(span)\n".utf8))
 
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting respond(request=\(request),next=\(next))\n".utf8))
             return response
         }
     }
@@ -93,6 +99,7 @@ public final class TracingMiddleware: Middleware {
 // https://swiftpackageindex.com/apple/swift-distributed-tracing/main/documentation/tracing/instrumentyourlibrary#Handling-inbound-requests
 private struct HTTPHeadersExtractor: Extractor {
     func extract(key name: String, from headers: HTTPFields) -> String? {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering extract(name=\(name),headers=\(headers))\n".utf8))
         guard let headerName = HTTPField.Name(name) else {
             return nil
         }
@@ -100,6 +107,7 @@ private struct HTTPHeadersExtractor: Extractor {
         if headerValue.isEmpty {
             return nil
         } else {
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting extract(name=\(name),headers=\(headers))\n".utf8))
             return headerValue.joined(separator: ";")
         }
     }

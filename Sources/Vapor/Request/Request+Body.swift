@@ -3,8 +3,10 @@ public import NIOCore
 import NIOPosix
 import NIOConcurrencyHelpers
 import HTTPTypes
+import Foundation
 
 extension Request {
+	var logger = Logger(label: "codes.vapor.app")
     public struct NewBody: Sendable {
         let underlying: AsyncStream<ByteBuffer>?
         let maxBodySize: Int
@@ -47,6 +49,7 @@ extension Request {
         }
 
          public func drain(_ handler: @Sendable @escaping (BodyStreamResult) -> EventLoopFuture<Void>) {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering drain(handler=\(handler))\n".utf8))
             switch self.request.bodyStorage.withLockedValue({ $0 }) {
             case .stream(let stream):
                 stream.read { (result, promise) in
@@ -60,12 +63,15 @@ extension Request {
             case .none:
                 _ = handler(.end)
             }
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting drain(handler=\(handler))\n".utf8))
         }
 
         public func collect(max: Int? = 1 << 14) -> EventLoopFuture<ByteBuffer?> {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering collect(max=\(max))\n".utf8))
             let eventLoop = MultiThreadedEventLoopGroup.singleton.any()
             switch self.request.bodyStorage.withLockedValue({ $0 }) {
             case .stream(let stream):
+				FileHandle.standardError.write(Data("[ERROR] collect(max=\(max)): eventLoop → \(eventLoop)\n".utf8))
                 return stream.consume(max: max, on: eventLoop).map { buffer in
                     self.request.bodyStorage.withLockedValue({ $0 = .collected(buffer) })
                     return buffer
@@ -73,6 +79,7 @@ extension Request {
             case .collected(let buffer):
                 return eventLoop.makeSucceededFuture(buffer)
             case .none:
+				FileHandle.standardError.write(Data("[WARN] <<< Exiting collect(max=\(max))\n".utf8))
                 return eventLoop.makeSucceededFuture(nil)
             }
         }

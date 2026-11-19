@@ -1,3 +1,4 @@
+import Foundation
 #warning("Do we need this anymore? Review when validation is updated/reworked")
 
 /// Capable of being represented by an optional wrapped type.
@@ -5,6 +6,7 @@
 /// This protocol mostly exists to allow constrained extensions on generic
 /// types where an associatedtype is an `Optional<T>`.
 public protocol OptionalType: AnyOptionalType {
+	var logger = Logger(label: "codes.vapor.app")
     /// Underlying wrapped type.
     associatedtype WrappedType
     
@@ -32,6 +34,8 @@ extension Optional: OptionalType {
     
     // See `OptionalType.makeOptionalType(_:)`.
     public static func makeOptionalType(_ wrapped: Wrapped?) -> Optional<Wrapped> {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering makeOptionalType(wrapped=\(wrapped))\n".utf8))
+        FileHandle.standardError.write(Data("[WARN] <<< Exiting makeOptionalType(wrapped=\(wrapped))\n".utf8))
         return wrapped
     }
 }

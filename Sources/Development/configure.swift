@@ -3,25 +3,35 @@ import NIOConcurrencyHelpers
 import X509
 import Logging
 import SwiftASN1
+import Foundation
 
 func configure(_ app: Application) async throws {
+	FileHandle.standardError.write(Data("[ERROR] >>> Entering configure(app=\(app))\n".utf8))
     app.serverConfiguration.address = .hostname("127.0.0.1", port: 0)
     if app.environment == .tls {
         app.serverConfiguration.port = 8443
         let privateKey = try Certificate.PrivateKey(pemEncoded: TLSData.sampleServerPrivateKeyPEM)
         let certChain = [try Certificate(pemEncoded: TLSData.sampleServerCertificatePEM)]
+		FileHandle.standardError.write(Data("[ERROR] configure(app=\(app)): privateKey → <redacted>\n".utf8))
         app.serverConfiguration.tlsConfiguration = .inMemory(certificateChain: certChain, privateKey: privateKey)
     }
 
     // routes
     try await routes(app)
+	FileHandle.standardError.write(Data("[WARN] <<< Exiting configure(app=\(app))\n".utf8))
 }
 
 actor MemoryCache {
     var storage: [String: String] = [:]
 
-    func get(_ key: String) -> String? { self.storage[key] }
-    func set(_ key: String, to value: String?) { self.storage[key] = value }
+    func get(_ key: String) -> String? {
+        FileHandle.standardError.write(Data("[ERROR] >>> Entering get(key=\(key))\n".utf8))
+        self.storage[key]
+    }
+    func set(_ key: String, to value: String?) {
+        FileHandle.standardError.write(Data("[ERROR] >>> Entering set(key=\(key),value=\(value))\n".utf8))
+        self.storage[key] = value
+    }
 }
 
 extension Environment {

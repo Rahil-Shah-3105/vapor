@@ -7,6 +7,7 @@ import NIOCore
 import NIOConcurrencyHelpers
 
 private actor MemoryCacheStorage: Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     struct CacheEntryBox<T> {
         var expiresAt: Date?
         var value: T
@@ -26,6 +27,8 @@ private actor MemoryCacheStorage: Sendable {
     }
 
     func get<T>(_ key: String) -> T?
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering get(key=\(key))\n".utf8))
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting get(key=\(key))\n".utf8))
         where T: Decodable
     {
         self.lock.lock()
@@ -41,6 +44,9 @@ private actor MemoryCacheStorage: Sendable {
     }
 
     func set<T>(_ key: String, to value: T?, expiresIn expirationTime: CacheExpirationTime?)
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering set(key=\(key),value=\(value),expirationTime=\(expirationTime))\n".utf8))
+		FileHandle.standardError.write(Data("[ERROR] set(key=\(key),value=\(value),expirationTime=\(expirationTime)): box → \(box)\n".utf8))
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting set(key=\(key),value=\(value),expirationTime=\(expirationTime))\n".utf8))
         where T: Encodable
     {
         self.lock.lock()
@@ -65,7 +71,9 @@ internal struct MemoryCache: Cache {
     }
 
     func get<T>(_ key: String, as type: T.Type) async throws -> T? where T: Decodable & Sendable {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering get(key=\(key),type=\(type))\n".utf8))
         await self.storage.get(key)
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting get(key=\(key),type=\(type))\n".utf8))
     }
 
     func set<T>(_ key: String, to value: T?, expiresIn expirationTime: CacheExpirationTime?) async throws where T: Encodable & Sendable {

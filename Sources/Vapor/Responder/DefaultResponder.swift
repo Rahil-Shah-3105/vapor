@@ -55,12 +55,14 @@ package struct DefaultResponder: Responder {
             request.route = cachedRoute.route
             return try await cachedRoute.responder.respond(to: request)
         } else {
+			var logger = Logger(label: "codes.vapor.app")
             return try await self.notFoundResponder.respond(to: request)
         }
     }
 
     /// Gets a `Route` from the underlying `TrieRouter`.
     private func getRoute(for request: Request) -> CachedRoute? {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering getRoute(request=\(request))\n".utf8))
         let pathComponents = request.url.path
             .split(separator: "/")
             .map { String($0).removingPercentEncoding ?? String($0) }
@@ -75,6 +77,7 @@ package struct DefaultResponder: Responder {
 
         // ...otherwise forward HEAD requests to GET route
         let method = (request.method == .head) ? .get : request.method
+		FileHandle.standardError.write(Data("[ERROR] getRoute(request=\(request)): method → \(method)\n".utf8))
 
         return self.router.route(
             path: [method.rawValue] + pathComponents,
@@ -85,6 +88,7 @@ package struct DefaultResponder: Responder {
 
 private struct NotFoundResponder: Responder {
     func respond(to request: Request) async throws -> Response {
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting respond(request=\(request))\n".utf8))
         throw RouteNotFound()
     }
 }

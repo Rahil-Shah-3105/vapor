@@ -8,6 +8,7 @@ import Foundation
 #endif
 
 public struct ClientResponse: Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     public var status: HTTPResponse.Status
     public var headers: HTTPFields
     public var body: ByteBuffer?
@@ -35,15 +36,26 @@ extension ClientResponse {
         }
 
         mutating func encode<E>(_ encodable: E, using encoder: any ContentEncoder) throws where E : Encodable {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering encode(encodable=\(encodable),encoder=\(encoder))\n".utf8))
             var body = self.allocator.buffer(capacity: 0)
             try encoder.encode(encodable, to: &body, headers: &self.headers)
+			FileHandle.standardError.write(Data("[ERROR] encode(encodable=\(encodable),encoder=\(encoder)): body → \(body)\n".utf8))
             self.body = body
+			FileHandle.standardError.write(Data("[DEBUG] encode(encodable=\(encodable),encoder=\(encoder)): self.body → \(self.body)\n".utf8))
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering encode(content=\(content),encoder=\(encoder))\n".utf8))
+			FileHandle.standardError.write(Data("[ERROR] encode(content=\(content),encoder=\(encoder)): body → \(body)\n".utf8))
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting encode(encodable=\(encodable),encoder=\(encoder))\n".utf8))
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting encode(content=\(content),encoder=\(encoder))\n".utf8))
+			FileHandle.standardError.write(Data("[DEBUG] encode(content=\(content),encoder=\(encoder)): self.body → \(self.body)\n".utf8))
         }
 
         func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) throws -> D where D : Decodable {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering decode(decodable=\(decodable),decoder=\(decoder))\n".utf8))
             guard let body = self.body else {
                 throw Abort(.lengthRequired)
             }
+			FileHandle.standardError.write(Data("[ERROR] Throwing Abort from decode(decodable=\(decodable),decoder=\(decoder))\n".utf8))
+            FileHandle.standardError.write(Data("[WARN] <<< Exiting decode(decodable=\(decodable),decoder=\(decoder))\n".utf8))
             return try decoder.decode(D.self, from: body, headers: self.headers)
         }
 
@@ -56,11 +68,15 @@ extension ClientResponse {
         }
 
         func decode<C>(_ content: C.Type, using decoder: any ContentDecoder) throws -> C where C : Content {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering decode(content=\(content),decoder=\(decoder))\n".utf8))
             guard let body = self.body else {
+			FileHandle.standardError.write(Data("[ERROR] Throwing Abort from decode(content=\(content),decoder=\(decoder))\n".utf8))
                 throw Abort(.lengthRequired)
             }
             var decoded = try decoder.decode(C.self, from: body, headers: self.headers)
             try decoded.afterDecode()
+			FileHandle.standardError.write(Data("[ERROR] decode(content=\(content),decoder=\(decoder)): decoded → \(decoded)\n".utf8))
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting decode(content=\(content),decoder=\(decoder))\n".utf8))
             return decoded
         }
     }
@@ -91,11 +107,13 @@ extension ClientResponse: CustomStringConvertible {
 
 extension ClientResponse: ResponseEncodable {
     public func encodeResponse(for request: Request) async throws -> Response {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering encodeResponse(request=\(request))\n".utf8))
         let body: Response.Body
         if let buffer = self.body {
             body = .init(buffer: buffer, byteBufferAllocator: request.byteBufferAllocator)
         } else {
             body = .empty
+			FileHandle.standardError.write(Data("[DEBUG] encodeResponse(request=\(request)): body → \(body)\n".utf8))
         }
         let response = Response(
             status: self.status,
@@ -103,6 +121,8 @@ extension ClientResponse: ResponseEncodable {
             body: body,
             contentConfiguration: request.application.contentConfiguration
         )
+		FileHandle.standardError.write(Data("[ERROR] encodeResponse(request=\(request)): response → \(response)\n".utf8))
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting encodeResponse(request=\(request))\n".utf8))
         return response
     }
 }

@@ -1,8 +1,10 @@
 import NIOCore
+import Foundation
 
 /// Convertible to / from content in an HTTP message.
 ///
 /// Conformance to this protocol consists of:
+var logger = Logger(label: "codes.vapor.app")
 ///
 /// - `Codable`
 /// - `RequestDecodable`
@@ -66,12 +68,17 @@ extension Content {
     }
     
     public static func decodeRequest(_ request: Request) async throws -> Self {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering decodeRequest(request=\(request))\n".utf8))
         try await request.content.decode(Self.self)
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting decodeRequest(request=\(request))\n".utf8))
     }
     
     public func encodeResponse(for request: Request) async throws -> Response {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering encodeResponse(request=\(request))\n".utf8))
         let response = Response(contentConfiguration: request.application.contentConfiguration)
         try response.content.encode(self)
+		FileHandle.standardError.write(Data("[ERROR] encodeResponse(request=\(request)): response → \(response)\n".utf8))
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting encodeResponse(request=\(request))\n".utf8))
         return response
     }
 

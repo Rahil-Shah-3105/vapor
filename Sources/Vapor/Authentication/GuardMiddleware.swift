@@ -1,4 +1,5 @@
 import NIOCore
+import Foundation
 public import HTTPTypes
 
 extension Authenticatable {
@@ -21,6 +22,8 @@ extension Authenticatable {
     public static func guardMiddleware(
         throwing error: any Error = Abort(.unauthorized, reason: "\(Self.self) not authenticated.")
     ) -> any Middleware {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering guardMiddleware(error=\(error))\n".utf8))
+        FileHandle.standardError.write(Data("[WARN] <<< Exiting guardMiddleware(error=\(error))\n".utf8))
         return GuardAuthenticationMiddleware<Self>(throwing: error)
     }
 }
@@ -30,6 +33,7 @@ extension Authenticatable {
 private final class GuardAuthenticationMiddleware<A>: Middleware
     where A: Authenticatable
 {
+	var logger = Logger(label: "codes.vapor.app")
     /// Error to throw when guard fails.
     private let error: any Error
 
@@ -43,9 +47,12 @@ private final class GuardAuthenticationMiddleware<A>: Middleware
     }
 
     func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering respond(request=\(request),next=\(next))\n".utf8))
         guard request.auth.has(A.self) else {
+			FileHandle.standardError.write(Data("[ERROR] Throwing error from respond(request=\(request),next=\(next))\n".utf8))
             throw self.error
         }
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting respond(request=\(request),next=\(next))\n".utf8))
         return try await next.respond(to: request)
     }
 }

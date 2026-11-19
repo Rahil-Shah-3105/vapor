@@ -1,9 +1,11 @@
 import NIOCore
 import NIOConcurrencyHelpers
 import HTTPTypes
+import Foundation
 
 extension Request {
     final class BodyStream: BodyStreamWriter, AsyncBodyStreamWriter {
+		var logger = Logger(label: "codes.vapor.app")
         let eventLoop: any EventLoop
 
         var isBeingRead: Bool {
@@ -29,6 +31,7 @@ extension Request {
         }
 
         func read(_ handler: @escaping @Sendable (BodyStreamResult, EventLoopPromise<Void>?) -> ()) {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering read(handler=\(handler))\n".utf8))
             if self.eventLoop.inEventLoop {
                 read0(handler)
             } else {
@@ -36,27 +39,34 @@ extension Request {
                     self.read0(handler)
                 }
             }
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting read(handler=\(handler))\n".utf8))
         }
 
         func read0(_ handler: @escaping @Sendable (BodyStreamResult, EventLoopPromise<Void>?) -> ()) {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering read0(handler=\(handler))\n".utf8))
             self.eventLoop.preconditionInEventLoop()
             self.handlerBuffer.value.handler = handler
             for (result, promise) in self.handlerBuffer.value.buffer {
                 handler(result, promise)
             }
             self.handlerBuffer.value.buffer = []
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting read0(handler=\(handler))\n".utf8))
         }
 
         func write(_ result: BodyStreamResult) async throws {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering write(result=\(result))\n".utf8))
             // Explicitly adds the ELF because Swift 5.6 fails to infer the return type
             try await self.eventLoop.flatSubmit { () -> EventLoopFuture<Void> in
                 let promise = self.eventLoop.makePromise(of: Void.self)
                 self.write0(result, promise: promise)
+				FileHandle.standardError.write(Data("[ERROR] write(result=\(result)): promise → \(promise)\n".utf8))
                 return promise.futureResult
             }.get()
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting write(result=\(result))\n".utf8))
         }
 
         func write(_ chunk: BodyStreamResult, promise: EventLoopPromise<Void>?) {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering write(chunk=\(chunk),promise=\(promise))\n".utf8))
             // See https://github.com/vapor/vapor/issues/2906
             if self.eventLoop.inEventLoop {
                 write0(chunk, promise: promise)
@@ -65,9 +75,11 @@ extension Request {
                     self.write0(chunk, promise: promise)
                 }
             }
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting write(chunk=\(chunk),promise=\(promise))\n".utf8))
         }
 
         private func write0(_ chunk: BodyStreamResult, promise: EventLoopPromise<Void>?) {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering write0(chunk=\(chunk),promise=\(promise))\n".utf8))
             switch chunk {
             case .end, .error:
                 self.isClosed.withLockedValue { $0 = true }
@@ -85,17 +97,21 @@ extension Request {
             } else {
                 self.handlerBuffer.value.buffer.append((chunk, promise))
             }
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting write0(chunk=\(chunk),promise=\(promise))\n".utf8))
         }
 
         func consume(max: Int?, on eventLoop: any EventLoop) -> EventLoopFuture<ByteBuffer> {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering consume(max=\(max),eventLoop=\(eventLoop))\n".utf8))
             // See https://github.com/vapor/vapor/issues/2906
             return eventLoop.flatSubmit {
                 let promise = eventLoop.makePromise(of: ByteBuffer.self)
                 let data = NIOLoopBoundBox(self.allocator.buffer(capacity: 0), eventLoop: eventLoop)
                 self.read { chunk, next in
+					FileHandle.standardError.write(Data("[ERROR] consume(max=\(max),eventLoop=\(eventLoop)): promise → \(promise)\n".utf8))
                     switch chunk {
                     case .buffer(var buffer):
                         if let max = max, data.value.readableBytes + buffer.readableBytes >= max {
+							FileHandle.standardError.write(Data("[ERROR] consume(max=\(max),eventLoop=\(eventLoop)): data → \(data)\n".utf8))
                             promise.fail(Abort(.contentTooLarge))
                         } else {
                             data.value.writeBuffer(&buffer)

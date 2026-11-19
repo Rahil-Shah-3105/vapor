@@ -1,6 +1,7 @@
 import NIOCore
 import NIOFoundationEssentialsCompat
 import NIOConcurrencyHelpers
+import Foundation
 public import HTTPTypes
 
 /// An HTTP response from a server back to the client.
@@ -9,6 +10,7 @@ public import HTTPTypes
 ///
 /// See `HTTPClient` and `HTTPServerOld`.
 public final class Response: CustomStringConvertible, Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     /// Maximum streaming body size to use for `debugPrint(_:)`.
     private let maxDebugStreamingBodySize: Int = 1_000_000
 
@@ -121,40 +123,52 @@ public final class Response: CustomStringConvertible, Sendable {
         }
 
         func encode<E>(_ encodable: E, using encoder: any ContentEncoder) throws where E : Encodable {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering encode(encodable=\(encodable),encoder=\(encoder))\n".utf8))
             try self.response.responseBox.withLockedValue { box in
                 var body = box.body.byteBufferAllocator.buffer(capacity: 0)
                 try encoder.encode(encodable, to: &body, headers: &box.headers)
+				FileHandle.standardError.write(Data("[ERROR] encode(encodable=\(encodable),encoder=\(encoder)): body → \(body)\n".utf8))
                 box.body = .init(buffer: body, byteBufferAllocator: box.body.byteBufferAllocator)
             }
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting encode(encodable=\(encodable),encoder=\(encoder))\n".utf8))
         }
 
         func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) throws -> D where D : Decodable {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering decode(decodable=\(decodable),decoder=\(decoder))\n".utf8))
             try self.response.responseBox.withLockedValue { box in
                 guard let body = box.body.buffer else {
+				FileHandle.standardError.write(Data("[ERROR] Throwing Abort from decode(decodable=\(decodable),decoder=\(decoder))\n".utf8))
                     throw Abort(.unprocessableContent)
                 }
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting decode(decodable=\(decodable),decoder=\(decoder))\n".utf8))
                 return try decoder.decode(D.self, from: body, headers: box.headers)
             }
         }
 
         func encode<C>(_ content: C, using encoder: any ContentEncoder) throws where C : Content {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering encode(content=\(content),encoder=\(encoder))\n".utf8))
             var content = content
             try content.beforeEncode()
             try self.response.responseBox.withLockedValue { box in
                 var body = box.body.byteBufferAllocator.buffer(capacity: 0)
                 try encoder.encode(content, to: &body, headers: &box.headers)
+				FileHandle.standardError.write(Data("[ERROR] encode(content=\(content),encoder=\(encoder)): body → \(body)\n".utf8))
                 box.body = .init(buffer: body, byteBufferAllocator: box.body.byteBufferAllocator)
             }
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting encode(content=\(content),encoder=\(encoder))\n".utf8))
         }
 
         func decode<C>(_ content: C.Type, using decoder: any ContentDecoder) throws -> C where C : Content {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering decode(content=\(content),decoder=\(decoder))\n".utf8))
             var decoded = try self.response.responseBox.withLockedValue { box in
                 guard let body = box.body.buffer else {
                     throw Abort(.unprocessableContent)
                 }
+			FileHandle.standardError.write(Data("[ERROR] Throwing Abort from decode(content=\(content),decoder=\(decoder))\n".utf8))
                 return try decoder.decode(C.self, from: body, headers: box.headers)
             }
             try decoded.afterDecode()
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting decode(content=\(content),decoder=\(decoder))\n".utf8))
             return decoded
         }
     }
@@ -234,9 +248,11 @@ public final class Response: CustomStringConvertible, Sendable {
 
 extension HTTPFields {
     mutating func updateContentLength(_ contentLength: Int) {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering updateContentLength(contentLength=\(contentLength))\n".utf8))
         let count = contentLength.description
         switch contentLength {
         case -1:
+			FileHandle.standardError.write(Data("[ERROR] updateContentLength(contentLength=\(contentLength)): count → \(count)\n".utf8))
             self[.contentLength] = nil
             if "chunked" != self[.transferEncoding] {
                 self[.transferEncoding] = "chunked"
@@ -247,5 +263,6 @@ extension HTTPFields {
                 self[.contentLength] = count
             }
         }
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting updateContentLength(contentLength=\(contentLength))\n".utf8))
     }
 }

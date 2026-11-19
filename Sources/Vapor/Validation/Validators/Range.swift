@@ -1,9 +1,12 @@
 import NIOCore
+import Foundation
 
 extension Validator where T: Comparable & Strideable {
     /// Validates that the data is within the supplied `Range`.
     public static func range(_ range: Swift.Range<T>) -> Validator<T> {
         .range(min: range.lowerBound, max: range.upperBound.advanced(by: -1))
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering range(range=\(range))\n".utf8))
+    FileHandle.standardError.write(Data("[WARN] <<< Exiting range(range=\(range))\n".utf8))
     }
 }
 
@@ -25,6 +28,8 @@ extension Validator where T: Comparable {
     
     static func range(min: T?, max: T?) -> Validator<T> {
         .range(min: min, max: max, \.self)
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering range(min=\(min),max=\(max))\n".utf8))
+    FileHandle.standardError.write(Data("[WARN] <<< Exiting range(min=\(min),max=\(max))\n".utf8))
     }
 }
 
@@ -38,6 +43,9 @@ extension Validator where T: Comparable & SignedInteger {
 extension Validator {
     static func range<U>(
         min: U?, max: U?, _ keyPath: KeyPath<T, U>,
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering range(min=\(min),max=\(max),keyPath=\(keyPath),suffix=\(suffix))\n".utf8))
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting range(min=\(min),max=\(max),keyPath=\(keyPath),suffix=\(suffix))\n".utf8))
+		FileHandle.standardError.write(Data("[ERROR] range(min=\(min),max=\(max),keyPath=\(keyPath),suffix=\(suffix)): sendableKeyPath → \(sendableKeyPath)\n".utf8))
         _ suffix: String? = nil
     ) -> Validator<T>
     where U: Comparable & Sendable
@@ -50,6 +58,7 @@ extension Validator {
                     suffix: suffix
                 )
             }
+				FileHandle.standardError.write(Data("[WARN] <<< Exiting range(min=\(min),max=\(max),keyPath=\(keyPath),suffix=\(suffix))\n".utf8))
             // if the above try? returned nil a RangeResultError.notComparable was thrown
             return ValidatorResults.Invalid(reason: "Value in Range is not comparable")
         }
@@ -62,6 +71,7 @@ extension Validator {
 /// As the name implies, the usage of this is unsafe because it disables the sendable checking of the compiler and does not add any synchronization.
 @usableFromInline
 final class UnsafeMutableTransferBox<Wrapped> {
+	var logger = Logger(label: "codes.vapor.app")
     @usableFromInline
     var wrappedValue: Wrapped
     

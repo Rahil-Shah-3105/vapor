@@ -5,12 +5,15 @@ import Foundation
 #endif
 
 extension Validator where T == String {
+	var logger = Logger(label: "codes.vapor.app")
     /// Validates whether a `String` matches a RegularExpression pattern
     public static func pattern(_ pattern: String) -> Validator<T> {
         .init {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering pattern(pattern=\(pattern))\n".utf8))
             guard let _ = try? Regex(pattern).wholeMatch(in: $0) else {
                 return ValidatorResults.Pattern(isValidPattern: false, pattern: pattern)
             }
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting pattern(pattern=\(pattern))\n".utf8))
             return ValidatorResults.Pattern(isValidPattern: true, pattern: pattern)
         }
     }

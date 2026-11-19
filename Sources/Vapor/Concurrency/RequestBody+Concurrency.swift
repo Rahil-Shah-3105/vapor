@@ -2,6 +2,7 @@
 public import NIOCore
 import NIOConcurrencyHelpers
 import NIOPosix
+import Foundation
 
 // MARK: - Request.Body.AsyncSequenceDelegate
 extension Request.Body {
@@ -27,6 +28,7 @@ extension Request.Body {
         }
 
         private func produceMore0() {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering produceMore0()\n".utf8))
             self.eventLoop.preconditionInEventLoop()
             switch self._state {
             case .notCalledYet:
@@ -36,11 +38,14 @@ extension Request.Body {
                 preconditionFailure()
             case .waitingForSignalFromConsumer(let promise):
                 self._state = .noSignalReceived
+				FileHandle.standardError.write(Data("[DEBUG] produceMore0(): self._state → \(self._state)\n".utf8))
                 promise.succeed(())
             }
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting produceMore0()\n".utf8))
         }
 
         private func didTerminate0() {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering didTerminate0()\n".utf8))
             self.eventLoop.preconditionInEventLoop()
             switch self._state {
             case .notCalledYet:
@@ -51,11 +56,14 @@ extension Request.Body {
                 break
             case .waitingForSignalFromConsumer(let promise):
                 self._state = .noSignalReceived
+				FileHandle.standardError.write(Data("[DEBUG] didTerminate0(): self._state → \(self._state)\n".utf8))
                 promise.fail(CancellationError())
             }
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting didTerminate0()\n".utf8))
         }
 
         func registerBackpressurePromise(_ promise: EventLoopPromise<Void>) {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering registerBackpressurePromise(promise=\(promise))\n".utf8))
             self.eventLoop.preconditionInEventLoop()
             switch self._state {
             case .noSignalReceived, .notCalledYet:
@@ -63,14 +71,19 @@ extension Request.Body {
             case .waitingForSignalFromConsumer:
                 preconditionFailure()
             }
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting registerBackpressurePromise(promise=\(promise))\n".utf8))
         }
 
         func didTerminate() {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering didTerminate()\n".utf8))
             self.eventLoop.execute { self.didTerminate0() }
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting didTerminate()\n".utf8))
         }
 
         func produceMore() {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering produceMore()\n".utf8))
             self.eventLoop.execute { self.produceMore0() }
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting produceMore()\n".utf8))
         }
     }
 }
@@ -95,6 +108,8 @@ extension Request.Body: AsyncSequence {
 
         @concurrent
         public mutating func next() async throws -> ByteBuffer? {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering next()\n".utf8))
+            FileHandle.standardError.write(Data("[WARN] <<< Exiting next()\n".utf8))
             return try await self.underlying.next()
         }
     }
@@ -107,6 +122,7 @@ extension Request.Body: AsyncSequence {
     ///
     /// Example: app.on(.post, "/upload", body: .stream) { ... }
     private func checkBodyStorage() {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering checkBodyStorage()\n".utf8))
         switch request.bodyStorage.withLockedValue({ $0 }) {
         case .stream(_):
             break
@@ -118,6 +134,7 @@ extension Request.Body: AsyncSequence {
             Example: app.on(.post, "/upload", body: .stream) { ... }
            """)
         }
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting checkBodyStorage()\n".utf8))
     }
     
     /// Generates an `AsyncIterator` to stream the body’s content as
@@ -126,9 +143,12 @@ extension Request.Body: AsyncSequence {
     /// - Returns: `AsyncIterator` containing the `Request.Body` as a
     /// `ByteBuffer` sequence
     public func makeAsyncIterator() -> AsyncIterator {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering makeAsyncIterator()\n".utf8))
         let eventLoop = MultiThreadedEventLoopGroup.singleton.any()
         let delegate = AsyncSequenceDelegate(eventLoop: eventLoop)
         
+		FileHandle.standardError.write(Data("[ERROR] makeAsyncIterator(): delegate → \(delegate)\n".utf8))
+		FileHandle.standardError.write(Data("[ERROR] makeAsyncIterator(): eventLoop → \(eventLoop)\n".utf8))
         let producer = NIOThrowingAsyncSequenceProducer.makeSequence(
             elementType: ByteBuffer.self,
             failureType: (any Error).self,
@@ -146,6 +166,7 @@ extension Request.Body: AsyncSequence {
                 // Send the buffer to the async sequence
                 let result = source.yield(buffer)
                 // Inspect the source view and handle outcomes
+				FileHandle.standardError.write(Data("[ERROR] makeAsyncIterator(): result → \(result)\n".utf8))
                 switch result {
                 case .dropped:
                     // The consumer dropped the sequence.
@@ -158,6 +179,7 @@ extension Request.Body: AsyncSequence {
                     // We need to create a promise that we succeed later.
                     let promise = eventLoop.makePromise(of: Void.self)
                     // We pass the promise to the delegate so that we can succeed it,
+					FileHandle.standardError.write(Data("[ERROR] makeAsyncIterator(): promise → \(promise)\n".utf8))
                     // once we get a call to `delegate.produceMore()`.
                     delegate.registerBackpressurePromise(promise)
                     // return the future that we will fulfill eventually.
@@ -175,6 +197,7 @@ extension Request.Body: AsyncSequence {
             }
         }
         
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting makeAsyncIterator()\n".utf8))
         return AsyncIterator(underlying: producer.sequence.makeAsyncIterator())
     }
 }

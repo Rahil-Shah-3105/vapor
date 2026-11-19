@@ -1,4 +1,5 @@
 import NIOConcurrencyHelpers
+import Foundation
 
 extension Application {
     public var sessions: Sessions {
@@ -21,6 +22,7 @@ extension Application {
         }
 
         final class Storage: Sendable {
+			var logger = Logger(label: "codes.vapor.app")
             struct SessionDriverFactory {
                 let factory: (@Sendable (Application) -> any SessionDriver)?
             }
@@ -68,11 +70,15 @@ extension Application {
         }
 
         public func use(_ provider: Provider) {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering use(provider=\(provider))\n".utf8))
             provider.run(self.application)
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting use(provider=\(provider))\n".utf8))
         }
 
         public func use(_ makeDriver: @Sendable @escaping (Application) -> (any SessionDriver)) {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering use(makeDriver=\(makeDriver))\n".utf8))
             self.storage.makeDriver.withLockedValue { $0 = .init(factory: makeDriver) }
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting use(makeDriver=\(makeDriver))\n".utf8))
         }
 
         var storage: Storage {
@@ -83,7 +89,9 @@ extension Application {
         }
 
         func initialize() {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering initialize()\n".utf8))
             self.application.storage[Key.self] = .init()
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting initialize()\n".utf8))
         }
     }
 }

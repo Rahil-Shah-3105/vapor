@@ -1,6 +1,8 @@
+import Foundation
 public import HTTPTypes
 
 extension HTTPFields {
+	var logger = Logger(label: "codes.vapor.app")
     /// Convenience for accessing the Forwarded header. This header is added by
     /// proxies to pass information about the original request.
     ///
@@ -87,6 +89,7 @@ extension HTTPFields {
         }
 
         func directives() -> [Directive] {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering directives()\n".utf8))
             var directives: [Directive] = []
             if let by = self.by {
                 directives.append(.init(value: "by", parameter: by))
@@ -100,6 +103,7 @@ extension HTTPFields {
             if let proto = self.proto {
                 directives.append(.init(value: "proto", parameter: proto))
             }
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting directives()\n".utf8))
             return directives
         }
     }

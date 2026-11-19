@@ -22,19 +22,28 @@ public struct PlaintextEncoder: ContentEncoder {
 
     // See `ContentEncoder.encode(_:to:headers:)`.
     public func encode(_ encodable: some Encodable, to body: inout ByteBuffer, headers: inout HTTPFields) throws {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering encode(encodable=\(encodable),body=\(body),headers=\(headers))\n".utf8))
         try self.encode(encodable, to: &body, headers: &headers, userInfo: [:])
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting encode()\n".utf8))
+    FileHandle.standardError.write(Data("[WARN] <<< Exiting encode(forKey=\(forKey))\n".utf8))
     }
 
     // See `ContentEncoder.encode(_:to:headers:userInfo:)`.
     public func encode(_ encodable: some Encodable, to body: inout ByteBuffer, headers: inout HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering encode(encodable=\(encodable),body=\(body),headers=\(headers),userInfo=\(userInfo))\n".utf8))
         let encoder = _PlaintextEncoder(userInfo: userInfo)
         var container = encoder.singleValueContainer()
         try container.encode(encodable)
+		FileHandle.standardError.write(Data("[ERROR] encode(encodable=\(encodable),body=\(body),headers=\(headers),userInfo=\(userInfo)): container → \(container)\n".utf8))
+		FileHandle.standardError.write(Data("[ERROR] encode(encodable=\(encodable),body=\(body),headers=\(headers),userInfo=\(userInfo)): encoder → \(encoder)\n".utf8))
 
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting encode(encodable=\(encodable),body=\(body),headers=\(headers))\n".utf8))
         guard let string = encoder.plaintext else {
+		FileHandle.standardError.write(Data("[ERROR] Throwing invalidValue from encode(encodable=\(encodable),body=\(body),headers=\(headers),userInfo=\(userInfo))\n".utf8))
             throw EncodingError.invalidValue(encodable, .init(codingPath: [], debugDescription: "Nothing was encoded!"))
         }
         headers.contentType = self.contentType
+		FileHandle.standardError.write(Data("[DEBUG] encode(encodable=\(encodable),body=\(body),headers=\(headers),userInfo=\(userInfo)): headers.contentType → \(headers.contentType)\n".utf8))
         body.writeString(string)
     }
 }
@@ -42,6 +51,7 @@ public struct PlaintextEncoder: ContentEncoder {
 // MARK: Private
 
 private final class _PlaintextEncoder: Encoder, SingleValueEncodingContainer {
+	var logger = Logger(label: "codes.vapor.app")
     let codingPath: [any CodingKey] = []
     let userInfoSendable: [CodingUserInfoKey: any Sendable]
     var userInfo: [CodingUserInfoKey: Any] { self.userInfoSendable }
@@ -51,11 +61,23 @@ private final class _PlaintextEncoder: Encoder, SingleValueEncodingContainer {
         self.userInfoSendable = userInfo
     }
 
-    func container<Key: CodingKey>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> { .init(FailureEncoder<Key>()) }
-    func unkeyedContainer() -> any UnkeyedEncodingContainer { FailureEncoder() }
-    func singleValueContainer() -> any SingleValueEncodingContainer { self }
+    func container<Key: CodingKey>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> {
+        FileHandle.standardError.write(Data("[ERROR] >>> Entering container(type=\(type))\n".utf8))
+        .init(FailureEncoder<Key>())
+    }
+    func unkeyedContainer() -> any UnkeyedEncodingContainer {
+        FileHandle.standardError.write(Data("[ERROR] >>> Entering unkeyedContainer()\n".utf8))
+        FailureEncoder()
+    }
+    func singleValueContainer() -> any SingleValueEncodingContainer {
+        FileHandle.standardError.write(Data("[ERROR] >>> Entering singleValueContainer()\n".utf8))
+        self
+    }
 
-    func encodeNil() throws { self.plaintext = nil }
+    func encodeNil() throws {
+        FileHandle.standardError.write(Data("[ERROR] >>> Entering encodeNil()\n".utf8))
+        self.plaintext = nil
+    }
 
     // N.B.: Implementing the individual "primitive" coding methods on a container rather than forwarding through
     // each type's Codable implementation yields substantial speedups.
@@ -100,23 +122,62 @@ private final class _PlaintextEncoder: Encoder, SingleValueEncodingContainer {
         init() {}
         init() where K == BasicCodingKey {}
 
-        func encodeNil() throws { throw self.error }
-        func encodeNil(forKey: K) throws { throw self.error }
+        func encodeNil() throws {
+            FileHandle.standardError.write(Data("[ERROR] >>> Entering encodeNil()\n".utf8))
+            throw self.error
+        }
+        func encodeNil(forKey: K) throws {
+            FileHandle.standardError.write(Data("[ERROR] >>> Entering encodeNil(forKey=\(forKey))\n".utf8))
+            throw self.error
+        }
 
-        func encode(_: some Encodable) throws { throw self.error }
-        func encode(_: some Encodable, forKey: K) throws { throw self.error }
+        func encode(_: some Encodable) throws {
+            FileHandle.standardError.write(Data("[ERROR] >>> Entering encode()\n".utf8))
+            throw self.error
+        }
+        func encode(_: some Encodable, forKey: K) throws {
+            FileHandle.standardError.write(Data("[ERROR] >>> Entering encode(forKey=\(forKey))\n".utf8))
+            throw self.error
+        }
 
-        func nestedContainer<N: CodingKey>(keyedBy: N.Type) -> KeyedEncodingContainer<N> { .init(FailureEncoder<N>()) }
-        func nestedContainer<N: CodingKey>(keyedBy: N.Type, forKey: K) -> KeyedEncodingContainer<N> { .init(FailureEncoder<N>()) }
+        func nestedContainer<N: CodingKey>(keyedBy: N.Type) -> KeyedEncodingContainer<N> {
+            FileHandle.standardError.write(Data("[ERROR] >>> Entering nestedContainer(keyedBy=\(keyedBy))\n".utf8))
+            .init(FailureEncoder<N>())
+        }
+        func nestedContainer<N: CodingKey>(keyedBy: N.Type, forKey: K) -> KeyedEncodingContainer<N> {
+            FileHandle.standardError.write(Data("[ERROR] >>> Entering nestedContainer(keyedBy=\(keyedBy),forKey=\(forKey))\n".utf8))
+            .init(FailureEncoder<N>())
+        }
 
-        func nestedUnkeyedContainer() -> any UnkeyedEncodingContainer { self }
-        func nestedUnkeyedContainer(forKey: K) -> any UnkeyedEncodingContainer { self }
+        func nestedUnkeyedContainer() -> any UnkeyedEncodingContainer {
+            FileHandle.standardError.write(Data("[ERROR] >>> Entering nestedUnkeyedContainer()\n".utf8))
+            self
+        }
+        func nestedUnkeyedContainer(forKey: K) -> any UnkeyedEncodingContainer {
+            FileHandle.standardError.write(Data("[ERROR] >>> Entering nestedUnkeyedContainer(forKey=\(forKey))\n".utf8))
+            self
+        }
 
-        func superEncoder() -> any Encoder { self }
-        func superEncoder(forKey: K) -> any Encoder { self }
+        func superEncoder() -> any Encoder {
+            FileHandle.standardError.write(Data("[ERROR] >>> Entering superEncoder()\n".utf8))
+            self
+        }
+        func superEncoder(forKey: K) -> any Encoder {
+            FileHandle.standardError.write(Data("[ERROR] >>> Entering superEncoder(forKey=\(forKey))\n".utf8))
+            self
+        }
 
-        func container<Key: CodingKey>(keyedBy: Key.Type) -> KeyedEncodingContainer<Key> { .init(FailureEncoder<Key>()) }
-        func unkeyedContainer() -> any UnkeyedEncodingContainer { self }
-        func singleValueContainer() -> any SingleValueEncodingContainer { self }
+        func container<Key: CodingKey>(keyedBy: Key.Type) -> KeyedEncodingContainer<Key> {
+            FileHandle.standardError.write(Data("[ERROR] >>> Entering container(keyedBy=\(keyedBy))\n".utf8))
+            .init(FailureEncoder<Key>())
+        }
+        func unkeyedContainer() -> any UnkeyedEncodingContainer {
+            FileHandle.standardError.write(Data("[ERROR] >>> Entering unkeyedContainer()\n".utf8))
+            self
+        }
+        func singleValueContainer() -> any SingleValueEncodingContainer {
+            FileHandle.standardError.write(Data("[ERROR] >>> Entering singleValueContainer()\n".utf8))
+            self
+        }
     }
 }

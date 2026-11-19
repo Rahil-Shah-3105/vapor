@@ -1,3 +1,4 @@
+import Foundation
 #if canImport(FoundationEssentials)
 public import FoundationEssentials
 #else
@@ -195,8 +196,10 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral, Sendable {
 
         /// Serializes an `HTTPCookie` to a `String`.
         public func serialize(name: String) -> String {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering serialize(name=\(name))\n".utf8))
             var serialized = "\(name)=\(self.string)"
 
+			FileHandle.standardError.write(Data("[ERROR] serialize(name=\(name)): serialized → \(serialized)\n".utf8))
             if let expires = self.expires {
                 serialized += "; Expires=\(expires.formatted(.rfc1123))"
             }
@@ -233,6 +236,7 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral, Sendable {
                 }
             }
 
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting serialize(name=\(name))\n".utf8))
             return serialized
         }
     }

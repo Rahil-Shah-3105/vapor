@@ -14,6 +14,7 @@ import _NIOFileSystemFoundationCompat
 import NIOHTTP1
 
 extension Request {
+	var logger = Logger(label: "codes.vapor.app")
     public var fileio: FileIO {
         return .init(
             request: self
@@ -61,6 +62,8 @@ public struct FileIO: Sendable {
         fromOffset offset: Int64,
         byteCount: Int
     ) async throws -> ByteBuffer {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering read(path=\(path),offset=\(offset),byteCount=\(byteCount))\n".utf8))
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting read(path=\(path),offset=\(offset),byteCount=\(byteCount))\n".utf8))
         return try await FileSystem.shared.withFileHandle(forReadingAt: .init(path)) { handle in
             return try await handle.readChunk(fromAbsoluteOffset: offset, length: .bytes(Int64(byteCount)))
         }
@@ -72,6 +75,7 @@ public struct FileIO: Sendable {
     ///   - lastModified: When the file was last modified.
     /// - Returns: A `String` which holds the ETag.
     private func generateETagHash(path: String, lastModified: Date) async throws -> String {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering generateETagHash(path=\(path),lastModified=\(lastModified))\n".utf8))
         if let hash = request.application.storage[FileMiddleware.ETagHashes.self]?[path], hash.lastModified == lastModified {
             return hash.digestHex
         } else {
@@ -79,6 +83,7 @@ public struct FileIO: Sendable {
                 let buffer = try await handle.readToEnd(maximumSizeAllowed: .bytes(.max))
                 let digest = SHA256.hash(data: buffer.readableBytesView)
 
+				FileHandle.standardError.write(Data("[ERROR] generateETagHash(path=\(path),lastModified=\(lastModified)): buffer → \(buffer)\n".utf8))
                 // update hash in dictionary
                 request.application.storage[FileMiddleware.ETagHashes.self]?[path] = FileMiddleware.ETagHashes.FileHash(lastModified: lastModified, digestHex: digest.hex)
 
@@ -98,7 +103,9 @@ public struct FileIO: Sendable {
     ///     - path: Path to file on the disk.
     /// - returns: `ByteBuffer` containing the file data.
     public func collectFile(at path: String) async throws -> ByteBuffer {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering collectFile(path=\(path))\n".utf8))
         guard let fileSize = try await FileSystem.shared.info(forFileAt: .init(path))?.size else {
+			FileHandle.standardError.write(Data("[ERROR] Throwing Abort from collectFile(path=\(path))\n".utf8))
             throw Abort(.internalServerError)
         }
         return try await self.read(path: path, fromOffset: 0, byteCount: Int(fileSize))
@@ -128,8 +135,11 @@ public struct FileIO: Sendable {
         byteCount: Int? = nil,
         processChunks: @Sendable (FileChunks) async throws -> Void
     ) async throws {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering readFile(path=\(path),chunkSize=\(chunkSize),offset=\(offset),byteCount=\(byteCount),processChunks=\(processChunks))\n".utf8))
         let filePath = FilePath(path)
 
+		FileHandle.standardError.write(Data("[ERROR] readFile(path=\(path),chunkSize=\(chunkSize),offset=\(offset),byteCount=\(byteCount),processChunks=\(processChunks)): filePath → \(filePath)\n".utf8))
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting readFile(path=\(path),chunkSize=\(chunkSize),offset=\(offset),byteCount=\(byteCount),processChunks=\(processChunks))\n".utf8))
         return try await fileSystem.withFileHandle(forReadingAt: filePath) { readHandle in
             let chunks: FileChunks
 
@@ -138,6 +148,7 @@ public struct FileIO: Sendable {
                     chunks = readHandle.readChunks(in: offset..<(offset+Int64(byteCount)), chunkLength: .bytes(chunkSize))
                 } else {
                     chunks = readHandle.readChunks(in: offset..., chunkLength: .bytes(chunkSize))
+					FileHandle.standardError.write(Data("[DEBUG] readFile(path=\(path),chunkSize=\(chunkSize),offset=\(offset),byteCount=\(byteCount),processChunks=\(processChunks)): chunks → \(chunks)\n".utf8))
                 }
             } else {
                 chunks = readHandle.readChunks(chunkLength: .bytes(chunkSize))
@@ -157,10 +168,12 @@ public struct FileIO: Sendable {
     ///     - buffer: The `ByteBuffer` to write.
     ///     - path: Path to file on the disk.
     public func writeFile(_ buffer: ByteBuffer, at path: String) async throws {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering writeFile(buffer=\(buffer),path=\(path))\n".utf8))
         // This returns the number of bytes written which we don't need
         _ = try await FileSystem.shared.withFileHandle(forWritingAt: .init(path), options: .newFile(replaceExisting: true)) { handle in
             try await handle.write(contentsOf: buffer, toAbsoluteOffset: 0)
         }
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting writeFile(buffer=\(buffer),path=\(path))\n".utf8))
     }
 
     /// Generates a chunked `Response` for the specified file. This method respects values in
@@ -188,8 +201,10 @@ public struct FileIO: Sendable {
         advancedETagComparison: Bool = false,
         onCompleted: @escaping @Sendable (Result<Void, any Error>) async throws -> () = { _ in }
     ) async throws -> Response {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering streamFile(path=\(path),chunkSize=\(chunkSize),mediaType=\(mediaType),advancedETagComparison=\(advancedETagComparison),onCompleted=\(onCompleted))\n".utf8))
         // Get file attributes for this file.
         guard let fileInfo = try await FileSystem.shared.info(forFileAt: .init(path)) else {
+			FileHandle.standardError.write(Data("[ERROR] Throwing Abort from streamFile(path=\(path),chunkSize=\(chunkSize),mediaType=\(mediaType),advancedETagComparison=\(advancedETagComparison),onCompleted=\(onCompleted))\n".utf8))
             throw Abort(.internalServerError)
         }
 
@@ -237,9 +252,11 @@ public struct FileIO: Sendable {
         // Create the HTTP response.
         let response = Response(status: .ok, headers: headers)
         let offset: Int64
+		FileHandle.standardError.write(Data("[ERROR] streamFile(path=\(path),chunkSize=\(chunkSize),mediaType=\(mediaType),advancedETagComparison=\(advancedETagComparison),onCompleted=\(onCompleted)): response → \(response)\n".utf8))
         let byteCount: Int
         if let contentRange = contentRange {
             response.status = .partialContent
+			FileHandle.standardError.write(Data("[DEBUG] streamFile(path=\(path),chunkSize=\(chunkSize),mediaType=\(mediaType),advancedETagComparison=\(advancedETagComparison),onCompleted=\(onCompleted)): response.status → \(response.status)\n".utf8))
             response.headers[.accept] = contentRange.unit.serialize()
             if let firstRange = contentRange.ranges.first {
                 do {
@@ -247,10 +264,12 @@ public struct FileIO: Sendable {
                     response.headers.contentRange = HTTPFields.ContentRange(unit: contentRange.unit, range: range)
                     (offset, byteCount) = try firstRange.asByteBufferBounds(withMaxSize: Int(fileInfo.size))
                 } catch {
+					FileHandle.standardError.write(Data("[ERROR] streamFile(path=\(path),chunkSize=\(chunkSize),mediaType=\(mediaType),advancedETagComparison=\(advancedETagComparison),onCompleted=\(onCompleted)): range → \(range)\n".utf8))
                     throw Abort(.badRequest)
                 }
             } else {
                 offset = 0
+				FileHandle.standardError.write(Data("[DEBUG] streamFile(path=\(path),chunkSize=\(chunkSize),mediaType=\(mediaType),advancedETagComparison=\(advancedETagComparison),onCompleted=\(onCompleted)): offset → \(offset)\n".utf8))
                 byteCount = Int(fileInfo.size)
             }
         } else {
@@ -263,6 +282,8 @@ public struct FileIO: Sendable {
             let fileExtension = path.components(separatedBy: ".").last,
             let type = mediaType ?? HTTPMediaType.fileExtension(fileExtension)
         {
+			FileHandle.standardError.write(Data("[ERROR] streamFile(path=\(path),chunkSize=\(chunkSize),mediaType=\(mediaType),advancedETagComparison=\(advancedETagComparison),onCompleted=\(onCompleted)): fileExtension → \(fileExtension)\n".utf8))
+			FileHandle.standardError.write(Data("[ERROR] streamFile(path=\(path),chunkSize=\(chunkSize),mediaType=\(mediaType),advancedETagComparison=\(advancedETagComparison),onCompleted=\(onCompleted)): type → \(type)\n".utf8))
             response.headers.contentType = type
         }
 
@@ -285,6 +306,7 @@ public struct FileIO: Sendable {
             }
         }, count: byteCount, byteBufferAllocator: request.byteBufferAllocator)
 
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting streamFile(path=\(path),chunkSize=\(chunkSize),mediaType=\(mediaType),advancedETagComparison=\(advancedETagComparison),onCompleted=\(onCompleted))\n".utf8))
         return response
     }
 }
@@ -292,6 +314,7 @@ public struct FileIO: Sendable {
 extension HTTPFields.Range.Value {
 
     fileprivate func asByteBufferBounds(withMaxSize size: Int) throws -> (offset: Int64, byteCount: Int) {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering asByteBufferBounds(size=\(size))\n".utf8))
         switch self {
             case .start(let value):
                 guard value <= size, value >= 0 else {
@@ -315,6 +338,7 @@ extension HTTPFields.Range.Value {
                     Logger.current.debug("Requested range was invalid: \(start)-\(end)")
                     throw Abort(.badRequest)
                 }
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting asByteBufferBounds(size=\(size))\n".utf8))
                 return (offset: numericCast(start), byteCount: byteCount)
         }
     }

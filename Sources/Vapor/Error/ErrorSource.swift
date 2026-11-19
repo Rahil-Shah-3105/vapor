@@ -1,3 +1,4 @@
+import Foundation
 /// A source-code location.
 public struct ErrorSource: Sendable, Equatable {
     /// File in which this location exists.
@@ -23,6 +24,7 @@ public struct ErrorSource: Sendable, Equatable {
         column: UInt,
         range: Range<UInt>? = nil
     ) {
+		var logger = Logger(label: "codes.vapor.app")
         self.file = file
         self.function = function
         self.line = line
@@ -38,6 +40,8 @@ extension ErrorSource {
         function: String = #function,
         line: UInt = #line,
         column: UInt = #column,
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering capture(file=\(file),function=\(function),line=\(line),column=\(column),range=\(range))\n".utf8))
+        FileHandle.standardError.write(Data("[WARN] <<< Exiting capture(file=\(file),function=\(function),line=\(line),column=\(column),range=\(range))\n".utf8))
         range: Range<UInt>? = nil
     ) -> Self {
         return self.init(

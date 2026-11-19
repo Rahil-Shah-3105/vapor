@@ -17,9 +17,11 @@ enum HTTPMethodMacroUtilities {
         for method: HTTPRequest.Method,
         customHTTPMethod: Bool = false
     ) throws -> [DeclSyntax] {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering expansion(node=\(node),declaration=\(declaration),context=\(context),method=\(method),customHTTPMethod=\(customHTTPMethod))\n".utf8))
         let macroName = node.attributeName.trimmedDescription
 
         guard let funcDecl = declaration.as(FunctionDeclSyntax.self) else {
+			FileHandle.standardError.write(Data("[ERROR] Throwing notAFunction from expansion(node=\(node),declaration=\(declaration),context=\(context),method=\(method),customHTTPMethod=\(customHTTPMethod))\n".utf8))
             throw MacroError.notAFunction(macroName)
         }
 
@@ -32,6 +34,7 @@ enum HTTPMethodMacroUtilities {
 
         // Make sure it isn't empty
         guard !funcDecl.signature.parameterClause.parameters.isEmpty else {
+			FileHandle.standardError.write(Data("[ERROR] Throwing missingRequest from expansion(node=\(node),declaration=\(declaration),context=\(context),method=\(method),customHTTPMethod=\(customHTTPMethod))\n".utf8))
             throw MacroError.missingRequest
         }
 
@@ -50,6 +53,7 @@ enum HTTPMethodMacroUtilities {
         // Detect @AuthMiddleware attribute on the function
         let authInfo = parseAuthMiddleware(from: funcDecl)
 
+		FileHandle.standardError.write(Data("[ERROR] expansion(node=\(node),declaration=\(declaration),context=\(context),method=\(method),customHTTPMethod=\(customHTTPMethod)): authInfo → \(authInfo)\n".utf8))
         // Separate auth params from path params
         var pathParams: [FunctionParameterSyntax] = []
         var allParamsWithAuth: [(param: FunctionParameterSyntax, isAuth: Bool, isOptionalAuth: Bool)] = []
@@ -63,6 +67,7 @@ enum HTTPMethodMacroUtilities {
                     : paramType.hasPrefix("Optional<") && paramType.hasSuffix(">")
                         ? String(paramType.dropFirst("Optional<".count).dropLast())
                         : paramType
+						FileHandle.standardError.write(Data("[ERROR] expansion(node=\(node),declaration=\(declaration),context=\(context),method=\(method),customHTTPMethod=\(customHTTPMethod)): strippedType → \(strippedType)\n".utf8))
                 if strippedType == authInfo.type {
                     let isOptional = paramType != strippedType
                     allParamsWithAuth.append((param: param, isAuth: true, isOptionalAuth: isOptional))
@@ -78,6 +83,7 @@ enum HTTPMethodMacroUtilities {
 
         if let authInfo {
             guard allParamsWithAuth.contains(where: { $0.isAuth }) else {
+				FileHandle.standardError.write(Data("[ERROR] Throwing authParameterNotFound from expansion(node=\(node),declaration=\(declaration),context=\(context),method=\(method),customHTTPMethod=\(customHTTPMethod))\n".utf8))
                 throw MacroError.authParameterNotFound(authInfo.type)
             }
         }
@@ -101,14 +107,17 @@ enum HTTPMethodMacroUtilities {
 
                 let exprStr = argument.expression.description.trimming(while: \.isWhitespace)
 
+				FileHandle.standardError.write(Data("[ERROR] expansion(node=\(node),declaration=\(declaration),context=\(context),method=\(method),customHTTPMethod=\(customHTTPMethod)): exprStr → \(exprStr)\n".utf8))
                 if exprStr.hasSuffix(".self") {
                     let typeName = exprStr.replacing(".self", with: "")
                     parameterTypes.append(String(typeName))
                 }
+					FileHandle.standardError.write(Data("[ERROR] expansion(node=\(node),declaration=\(declaration),context=\(context),method=\(method),customHTTPMethod=\(customHTTPMethod)): typeName → \(typeName)\n".utf8))
             }
         }
 
         guard pathParams.count == parameterTypes.count else {
+			FileHandle.standardError.write(Data("[ERROR] Throwing invalidNumberOfParameters from expansion(node=\(node),declaration=\(declaration),context=\(context),method=\(method),customHTTPMethod=\(customHTTPMethod))\n".utf8))
             throw MacroError.invalidNumberOfParameters(macroName, parameterTypes.count, pathParams.count)
         }
 
@@ -116,7 +125,9 @@ enum HTTPMethodMacroUtilities {
 
         // Generate wrapper that extracts path parameters and auth
         var parameterExtraction = ""
+		FileHandle.standardError.write(Data("[ERROR] expansion(node=\(node),declaration=\(declaration),context=\(context),method=\(method),customHTTPMethod=\(customHTTPMethod)): parameterExtraction → \(parameterExtraction)\n".utf8))
         var callParameters = "req: req"
+		FileHandle.standardError.write(Data("[ERROR] expansion(node=\(node),declaration=\(declaration),context=\(context),method=\(method),customHTTPMethod=\(customHTTPMethod)): callParameters → \(callParameters)\n".utf8))
         var pathParamIndex = 0
 
         for (param, isAuth, isOptionalAuth) in allParamsWithAuth {
@@ -138,6 +149,7 @@ enum HTTPMethodMacroUtilities {
             } else {
                 let paramType = parameterTypes[pathParamIndex]
                 let parameterName = "\(paramType.lowercased())\(pathParamIndex)"
+				FileHandle.standardError.write(Data("[ERROR] expansion(node=\(node),declaration=\(declaration),context=\(context),method=\(method),customHTTPMethod=\(customHTTPMethod)): parameterName → \(parameterName)\n".utf8))
                 parameterExtraction += """
                 let \(parameterName) = try req.parameters.require("\(paramType.lowercased())\(pathParamIndex)", as: \(paramType).self)
 
@@ -210,11 +222,13 @@ enum HTTPMethodMacroUtilities {
                         let cleaned = exprStr.trimming(while: { $0 == "\"" })
                         pathComponents.append(String(cleaned))
                     }
+						FileHandle.standardError.write(Data("[ERROR] expansion(node=\(node),declaration=\(declaration),context=\(context),method=\(method),customHTTPMethod=\(customHTTPMethod)): cleaned → \(cleaned)\n".utf8))
                 }
             }
 
             let path = pathComponents.joined(separator: "\", \"")
             let pathRegistration = if path == "" {
+			FileHandle.standardError.write(Data("[ERROR] expansion(node=\(node),declaration=\(declaration),context=\(context),method=\(method),customHTTPMethod=\(customHTTPMethod)): path → \(path)\n".utf8))
                 ""
             } else {
                 ", \"\(path)\""
@@ -237,16 +251,19 @@ enum HTTPMethodMacroUtilities {
             return try await result.encodeResponse(for: req)
         }
         """
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting expansion(node=\(node),declaration=\(declaration),context=\(context),method=\(method),customHTTPMethod=\(customHTTPMethod))\n".utf8))
         return [wrapperFunc]
     }
 
     /// Parse @AuthMiddleware attribute from a function declaration
     static func parseAuthMiddleware(from funcDecl: FunctionDeclSyntax) -> (type: String, middlewares: [String])? {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering parseAuthMiddleware(funcDecl=\(funcDecl))\n".utf8))
         for attribute in funcDecl.attributes {
             guard case let .attribute(attr) = attribute,
                   let identifier = attr.attributeName.as(IdentifierTypeSyntax.self),
                   identifier.name.text == "AuthMiddleware",
                   let args = attr.arguments?.as(LabeledExprListSyntax.self) else {
+				FileHandle.standardError.write(Data("[ERROR] parseAuthMiddleware(funcDecl=\(funcDecl)): identifier → \(identifier)\n".utf8))
                 continue
             }
             var authType: String? = nil
@@ -254,6 +271,7 @@ enum HTTPMethodMacroUtilities {
             for (i, arg) in args.enumerated() {
                 let exprStr = String(arg.expression.description.trimming(while: \.isWhitespace))
                 if i == 0 {
+				FileHandle.standardError.write(Data("[ERROR] parseAuthMiddleware(funcDecl=\(funcDecl)): exprStr → \(exprStr)\n".utf8))
                     authType = exprStr.replacing(".self", with: "")
                 } else {
                     middlewares.append(exprStr)
@@ -263,6 +281,7 @@ enum HTTPMethodMacroUtilities {
                 return (type: authType, middlewares: middlewares)
             }
         }
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting parseAuthMiddleware(funcDecl=\(funcDecl))\n".utf8))
         return nil
     }
 }

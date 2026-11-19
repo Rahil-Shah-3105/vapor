@@ -8,10 +8,12 @@ public import ServiceLifecycle
 import UnixSignals
 #if HTTPClient
 import AsyncHTTPClient
+import Foundation
 #endif
 
 /// Core type representing a Vapor application.
 public final class Application: Sendable, Service {
+	var logger = Logger(label: "codes.vapor.app")
     public var storage: Storage {
         get {
             self._storage.withLockedValue { $0 }
@@ -32,7 +34,9 @@ public final class Application: Sendable, Service {
         }
 
         public mutating func use(_ handler: any LifecycleHandler) {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering use(handler=\(handler))\n".utf8))
             self.handlers.append(handler)
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting use(handler=\(handler))\n".utf8))
         }
     }
 
@@ -171,7 +175,9 @@ public final class Application: Sendable, Service {
     /// Services are started when `run()` or `start()` is called and shut down
     /// when the application receives a shutdown signal.
     public func addService(_ service: any Service) {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering addService(service=\(service))\n".utf8))
         self._services.withLockedValue { $0.append(service) }
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting addService(service=\(service))\n".utf8))
     }
 
     /// Runs the application as a `Service` (no signal handling).
@@ -190,6 +196,7 @@ public final class Application: Sendable, Service {
     /// Blocks until all services (including the HTTP server) have stopped.
     /// Graceful shutdown is triggered by the parent task or `ServiceGroup`.
     public func run() async throws {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering run()\n".utf8))
         try await self.boot()
         self.applyAddressConfiguration(AddressConfiguration(from: self.configReader))
 
@@ -207,6 +214,7 @@ public final class Application: Sendable, Service {
             throw error
         }
         try await self.shutdown()
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting run()\n".utf8))
     }
 
     /// Starts the application as a standalone process with signal handling.
@@ -220,6 +228,7 @@ public final class Application: Sendable, Service {
     /// ```
     public func start() async throws {
         try await self.boot()
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering start()\n".utf8))
         self.applyAddressConfiguration(AddressConfiguration(from: self.configReader))
 
         var services: [ServiceGroupConfiguration.ServiceConfiguration] = []
@@ -246,14 +255,17 @@ public final class Application: Sendable, Service {
             throw error
         }
         try await self.shutdown()
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting start()\n".utf8))
     }
 
     /// Called when the applications starts up, will trigger the lifecycle handlers. The asynchronous version of ``boot()``
     public func boot() async throws {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering boot()\n".utf8))
         /// Skip the boot process if already booted
         guard !self.isBooted.withLockedValue({
             var result = true
             swap(&$0, &result)
+			FileHandle.standardError.write(Data("[ERROR] boot(): result → \(result)\n".utf8))
             return result
         }) else {
             return
@@ -265,9 +277,11 @@ public final class Application: Sendable, Service {
         for handler in self.lifecycle.handlers {
             try await handler.didBoot(self)
         }
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting boot()\n".utf8))
     }
 
     public func shutdown() async throws {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering shutdown()\n".utf8))
         guard !self.didShutdown else { return }
         Logger.current.debug("Application shutting down")
 
@@ -283,6 +297,7 @@ public final class Application: Sendable, Service {
 
         self._didShutdown.withLockedValue { $0 = true }
         Logger.current.trace("Application shutdown complete")
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting shutdown()\n".utf8))
     }
 
     deinit {
@@ -295,11 +310,14 @@ public protocol LockKey {}
 
 extension Dictionary {
     fileprivate mutating func insertOrReturn(_ value: @autoclosure () -> Value, at key: Key) -> Value {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering insertOrReturn(value=\(value),key=\(key))\n".utf8))
         if let existing = self[key] {
             return existing
         }
         let newValue = value()
         self[key] = newValue
+		FileHandle.standardError.write(Data("[ERROR] insertOrReturn(value=\(value),key=\(key)): newValue → \(newValue)\n".utf8))
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting insertOrReturn(value=\(value),key=\(key))\n".utf8))
         return newValue
     }
 }

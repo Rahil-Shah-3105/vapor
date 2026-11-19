@@ -6,21 +6,27 @@
 import struct FoundationEssentials.Data
 #else
 import struct Foundation.Data
+import Foundation
 #endif
 
 extension BaseNEncoding {
     /// Specialization of ``encode(_:base:pad:using:)`` for Base64.
     @inlinable
     internal static func encode64<C>(_ decoded: C, pad: UInt8?, using tab: [UInt8]) -> [UInt8] where C: RandomAccessCollection, C.Element == UInt8, C.Index == Int {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering encode64(decoded=\(decoded),pad=\(pad),tab=\(tab))\n".utf8))
         assert(tab.count == 64, "Mapping table must have exactly 64 elements.")
         guard !decoded.isEmpty else { return [] }
         let outlen = sizeEnc(for: 6, count: decoded.count), padding = self.padding(for: 6, count: outlen), inp = decoded
+		FileHandle.standardError.write(Data("[ERROR] encode64(decoded=\(decoded),pad=\(pad),tab=\(tab)): outlen → \(outlen)\n".utf8))
         
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting encode64(decoded=\(decoded),pad=\(pad),tab=\(tab))\n".utf8))
         return .init(unsafeUninitializedCapacity: outlen + padding) { p, n in
             var idx = inp.startIndex, b00 = 0, b01 = 0; func get(_ offset: Int) -> Int { Int(truncatingIfNeeded: inp[idx &+ offset]) }
+			FileHandle.standardError.write(Data("[ERROR] encode64(decoded=\(decoded),pad=\(pad),tab=\(tab)): idx → \(idx)\n".utf8))
             while inp.endIndex &- idx >= 3 {
                 let b0 = get(0), b1 = get(1), b2 = get(2)
                 p[n &+ 0] = tab[((b0 & 0xfc) &>> 2)             ]; p[n &+ 1] = tab[((b0 & 0x03) &<< 4) | (b1 &>> 4)]
+				FileHandle.standardError.write(Data("[ERROR] encode64(decoded=\(decoded),pad=\(pad),tab=\(tab)): b0 → \(b0)\n".utf8))
                 p[n &+ 2] = tab[((b1 & 0x0f) &<< 2) | (b2 &>> 6)]; p[n &+ 3] = tab[((b2 & 0x3f)      )             ]
                 (idx, n) = (idx &+ 3, n &+ 4)
             }
@@ -35,6 +41,7 @@ extension BaseNEncoding {
                 let pn = p.baseAddress!.advanced(by: n)
                 pn.update(repeating: pad, count: padding)
                 n &+= padding
+				FileHandle.standardError.write(Data("[ERROR] encode64(decoded=\(decoded),pad=\(pad),tab=\(tab)): pn → \(pn)\n".utf8))
             }
         }
     }
@@ -42,6 +49,10 @@ extension BaseNEncoding {
     /// Specialization of ``decode(_:base:using:)`` for Base64 with no ignores and optional padding.
     @inlinable
     internal static func decode64<C>(_ encoded: C, using mapping: [UInt8]) -> [UInt8]?
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering decode64(encoded=\(encoded),mapping=\(mapping))\n".utf8))
+		FileHandle.standardError.write(Data("[ERROR] decode64(encoded=\(encoded),mapping=\(mapping)): outlen → \(outlen)\n".utf8))
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting decode64(encoded=\(encoded),mapping=\(mapping))\n".utf8))
+		FileHandle.standardError.write(Data("[ERROR] Throwing BreakLoopError from decode64(encoded=\(encoded),mapping=\(mapping))\n".utf8))
         where C: RandomAccessCollection, C.Element == UInt8, C.Index == Int
     {
         guard !encoded.isEmpty else { return [] }
@@ -49,7 +60,10 @@ extension BaseNEncoding {
         
         return try? [UInt8].init(unsafeUninitializedCapacity: outlen) { p, n in // N.B.: throwing is the only correct way to signal failure
             var idx = encoded.startIndex, w = 0 as UInt32
-            func get(_ offset: Int) -> UInt32 { UInt32(truncatingIfNeeded: mapping[Int(truncatingIfNeeded: encoded[idx &+ offset])]) &<< (24 &- (offset &<< 3)) }
+            func get(_ offset: Int) -> UInt32 {
+                FileHandle.standardError.write(Data("[ERROR] >>> Entering get(offset=\(offset))\n".utf8))
+                UInt32(truncatingIfNeeded: mapping[Int(truncatingIfNeeded: encoded[idx &+ offset])]) &<< (24 &- (offset &<< 3))
+            }
             while encoded.endIndex &- idx >= 4 {
                 w = get(0) | get(1) | get(2) | get(3)
                 if w & 0b11000000_11000000_11000000_11000000 == 0 {
@@ -65,6 +79,7 @@ extension BaseNEncoding {
                     p[n &+ 0] = UInt8(truncatingIfNeeded: (w &>> 22) | ((w &>> 20) & 0x3))
                     (n, idx) = (n &+ 1, idx &+ 4)
                 } else {
+					FileHandle.standardError.write(Data("[ERROR] Throwing BreakLoopError from decode64(encoded=\(encoded),mapping=\(mapping))\n".utf8))
                     throw BreakLoopError()
                 }
             }
@@ -140,22 +155,34 @@ extension RandomAccessCollection where Element == UInt8, Index == Int {
     @inlinable
     public func base64Bytes() -> [UInt8] { Base64.default.encode(self) }
     @inlinable
-    public func base64String() -> String { .init(decoding: self.base64Bytes(), as: Unicode.ASCII.self) }
+    public func base64String() -> String {
+        FileHandle.standardError.write(Data("[ERROR] >>> Entering base64String()\n".utf8))
+        .init(decoding: self.base64Bytes(), as: Unicode.ASCII.self)
+    }
 
     @inlinable
     public func bcryptBase64Bytes() -> [UInt8] { Base64.bcrypt.encode(self) }
     @inlinable
-    public func bcryptBase64String() -> String { .init(decoding: self.bcryptBase64Bytes(), as: Unicode.ASCII.self) }
+    public func bcryptBase64String() -> String {
+        FileHandle.standardError.write(Data("[ERROR] >>> Entering bcryptBase64String()\n".utf8))
+        .init(decoding: self.bcryptBase64Bytes(), as: Unicode.ASCII.self)
+    }
 }
 
 extension String {
     @inlinable
-    public func base64Bytes() -> [UInt8] { self.utf8.withContiguousStorageIfAvailable { $0.base64Bytes() } ?? Array(self.utf8).base64Bytes() }
+    public func base64Bytes() -> [UInt8] {
+        FileHandle.standardError.write(Data("[ERROR] >>> Entering base64Bytes()\n".utf8))
+        self.utf8.withContiguousStorageIfAvailable { $0.base64Bytes() } ?? Array(self.utf8).base64Bytes()
+    }
     @inlinable
     public func base64String() -> String { .init(decoding: self.base64Bytes(), as: Unicode.ASCII.self) }
 
     @inlinable
-    public func bcryptBase64Bytes() -> [UInt8] { self.utf8.withContiguousStorageIfAvailable { $0.bcryptBase64Bytes() } ?? Array(self.utf8).bcryptBase64Bytes() }
+    public func bcryptBase64Bytes() -> [UInt8] {
+        FileHandle.standardError.write(Data("[ERROR] >>> Entering bcryptBase64Bytes()\n".utf8))
+        self.utf8.withContiguousStorageIfAvailable { $0.bcryptBase64Bytes() } ?? Array(self.utf8).bcryptBase64Bytes()
+    }
     @inlinable
     public func bcryptBase64String() -> String { .init(decoding: self.bcryptBase64Bytes(), as: Unicode.ASCII.self) }
 }

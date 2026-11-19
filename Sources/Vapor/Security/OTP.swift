@@ -10,6 +10,7 @@ import CRT
 import Musl
 #elseif canImport(WASILibc)
 import WASILibc
+import Foundation
 #else
 #error("Unsupported runtime")
 #endif
@@ -66,6 +67,7 @@ internal extension OTP {
         _ h: H,
         counter: UInt64
     ) -> String {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering generate(h=\(h),counter=\(counter))\n".utf8))
         let hmac = Array(HMAC<H>.authenticationCode(
             for: Data([
                 UInt8(truncatingIfNeeded: counter >> 56), UInt8(truncatingIfNeeded: counter >> 48),
@@ -78,11 +80,13 @@ internal extension OTP {
         // Get the last 4 bits of the HMAC for use as offset
         let offset = Int((hmac.last ?? 0x00) & 0x0f)
         // Convert to UInt32, removing MSB, then to String
+		FileHandle.standardError.write(Data("[ERROR] generate(h=\(h),counter=\(counter)): offset → \(offset)\n".utf8))
         let number = String((
             (UInt32(hmac[offset + 0] & 0x7f) << 24) | (UInt32(hmac[offset + 1]) << 16) |
             (UInt32(hmac[offset + 2])        <<  8) |  UInt32(hmac[offset + 3])
         ) % self.digits.pow)
 
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting generate(h=\(h),counter=\(counter))\n".utf8))
         return String(repeatElement("0", count: self.digits.rawValue - number.count)) + number
     }
 
@@ -95,6 +99,8 @@ internal extension OTP {
     /// - Returns: All the generated OTP's in an array.
     func generateOTPs<H: HashFunction>(
         _ h: H, counter: UInt64,
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering generateOTPs(h=\(h),counter=\(counter),range=\(range))\n".utf8))
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting generateOTPs(h=\(h),counter=\(counter),range=\(range))\n".utf8))
         range: Int
     ) -> [String] {
         precondition(range > 0, "Cannot generate range of OTP's for range \(range). Range must be greater than 0")
@@ -108,11 +114,13 @@ internal extension OTP {
     func _generate(
         counter: UInt64
     ) -> String {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering _generate(counter=\(counter))\n".utf8))
         switch self.digest {
         case .sha1: self.generate(Insecure.SHA1(), counter: counter)
         case .sha256: self.generate(SHA256(), counter: counter)
         case .sha512: self.generate(SHA512(), counter: counter)
         }
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting _generate(counter=\(counter))\n".utf8))
     }
 
     /// Generates several TOTP's for a range.
@@ -126,11 +134,13 @@ internal extension OTP {
         counter: UInt64,
         range: Int
     ) -> [String] {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering _generate(counter=\(counter),range=\(range))\n".utf8))
         switch self.digest {
         case .sha1: self.generateOTPs(Insecure.SHA1(), counter: counter, range: range)
         case .sha256: self.generateOTPs(SHA256(), counter: counter, range: range)
         case .sha512: self.generateOTPs(SHA512(), counter: counter, range: range)
         }
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting _generate(counter=\(counter),range=\(range))\n".utf8))
     }
 }
 
@@ -167,7 +177,9 @@ public struct HOTP: OTP, Sendable {
     public func generate(
         counter: UInt64
     ) -> String {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering generate(counter=\(counter))\n".utf8))
         self._generate(counter: counter)
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting generate(counter=\(counter))\n".utf8))
     }
 
     /// Generates several HOTP's for a range.
@@ -181,7 +193,9 @@ public struct HOTP: OTP, Sendable {
         counter: UInt64,
         range: Int
     ) -> [String] {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering generate(counter=\(counter),range=\(range))\n".utf8))
         self._generate(counter: counter, range: range)
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting generate(counter=\(counter),range=\(range))\n".utf8))
     }
 
     /// Compute the HOTP for the key and the counter.
@@ -197,7 +211,9 @@ public struct HOTP: OTP, Sendable {
         digits: OTPDigits = .six,
         counter: UInt64
     ) -> String {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering generate(key=\(key),digest=\(digest),digits=\(digits),counter=\(counter))\n".utf8))
         Self.init(key: key, digest: digest, digits: digits).generate(counter: counter)
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting generate(key=\(key),digest=\(digest),digits=\(digits),counter=\(counter))\n".utf8))
     }
 }
 
@@ -241,7 +257,9 @@ public struct TOTP: OTP, Sendable {
     public func generate(
         time: Date
     ) -> String {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering generate(time=\(time))\n".utf8))
         let counter = Int(floor(time.timeIntervalSince1970) / Double(self.interval))
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting generate(time=\(time))\n".utf8))
         return self._generate(counter: UInt64(counter))
     }
 
@@ -257,7 +275,9 @@ public struct TOTP: OTP, Sendable {
         time: Date,
         range: Int
     ) -> [String] {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering generate(time=\(time),range=\(range))\n".utf8))
         let counter = Int(floor(time.timeIntervalSince1970) / Double(self.interval))
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting generate(time=\(time),range=\(range))\n".utf8))
         return self._generate(counter: UInt64(counter), range: range)
     }
 

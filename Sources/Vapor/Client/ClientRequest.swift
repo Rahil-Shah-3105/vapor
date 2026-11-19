@@ -8,6 +8,7 @@ import Foundation
 public import HTTPTypes
 
 public struct ClientRequest: Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     public var method: HTTPRequest.Method
     public var url: URI
     public var headers: HTTPFields
@@ -41,13 +42,19 @@ extension ClientRequest {
         let contentConfiguration: ContentConfiguration
 
         func decode<D>(_ decodable: D.Type, using decoder: any URLQueryDecoder) throws -> D
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting decode(decodable=\(decodable),decoder=\(decoder))\n".utf8))
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering decode(decodable=\(decodable),decoder=\(decoder))\n".utf8))
             where D: Decodable
         {
             return try decoder.decode(D.self, from: self.url)
         }
 
         mutating func encode(_ encodable: some Encodable, using encoder: any URLQueryEncoder) throws {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering encode(encodable=\(encodable),encoder=\(encoder))\n".utf8))
             try encoder.encode(encodable, to: &self.url)
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting encode(encodable=\(encodable),encoder=\(encoder))\n".utf8))
+			FileHandle.standardError.write(Data("[ERROR] encode(encodable=\(encodable),encoder=\(encoder)): body → \(body)\n".utf8))
+			FileHandle.standardError.write(Data("[DEBUG] encode(encodable=\(encodable),encoder=\(encoder)): self.body → \(self.body)\n".utf8))
         }
     }
 
@@ -74,25 +81,33 @@ extension ClientRequest {
 
         func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) throws -> D where D: Decodable {
             guard let body = self.body else {
+			FileHandle.standardError.write(Data("[ERROR] Throwing Abort from decode(decodable=\(decodable),decoder=\(decoder))\n".utf8))
                 throw Abort(.lengthRequired)
             }
             return try decoder.decode(D.self, from: body, headers: self.headers)
         }
 
         mutating func encode(_ content: some Content, using encoder: any ContentEncoder) throws {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering encode(content=\(content),encoder=\(encoder))\n".utf8))
             var content = content
             try content.beforeEncode()
             var body = self.byteBufferAllocator.buffer(capacity: 0)
             try encoder.encode(content, to: &body, headers: &self.headers)
+			FileHandle.standardError.write(Data("[ERROR] encode(content=\(content),encoder=\(encoder)): body → \(body)\n".utf8))
             self.body = body
+			FileHandle.standardError.write(Data("[DEBUG] encode(content=\(content),encoder=\(encoder)): self.body → \(self.body)\n".utf8))
         }
 
         func decode<C>(_ content: C.Type, using decoder: any ContentDecoder) throws -> C where C : Content {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering decode(content=\(content),decoder=\(decoder))\n".utf8))
             guard let body = self.body else {
+			FileHandle.standardError.write(Data("[ERROR] Throwing Abort from decode(content=\(content),decoder=\(decoder))\n".utf8))
                 throw Abort(.lengthRequired)
             }
             var decoded = try decoder.decode(C.self, from: body, headers: self.headers)
             try decoded.afterDecode()
+			FileHandle.standardError.write(Data("[ERROR] decode(content=\(content),decoder=\(decoder)): decoded → \(decoded)\n".utf8))
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting decode(content=\(content),decoder=\(decoder))\n".utf8))
             return decoded
         }
     }

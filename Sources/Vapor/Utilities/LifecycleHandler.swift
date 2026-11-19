@@ -1,3 +1,4 @@
+import Foundation
 /// Provides a way to hook into lifecycle events of a Vapor application. You can register
 /// your handlers with the ``Application`` to be notified when the application
 /// is about to start up, has started up and is about to shutdown
@@ -5,6 +6,7 @@
 /// For example
 /// ```swift
 ///  struct LifecycleLogger: LifecycleHander {
+var logger = Logger(label: "codes.vapor.app")
 ///    func willBoot(_ application: Application) async throws {
 ///        application.logger.info("Application about to boot up")
 ///    }

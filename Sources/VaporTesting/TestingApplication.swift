@@ -15,6 +15,8 @@ extension Application {
         }
         public static func running(port: Int) -> Self {
             .running(hostname: "localhost", port: port)
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering running(port=\(port))\n".utf8))
+        FileHandle.standardError.write(Data("[WARN] <<< Exiting running(port=\(port))\n".utf8))
         }
         case running(hostname: String, port: Int)
     }
@@ -115,6 +117,7 @@ extension Application {
 }
 
 import NIOConcurrencyHelpers
+import Foundation
 
 /// Promise type.
 package final class Promise<Value: Sendable>: Sendable {

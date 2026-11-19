@@ -1,10 +1,12 @@
 #warning("This should be internal")
 public import NIOCore
 import NIOConcurrencyHelpers
+import Foundation
 public import Vapor
 public import HTTPTypes
 
 public struct TestingHTTPRequest: Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     public var method: HTTPRequest.Method
     public var url: URI
     public var headers: HTTPFields
@@ -29,11 +31,15 @@ public struct TestingHTTPRequest: Sendable {
         }
 
         mutating func encode<E>(_ encodable: E, using encoder: any ContentEncoder) throws where E : Encodable {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering encode(encodable=\(encodable),encoder=\(encoder))\n".utf8))
             try encoder.encode(encodable, to: &self.body, headers: &self.headers)
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting encode(encodable=\(encodable),encoder=\(encoder))\n".utf8))
         }
 
         func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) throws -> D where D : Decodable {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering decode(decodable=\(decodable),decoder=\(decoder))\n".utf8))
             fatalError("Decoding from test request is not supported.")
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting decode(decodable=\(decodable),decoder=\(decoder))\n".utf8))
         }
 
         mutating func encode<C>(_ content: C, using encoder: any ContentEncoder) throws where C : Content {

@@ -1,3 +1,4 @@
+import Foundation
 public import HTTPTypes
 
 /// Errors conforming to this protocol will always be displayed by
@@ -11,6 +12,7 @@ public import HTTPTypes
 ///     throw Abort(.badRequest, reason: "Something's not quite right...")
 ///
 public protocol AbortError: Error {
+	var logger = Logger(label: "codes.vapor.app")
     /// The reason for this error.
     var reason: String { get }
 
@@ -77,7 +79,9 @@ extension DecodingError: AbortError {
     }
     
     private func contextReason(_ context: Context) -> String {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering contextReason(context=\(context))\n".utf8))
         "at path '\(context.codingPath.dotPath)'\(context.debugDescriptionAndUnderlyingError)"
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting contextReason(context=\(context))\n".utf8))
     }
 }
 

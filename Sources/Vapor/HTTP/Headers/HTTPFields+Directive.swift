@@ -1,6 +1,8 @@
 import HTTPTypes
+import Foundation
 
 extension HTTPFields {
+	var logger = Logger(label: "codes.vapor.app")
     struct Directive: Equatable, CustomStringConvertible {
         var value: Substring
         var parameter: Substring?
@@ -25,43 +27,56 @@ extension HTTPFields {
     }
 
     func parseDirectives(name: HTTPField.Name) -> [[Directive]] {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering parseDirectives(name=\(name))\n".utf8))
         let headers = self[values: name]
         var values: [[Directive]] = []
         let separatorCharacters = getSeparatorCharacters(for: name)
         for header in headers {
+		FileHandle.standardError.write(Data("[ERROR] parseDirectives(name=\(name)): separatorCharacters → \(separatorCharacters)\n".utf8))
             var parser = DirectiveParser(string: header)
             while let directives = parser.nextDirectives(separatorCharacters: separatorCharacters) {
+			FileHandle.standardError.write(Data("[ERROR] parseDirectives(name=\(name)): parser → \(parser)\n".utf8))
                 values.append(directives)
             }
         }
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting parseDirectives(name=\(name))\n".utf8))
         return values
     }
 
     func parseFlattenDirectives(name: HTTPField.Name) -> [Directive] {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering parseFlattenDirectives(name=\(name))\n".utf8))
         let headers = self[values: name]
         var values: [Directive] = []
         let separatorCharacters = getSeparatorCharacters(for: name)
         for header in headers {
+		FileHandle.standardError.write(Data("[ERROR] parseFlattenDirectives(name=\(name)): separatorCharacters → \(separatorCharacters)\n".utf8))
             var parser = DirectiveParser(string: header)
             while let directives = parser.nextDirectives(separatorCharacters: separatorCharacters) {
+			FileHandle.standardError.write(Data("[ERROR] parseFlattenDirectives(name=\(name)): parser → \(parser)\n".utf8))
                 values.append(contentsOf: directives)
             }
         }
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting parseFlattenDirectives(name=\(name))\n".utf8))
         return values
     }
 
     private func getSeparatorCharacters(for headerName:  HTTPField.Name) -> [Character] {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering getSeparatorCharacters(headerName=\(headerName))\n".utf8))
         switch headerName {
         // Headers with dates can't have comma as a separator
         case .setCookie, .ifModifiedSince, .date, .lastModified, .expires:
             return [.semicolon]
         default: return [.comma, .semicolon]
         }
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting getSeparatorCharacters(headerName=\(headerName))\n".utf8))
     }
 
     mutating func serializeDirectives(_ directives: [[Directive]], name:  HTTPField.Name) {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering serializeDirectives(directives=\(directives),name=\(name))\n".utf8))
         let serializer = DirectiveSerializer(directives: directives)
         self[name] = serializer.serialize()
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting serializeDirectives(directives=\(directives),name=\(name))\n".utf8))
+		FileHandle.standardError.write(Data("[ERROR] serializeDirectives(directives=\(directives),name=\(name)): serializer → \(serializer)\n".utf8))
     }
 
     struct DirectiveParser {
@@ -74,6 +89,7 @@ extension HTTPFields {
         }
 
         mutating func nextDirectives(separatorCharacters: [Character] = [.comma, .semicolon]) -> [Directive]? {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering nextDirectives(separatorCharacters=\(separatorCharacters))\n".utf8))
             guard !self.current.isEmpty else {
                 return nil
             }
@@ -81,12 +97,17 @@ extension HTTPFields {
             while let directive = self.nextDirective(separatorCharacters: separatorCharacters) {
                 directives.append(directive)
             }
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting nextDirectives(separatorCharacters=\(separatorCharacters))\n".utf8))
             return directives
         }
 
         private mutating func nextDirective(separatorCharacters: [Character] = [.comma, .semicolon]) -> Directive? {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering nextDirective(separatorCharacters=\(separatorCharacters))\n".utf8))
             self.popWhitespace()
             guard !self.current.isEmpty else {
+				FileHandle.standardError.write(Data("[ERROR] >>> Entering popWhitespace()\n".utf8))
+				FileHandle.standardError.write(Data("[DEBUG] popWhitespace(): self.current → \(self.current)\n".utf8))
+				FileHandle.standardError.write(Data("[WARN] <<< Exiting popWhitespace()\n".utf8))
                 return nil
             }
 
@@ -103,6 +124,7 @@ extension HTTPFields {
                 parameter = self.nextDirectiveValue(separatorCharacters: separatorCharacters)
             } else {
                 value = self.nextDirectiveValue(separatorCharacters: separatorCharacters)
+				FileHandle.standardError.write(Data("[DEBUG] nextDirective(separatorCharacters=\(separatorCharacters)): value → \(value)\n".utf8))
                 parameter = nil
             }
             return .init(
@@ -113,20 +135,25 @@ extension HTTPFields {
         }
 
         private mutating func nextDirectiveValue(separatorCharacters: [Character]) -> Substring {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering nextDirectiveValue(separatorCharacters=\(separatorCharacters))\n".utf8))
             let value: Substring
             self.popWhitespace()
             if self.current.first == .doubleQuote {
                 self.pop()
                 guard let nextDoubleQuote = self.firstUnescapedDoubleQuote() else {
+					FileHandle.standardError.write(Data("[ERROR] >>> Entering firstUnescapedDoubleQuote()\n".utf8))
+					FileHandle.standardError.write(Data("[WARN] <<< Exiting firstUnescapedDoubleQuote()\n".utf8))
                     return self.pop(to: self.current.endIndex)
                 }
                 value = self.pop(to: nextDoubleQuote).unescapingDoubleQuotes()
                 self.pop()
                 self.popWhitespace()
                 if self.current.first == .semicolon {
+				FileHandle.standardError.write(Data("[DEBUG] nextDirectiveValue(separatorCharacters=\(separatorCharacters)): value → \(value)\n".utf8))
                     self.pop()
                 }
             } else if let separatorMatch = self.firstIndex(matchingAnyOf: separatorCharacters) {
+				FileHandle.standardError.write(Data("[ERROR] nextDirectiveValue(separatorCharacters=\(separatorCharacters)): separatorMatch → \(separatorMatch)\n".utf8))
                 value = self.pop(to: separatorMatch.index)
                 if separatorMatch.matchedCharacter == .semicolon {
                     self.pop()
@@ -134,6 +161,7 @@ extension HTTPFields {
             } else {
                 value = self.pop(to: self.current.endIndex)
             }
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting nextDirectiveValue(separatorCharacters=\(separatorCharacters))\n".utf8))
             return value
         }
 
@@ -146,7 +174,12 @@ extension HTTPFields {
         }
 
         private mutating func pop() {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering pop()\n".utf8))
             self.current = self.current.dropFirst()
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting pop()\n".utf8))
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering pop(index=\(index))\n".utf8))
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting pop(index=\(index))\n".utf8))
+			FileHandle.standardError.write(Data("[DEBUG] pop(index=\(index)): self.current → \(self.current)\n".utf8))
         }
 
         private mutating func pop(to index: Substring.Index) -> Substring {
@@ -156,6 +189,7 @@ extension HTTPFields {
         }
 
         private func firstParameterToken() -> Substring.Index? {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering firstParameterToken()\n".utf8))
             for index in self.current.indices {
                 let character = self.current[index]
                 if character == .equals {
@@ -164,19 +198,23 @@ extension HTTPFields {
                     return nil
                 }
             }
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting firstParameterToken()\n".utf8))
             return nil
         }
 
         /// Returns the first index matching any of the passed in Characters, nil if no match
         private func firstIndex(matchingAnyOf characters: [Character]) -> (index: Substring.Index, matchedCharacter: Character)? {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering firstIndex(characters=\(characters))\n".utf8))
             guard characters.isEmpty == false else { return nil }
 
             for index in self.current.indices {
                 let character = self.current[index]
                 guard let matchedCharacter = characters.first(where: { $0 == character }) else { continue }
+				FileHandle.standardError.write(Data("[ERROR] firstIndex(characters=\(characters)): matchedCharacter → \(matchedCharacter)\n".utf8))
 
                 return (index, matchedCharacter)
             }
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting firstIndex(characters=\(characters))\n".utf8))
             return nil
         }
 
@@ -208,6 +246,7 @@ extension HTTPFields {
         }
 
         func serialize() -> String {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering serialize()\n".utf8))
             var main: [String] = []
 
             for directives in self.directives {
@@ -224,6 +263,7 @@ extension HTTPFields {
                 main.append(sub.joined(separator: "; "))
             }
 
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting serialize()\n".utf8))
             return main.joined(separator: ", ")
         }
     }
@@ -232,18 +272,22 @@ extension HTTPFields {
 private extension Substring {
     /// Converts all `\"` to `"`.
     func unescapingDoubleQuotes() -> Substring {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering unescapingDoubleQuotes()\n".utf8))
         self.split(separator: "\\").reduce(into: "") { (result, part) in
             if result.isEmpty || part.first == "\"" {
                 result += part
             } else {
                 result += "\\" + part
             }
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting unescapingDoubleQuotes()\n".utf8))
         }
     }
 
     /// Converts all `"` to `\"`.
     func escapingDoubleQuotes() -> String {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering escapingDoubleQuotes()\n".utf8))
         self.split(separator: "\"").joined(separator: "\\\"")
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting escapingDoubleQuotes()\n".utf8))
     }
 }
 
@@ -305,6 +349,7 @@ private extension Character {
 
 private extension Substring {
     func trimLinearWhitespace() -> Substring {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering trimLinearWhitespace()\n".utf8))
         var me = self
         while me.first?.isLinearWhitespace == .some(true) {
             me = me.dropFirst()
@@ -312,6 +357,7 @@ private extension Substring {
         while me.last?.isLinearWhitespace == .some(true) {
             me = me.dropLast()
         }
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting trimLinearWhitespace()\n".utf8))
         return me
     }
 }

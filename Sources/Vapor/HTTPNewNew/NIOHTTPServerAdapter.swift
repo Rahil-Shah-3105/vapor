@@ -2,6 +2,7 @@ import NIOHTTPServer
 import NIOCore
 import NIOConcurrencyHelpers
 import Logging
+import Foundation
 
 /// Errors thrown by ``NIOHTTPServerAdapter``.
 enum NIOHTTPServerAdapterError: Error {
@@ -23,6 +24,7 @@ enum NIOHTTPServerAdapterError: Error {
 /// parent task (via `ServiceGroup` or task cancellation) through to
 /// `NIOHTTPServer.serve()`'s built-in `withGracefulShutdownHandler`.
 final class NIOHTTPServerAdapter: Server, Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     /// Tracks anyone waiting on ``listeningAddress`` along with a startup failure, if one occurred.
     ///
     /// `startupError` is retained so that a waiter arriving *after* `run()` has already failed
@@ -41,22 +43,29 @@ final class NIOHTTPServerAdapter: Server, Sendable {
     }
 
     func run() async throws {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering run()\n".utf8))
         do {
             try await self.runServer()
         } catch {
+			FileHandle.standardError.write(Data("[ERROR] Exception in run(): \(error)\n".utf8))
             // If we failed before publishing the listening address — bad TLS credentials, the port
             // already being in use, a bind failure — anyone awaiting `listeningAddress` would wait
             // forever, because only the success path below ever resumes them. Hand them the error.
             self.addressWaiters.withLockedValue { waiters in
                 waiters.startupError = error
+				FileHandle.standardError.write(Data("[DEBUG] run(): waiters.startupError → \(waiters.startupError)\n".utf8))
                 waiters.continuation?.resume(throwing: error)
                 waiters.continuation = nil
+				FileHandle.standardError.write(Data("[DEBUG] run(): waiters.continuation → \(waiters.continuation)\n".utf8))
             }
+			FileHandle.standardError.write(Data("[ERROR] Throwing error from run()\n".utf8))
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting run()\n".utf8))
             throw error
         }
     }
 
     private func runServer() async throws {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering runServer()\n".utf8))
         let transportSecurity: NIOHTTPServerConfiguration.TransportSecurity
         if let tls = self.application.serverConfiguration.tlsConfiguration {
             let credentials: NIOHTTPServerConfiguration.TransportSecurity.TLSCredentials
@@ -65,14 +74,17 @@ final class NIOHTTPServerAdapter: Server, Sendable {
                 credentials = .x509(.certificates(chain: chain, privateKey: key))
             case .pemFile(let certPath, let keyPath):
                 credentials = .x509(.pemFile(certificateChainPath: certPath, privateKeyPath: keyPath))
+				FileHandle.standardError.write(Data("[DEBUG] runServer(): credentials → <redacted>\n".utf8))
             }
             transportSecurity = .tls(credentials: credentials)
         } else {
             transportSecurity = .plaintext
+			FileHandle.standardError.write(Data("[DEBUG] runServer(): transportSecurity → \(transportSecurity)\n".utf8))
         }
 
         var supportedHTTPVersions = Set<NIOHTTPServerConfiguration.HTTPVersion>()
         for httpVersion in self.application.serverConfiguration.httpVersions {
+		FileHandle.standardError.write(Data("[ERROR] runServer(): supportedHTTPVersions → \(supportedHTTPVersions)\n".utf8))
             switch httpVersion.version {
             case .http1_1:
                 supportedHTTPVersions.insert(.http1_1)
@@ -91,6 +103,7 @@ final class NIOHTTPServerAdapter: Server, Sendable {
         }
 
         guard !self.application.serverConfiguration.httpVersions.isEmpty else {
+			FileHandle.standardError.write(Data("[ERROR] Throwing noHTTPVersionsSpecified from runServer()\n".utf8))
             throw NIOHTTPServerAdapterError.noHTTPVersionsSpecified
         }
 
@@ -98,6 +111,7 @@ final class NIOHTTPServerAdapter: Server, Sendable {
         guard self.application.serverConfiguration.isTLSEnabled
             || self.application.serverConfiguration.httpVersions == [.http1_1]
         else {
+			FileHandle.standardError.write(Data("[ERROR] Throwing http2RequiresTLS from runServer()\n".utf8))
             throw NIOHTTPServerAdapterError.http2RequiresTLS
         }
 
@@ -123,6 +137,7 @@ final class NIOHTTPServerAdapter: Server, Sendable {
             )
         case .provided(let provided):
             responder = provided
+			FileHandle.standardError.write(Data("[DEBUG] runServer(): responder → \(responder)\n".utf8))
         }
 
         let handler = VaporHTTPServerHandler(
@@ -140,15 +155,18 @@ final class NIOHTTPServerAdapter: Server, Sendable {
             // Wait for the server to bind, then publish the address
             let addresses = try await nioServer.listeningAddresses
             guard let address = addresses.first else {
+			FileHandle.standardError.write(Data("[ERROR] Throwing noListeningAddress from runServer()\n".utf8))
                 throw NIOHTTPServerAdapterError.noListeningAddress
             }
             let nioAddress = try NIOCore.SocketAddress.makeAddressResolvingHost(address.host, port: address.port)
 
+			FileHandle.standardError.write(Data("[ERROR] runServer(): nioAddress → \(nioAddress)\n".utf8))
             // Atomically set the address and resume any waiting continuation
             self.application.sharedNewAddress.withLockedValue { $0 = nioAddress }
             self.addressWaiters.withLockedValue { waiters in
                 waiters.continuation?.resume(returning: nioAddress)
                 waiters.continuation = nil
+				FileHandle.standardError.write(Data("[DEBUG] runServer(): waiters.continuation → \(waiters.continuation)\n".utf8))
             }
 
             Logger.current.notice("Server started on \(address.host):\(address.port)")
@@ -156,6 +174,7 @@ final class NIOHTTPServerAdapter: Server, Sendable {
             // Wait for serve() to complete (blocks until shutdown/cancellation)
             try await group.next()
         }
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting runServer()\n".utf8))
     }
 
     var listeningAddress: SocketAddress {
@@ -199,11 +218,13 @@ final class NIOHTTPServerAdapter: Server, Sendable {
     }
 
     private func resolveBindAddress() -> (String, Int) {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering resolveBindAddress()\n".utf8))
         switch self.application.serverConfiguration.address {
         case .hostname(let hostname, let port):
             return (hostname, port)
         case .unixDomainSocket:
             Logger.current.warning("Unix domain sockets are not supported by NIOHTTPServer. Falling back to default address.")
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting resolveBindAddress()\n".utf8))
             return ("127.0.0.1", 8080)
         }
     }

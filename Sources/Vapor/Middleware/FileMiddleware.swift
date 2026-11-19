@@ -6,12 +6,14 @@ public import Foundation
 #warning("Make this internal")
 public import NIOCore
 import _NIOFileSystem
+import Foundation
 public import HTTPTypes
 
 /// Serves static files from a public directory.
 ///
 /// `FileMiddleware` will default to `DirectoryConfig`'s working directory with `"/Public"` appended.
 public final class FileMiddleware: Middleware {
+	var logger = Logger(label: "codes.vapor.app")
     /// The public directory. Guaranteed to end with a slash.
     private let publicDirectory: String
     private let defaultFile: String?
@@ -64,8 +66,10 @@ public final class FileMiddleware: Middleware {
     }
 
     public func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering respond(request=\(request),next=\(next))\n".utf8))
         // make a copy of the percent-decoded path
         guard var path = request.url.path.removingPercentEncoding else {
+		FileHandle.standardError.write(Data("[ERROR] Throwing Abort from respond(request=\(request),next=\(next))\n".utf8))
             throw Abort(.badRequest)
         }
 
@@ -117,6 +121,7 @@ public final class FileMiddleware: Middleware {
             }
         }
 
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting respond(request=\(request),next=\(next))\n".utf8))
         return try await next.respond(to: request)
     }
 
@@ -180,24 +185,30 @@ public final class FileMiddleware: Middleware {
 fileprivate extension String {
     /// Determines if input path is absolute based on a leading slash
     func isAbsolute() -> Bool {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering isAbsolute()\n".utf8))
+        FileHandle.standardError.write(Data("[WARN] <<< Exiting isAbsolute()\n".utf8))
         return self.hasPrefix("/")
     }
 
     /// Makes a path relative by removing all leading slashes
     func removeLeadingSlashes() -> String {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering removeLeadingSlashes()\n".utf8))
         var newPath = self
         while newPath.hasPrefix("/") {
             newPath.removeFirst()
         }
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting removeLeadingSlashes()\n".utf8))
         return newPath
     }
 
     /// Adds a trailing slash to the path if one is not already present
     func addTrailingSlash() -> String {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering addTrailingSlash()\n".utf8))
         var newPath = self
         if !newPath.hasSuffix("/") {
             newPath += "/"
         }
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting addTrailingSlash()\n".utf8))
         return newPath
     }
 }
@@ -222,7 +233,9 @@ extension FileMiddleware {
         ///
         /// A typical cache duration may be 5 minutes, for instance: `.cacheUpToDuration(.minutes(5))`
         public static func cacheUpToDuration(_ duration: TimeAmount) -> CachePolicy {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering cacheUpToDuration(duration=\(duration))\n".utf8))
             CachePolicy(cacheControlHeader: .init(maxAge: Int(duration.nanoseconds/1_000_000_000)), ageHeader: 0)
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting cacheUpToDuration(duration=\(duration))\n".utf8))
         }
 
         /// A custom cache control policy that should be used for all files.
@@ -231,7 +244,9 @@ extension FileMiddleware {
         ///   - ageHeader: The `Age` header to use, in seconds. If none is specified, any previous age header will be cleared.
         /// - Returns: A cache policy with the specified headers.
         public static func custom(cacheControlHeader: HTTPFields.CacheControl?, ageHeader: Int? = nil) -> CachePolicy {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering custom(cacheControlHeader=\(cacheControlHeader),ageHeader=\(ageHeader))\n".utf8))
             CachePolicy(cacheControlHeader: cacheControlHeader, ageHeader: ageHeader)
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting custom(cacheControlHeader=\(cacheControlHeader),ageHeader=\(ageHeader))\n".utf8))
         }
     }
 }
@@ -242,12 +257,14 @@ extension Response {
     /// - Returns: The same response as the receiver.
     @discardableResult
     func cachePolicy(_ policy: FileMiddleware.CachePolicy) -> Response {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering cachePolicy(policy=\(policy))\n".utf8))
         self.headers.cacheControl = policy.cacheControlHeader
         if let age = policy.ageHeader {
             self.headers[.age] = "\(age)"
         } else {
             self.headers[.age] = nil
         }
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting cachePolicy(policy=\(policy))\n".utf8))
         return self
     }
 }

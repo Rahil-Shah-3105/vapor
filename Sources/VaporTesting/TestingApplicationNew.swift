@@ -1,3 +1,4 @@
+import Foundation
 public import Vapor
 public import HTTPTypes
 #warning("This should be internal")
@@ -5,7 +6,9 @@ public import NIOCore
 public import Testing
 
 extension Application {
+	var logger = Logger(label: "codes.vapor.app")
     public func test(method: Method = .inMemory, testBlock: (any VaporTestingRunner) async throws -> Void) async throws {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering test(method=\(method),testBlock=\(testBlock))\n".utf8))
         switch method {
         case .inMemory:
             fatalError()
@@ -15,8 +18,10 @@ extension Application {
             try await withRunningApp(app: self) { allocatedPort in
                 let tester = try LiveTestRunner(hostname: hostname, port: allocatedPort, app: self)
                 try await testBlock(tester)
+				FileHandle.standardError.write(Data("[ERROR] test(method=\(method),testBlock=\(testBlock)): tester → \(tester)\n".utf8))
             }
         }
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting test(method=\(method),testBlock=\(testBlock))\n".utf8))
     }
 }
 
@@ -35,6 +40,7 @@ extension VaporTestingRunner {
         sourceLocation: SourceLocation = #_sourceLocation,
         beforeRequest: (inout TestingHTTPRequest) async throws -> () = { _ in }
     ) async throws -> TestingHTTPResponse {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering sendRequest(method=\(method),path=\(path),hostname=\(hostname),port=\(port),headers=\(headers),body=\(body),sourceLocation=\(sourceLocation),beforeRequest=\(beforeRequest))\n".utf8))
         var request = TestingHTTPRequest(
             method: method,
             url: .init(scheme: "http", host: hostname, port: port, path: path),
@@ -46,7 +52,9 @@ extension VaporTestingRunner {
         do {
             return try await self.tester.makeRequest(request)
         } catch {
+			FileHandle.standardError.write(Data("[ERROR] Exception in sendRequest(method=\(method),path=\(path),hostname=\(hostname),port=\(port),headers=\(headers),body=\(body),sourceLocation=\(sourceLocation),beforeRequest=\(beforeRequest)): \(error)\n".utf8))
             Issue.record("\(String(reflecting: error))", sourceLocation: sourceLocation)
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting sendRequest(method=\(method),path=\(path),hostname=\(hostname),port=\(port),headers=\(headers),body=\(body),sourceLocation=\(sourceLocation),beforeRequest=\(beforeRequest))\n".utf8))
             throw error
         }
     }

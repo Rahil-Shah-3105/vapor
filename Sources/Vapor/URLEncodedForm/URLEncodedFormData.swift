@@ -19,6 +19,8 @@ enum URLQueryFragment: ExpressibleByStringLiteral, Equatable {
     func asUrlEncoded() throws -> String {
         switch self {
         case .urlEncoded(let encoded):
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering asUrlEncoded()\n".utf8))
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting asUrlEncoded()\n".utf8))
             return encoded
         case .urlDecoded(let decoded):
             return try decoded.urlEncoded()
@@ -27,13 +29,16 @@ enum URLQueryFragment: ExpressibleByStringLiteral, Equatable {
 
     /// Returns the URL Decoded version
     func asUrlDecoded() throws -> String {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering asUrlDecoded()\n".utf8))
         switch self {
         case .urlEncoded(let encoded):
             guard let decoded = encoded.removingPercentEncoding else {
+			FileHandle.standardError.write(Data("[ERROR] Throwing dataCorrupted from asUrlDecoded()\n".utf8))
                 throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: [], debugDescription: "Unable to remove percent encoding for \(encoded)"))
             }
             return decoded
         case .urlDecoded(let decoded):
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting asUrlDecoded()\n".utf8))
             return decoded
         }
     }
@@ -49,11 +54,13 @@ enum URLQueryFragment: ExpressibleByStringLiteral, Equatable {
     }
 
     func hash(into: inout Hasher) {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering hash(into=\(into))\n".utf8))
         do {
             try self.asUrlDecoded().hash(into: &into)
         } catch {
             Logger(label: "codes.vapor.url").report(error: error)
         }
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting hash(into=\(into))\n".utf8))
     }
 }
 
@@ -99,7 +106,9 @@ internal struct URLEncodedFormData: ExpressibleByArrayLiteral, ExpressibleByStri
     }
 
     mutating func set(value: URLQueryFragment, forPath path: [String], recursionDepth: Int) throws {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering set(value=\(value),path=\(path),recursionDepth=\(recursionDepth))\n".utf8))
         guard recursionDepth <= maxRecursionDepth else {
+			FileHandle.standardError.write(Data("[ERROR] Throwing reachedNestingLimit from set(value=\(value),path=\(path),recursionDepth=\(recursionDepth))\n".utf8))
             throw URLEncodedFormError.reachedNestingLimit
         }
         guard let firstElement = path.first else {
@@ -114,5 +123,6 @@ internal struct URLEncodedFormData: ExpressibleByArrayLiteral, ExpressibleByStri
         }
         try child.set(value: value, forPath: Array(path[1...]), recursionDepth: recursionDepth + 1)
         self.children[firstElement] = child
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting set(value=\(value),path=\(path),recursionDepth=\(recursionDepth))\n".utf8))
     }
 }

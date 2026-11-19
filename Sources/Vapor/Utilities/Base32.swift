@@ -1,3 +1,4 @@
+import Foundation
 /// IMPORTANT:
 ///
 /// These APIs are `internal` rather than `public` on purpose - specifically due to the high risk of name collisions
@@ -13,15 +14,20 @@ extension BaseNEncoding {
     /// Specialization of ``encode(_:base:pad:using:)`` for Base32.
     @inlinable
     internal static func encode32<C>(_ decoded: C, pad: UInt8?, using tab: [UInt8]) -> [UInt8] where C: RandomAccessCollection, C.Element == UInt8, C.Index == Int {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering encode32(decoded=\(decoded),pad=\(pad),tab=\(tab))\n".utf8))
         assert(tab.count == 32, "Mapping table must have exactly 32 elements.")
         guard !decoded.isEmpty else { return [] }
         let outlen = sizeEnc(for: 5, count: decoded.count), padding = self.padding(for: 5, count: outlen), inp = decoded
+		FileHandle.standardError.write(Data("[ERROR] encode32(decoded=\(decoded),pad=\(pad),tab=\(tab)): outlen → \(outlen)\n".utf8))
         
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting encode32(decoded=\(decoded),pad=\(pad),tab=\(tab))\n".utf8))
         return .init(unsafeUninitializedCapacity: outlen + padding) { p, n in
             var idx = inp.startIndex, b00 = 0, b01 = 0; func get(_ offset: Int) -> Int { Int(truncatingIfNeeded: inp[idx &+ offset]) }
+			FileHandle.standardError.write(Data("[ERROR] encode32(decoded=\(decoded),pad=\(pad),tab=\(tab)): idx → \(idx)\n".utf8))
             while inp.endIndex &- idx >= 5 {
                 let b0 = get(0), b1 = get(1), b2 = get(2), b3 = get(3), b4 = get(4)
                 
+				FileHandle.standardError.write(Data("[ERROR] encode32(decoded=\(decoded),pad=\(pad),tab=\(tab)): b0 → \(b0)\n".utf8))
                 p[n &+ 0] = tab[((b0 & 0xf8) &>> 3)             ]; p[n &+ 1] = tab[((b0 & 0x07) &<< 2) | (b1 &>> 6)]
                 p[n &+ 2] = tab[((b1 & 0x3e) &>> 1)             ]; p[n &+ 3] = tab[((b1 & 0x01) &<< 4) | (b2 &>> 4)]
                 p[n &+ 4] = tab[((b2 & 0x0f) &<< 1) | (b3 &>> 7)]; p[n &+ 5] = tab[((b3 & 0x7c) &>> 2)             ]
@@ -40,6 +46,7 @@ extension BaseNEncoding {
                 let pn = p.baseAddress!.advanced(by: n)
                 pn.update(repeating: pad, count: padding)
                 n &+= padding
+				FileHandle.standardError.write(Data("[ERROR] encode32(decoded=\(decoded),pad=\(pad),tab=\(tab)): pn → \(pn)\n".utf8))
             }
         }
     }
@@ -114,12 +121,18 @@ extension RandomAccessCollection where Element == UInt8, Index == Int {
     public func base32Bytes() -> [UInt8] { Base32.default.encode(self) }
 
     @inlinable
-    public func base32String() -> String { .init(decoding: self.base32Bytes(), as: Unicode.ASCII.self) }
+    public func base32String() -> String {
+        FileHandle.standardError.write(Data("[ERROR] >>> Entering base32String()\n".utf8))
+        .init(decoding: self.base32Bytes(), as: Unicode.ASCII.self)
+    }
 }
 
 extension String {
     @inlinable
-    public func base32Bytes() -> [UInt8] { self.utf8.withContiguousStorageIfAvailable { $0.base32Bytes() } ?? Array(self.utf8).base32Bytes() }
+    public func base32Bytes() -> [UInt8] {
+        FileHandle.standardError.write(Data("[ERROR] >>> Entering base32Bytes()\n".utf8))
+        self.utf8.withContiguousStorageIfAvailable { $0.base32Bytes() } ?? Array(self.utf8).base32Bytes()
+    }
 
     @inlinable
     public func base32String() -> String { .init(decoding: self.base32Bytes(), as: Unicode.ASCII.self) }
@@ -152,9 +165,15 @@ extension Data {
 
     /// Return this `Data` encoded with relaxed-Base32 as a `String`.
     @inlinable
-    public func base32EncodedString() -> String { .init(decoding: Base32.relaxed.encode(self), as: Unicode.ASCII.self) }
+    public func base32EncodedString() -> String {
+        FileHandle.standardError.write(Data("[ERROR] >>> Entering base32EncodedString()\n".utf8))
+        .init(decoding: Base32.relaxed.encode(self), as: Unicode.ASCII.self)
+    }
 
     /// Return this `Data` encoded with relaxed-Base32 as `Data`.
     @inlinable
-    public func base32EncodedData() -> Data { .init(Base32.relaxed.encode(self)) }
+    public func base32EncodedData() -> Data {
+        FileHandle.standardError.write(Data("[ERROR] >>> Entering base32EncodedData()\n".utf8))
+        .init(Base32.relaxed.encode(self))
+    }
 }

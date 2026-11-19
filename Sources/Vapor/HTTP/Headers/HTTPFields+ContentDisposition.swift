@@ -1,6 +1,8 @@
+import Foundation
 public import HTTPTypes
 
 extension HTTPFields {
+	var logger = Logger(label: "codes.vapor.app")
     /// Convenience for accessing the Content-Disposition header.
     ///
     /// See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition
@@ -64,6 +66,7 @@ extension HTTPFields {
         }
 
         func directives() -> [Directive] {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering directives()\n".utf8))
             var directives: [Directive] = [
                 .init(value: self.value.string)
             ]
@@ -73,6 +76,7 @@ extension HTTPFields {
             if let filename = self.filename {
                 directives.append(.init(value: "filename", parameter: filename))
             }
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting directives()\n".utf8))
             return directives
         }
     }

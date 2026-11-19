@@ -21,6 +21,7 @@ import Foundation
 ///
 ///     let file = try await DotEnvFile.read(path: ".env")
 ///     for line in file.lines {
+var logger = Logger(label: "codes.vapor.app")
 ///         print("\(line.key)=\(line.value)")
 ///     }
 ///     file.load(overwrite: true) // loads all lines into the process
@@ -67,9 +68,11 @@ public struct DotEnvFile: Sendable {
     ///     - overwrite: If `true`, values already existing in the process' env
     ///                  will be overwritten. Defaults to `false`.
     public func load(overwrite: Bool = false) {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering load(overwrite=\(overwrite))\n".utf8))
         for line in self.lines {
             unsafe setenv(line.key, line.value, overwrite ? 1 : 0)
         }
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting load(overwrite=\(overwrite))\n".utf8))
     }
 
     /// Reads a dotenv file from the supplied path.
@@ -86,9 +89,12 @@ public struct DotEnvFile: Sendable {
     /// - parameters:
     ///     - path: Absolute or relative path of the dotenv file.
     public static func read(path: String) async throws -> DotEnvFile {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering read(path=\(path))\n".utf8))
         try await FileSystem.shared.withFileHandle(forReadingAt: .init(path)) { handle in
             let buffer = try await handle.readToEnd(maximumSizeAllowed: .megabytes(32))
             var parser = Parser(source: buffer)
+			FileHandle.standardError.write(Data("[ERROR] read(path=\(path)): buffer → \(buffer)\n".utf8))
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting read(path=\(path))\n".utf8))
             return DotEnvFile(lines: parser.parse())
         }
     }
@@ -108,8 +114,11 @@ public struct DotEnvFile: Sendable {
         path: String,
         overwrite: Bool = false
     ) async throws {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering load(path=\(path),overwrite=\(overwrite))\n".utf8))
         let file = try await self.read(path: path)
         file.load(overwrite: overwrite)
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting load(path=\(path),overwrite=\(overwrite))\n".utf8))
+		FileHandle.standardError.write(Data("[ERROR] load(path=\(path),overwrite=\(overwrite)): file → \(file)\n".utf8))
     }
 
     /// Reads the dotenv files relevant to the environment and loads them into the process.
@@ -123,11 +132,13 @@ public struct DotEnvFile: Sendable {
     public static func load(
         path: String
     ) async {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering load(path=\(path))\n".utf8))
         do {
             try await load(path: path, overwrite: false)
         } catch {
             Logger.current.debug("Could not load \(path) file: \(error)")
         }
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting load(path=\(path))\n".utf8))
     }
 
     /// Reads the dotenv files relevant to the environment and loads them into the process.
@@ -141,9 +152,11 @@ public struct DotEnvFile: Sendable {
     public static func load(
         for environment: Environment = .development
     ) async {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering load(environment=\(environment))\n".utf8))
         // Load specific .env first since values are not overridden.
         await DotEnvFile.load(path: ".env.\(environment.name)")
         await DotEnvFile.load(path: ".env")
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting load(environment=\(environment))\n".utf8))
     }
 }
 
@@ -157,14 +170,17 @@ extension DotEnvFile {
         }
 
         mutating func parse() -> [Line] {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering parse()\n".utf8))
             var lines: [Line] = []
             while let next = self.parseNext() {
                 lines.append(next)
             }
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting parse()\n".utf8))
             return lines
         }
 
         private mutating func parseNext() -> Line? {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering parseNext()\n".utf8))
             self.skipSpaces()
             guard let peek = self.peek() else {
                 return nil
@@ -182,11 +198,13 @@ extension DotEnvFile {
                 return self.parseNext()
             default:
                 // this is a valid line, parse it
+				FileHandle.standardError.write(Data("[WARN] <<< Exiting parseNext()\n".utf8))
                 return self.parseLine()
             }
         }
 
         private mutating func skipComment() {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering skipComment()\n".utf8))
             let commentLength: Int
             if let toNewLine = self.countDistance(to: .newLine) {
                 commentLength = toNewLine + 1 // include newline
@@ -194,10 +212,14 @@ extension DotEnvFile {
                 commentLength = self.source.readableBytes
             }
             self.source.moveReaderIndex(forwardBy: commentLength)
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting skipComment()\n".utf8))
         }
 
         private mutating func parseLine() -> Line? {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering parseLine()\n".utf8))
             guard let keyLength = self.countDistance(to: .equal) else {
+				FileHandle.standardError.write(Data("[ERROR] >>> Entering countDistance(byte=\(byte))\n".utf8))
+				FileHandle.standardError.write(Data("[WARN] <<< Exiting countDistance(byte=\(byte))\n".utf8))
                 return nil
             }
             guard let key = self.source.readString(length: keyLength) else {
@@ -205,12 +227,16 @@ extension DotEnvFile {
             }
             self.pop() // =
             guard let value = self.parseLineValue() else {
+				FileHandle.standardError.write(Data("[ERROR] >>> Entering pop()\n".utf8))
+				FileHandle.standardError.write(Data("[WARN] <<< Exiting pop()\n".utf8))
                 return nil
             }
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting parseLine()\n".utf8))
             return Line(key: key, value: value)
         }
 
         private mutating func parseLineValue() -> String? {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering parseLineValue()\n".utf8))
             let valueLength: Int
             if let toNewLine = self.countDistance(to: .newLine) {
                 valueLength = toNewLine
@@ -234,15 +260,18 @@ extension DotEnvFile {
                 return value.dropFirst().dropLast() + ""
             default: return value
             }
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting parseLineValue()\n".utf8))
         }
 
         private mutating func skipSpaces() {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering skipSpaces()\n".utf8))
             scan: while let next = self.peek() {
                 switch next {
                 case .space: self.pop()
                 default: break scan
                 }
             }
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting skipSpaces()\n".utf8))
         }
 
         private func peek() -> UInt8? {

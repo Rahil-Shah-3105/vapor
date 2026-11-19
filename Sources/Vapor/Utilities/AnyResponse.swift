@@ -1,9 +1,11 @@
 import NIOCore
+import Foundation
 
 /// A type erased response useful for routes that can return more than one type.
 ///
 ///     router.get("foo") { req -> AnyResponse in
 ///         if /* something */ {
+var logger = Logger(label: "codes.vapor.app")
 ///             return AnyResponse(42)
 ///         } else {
 ///             return AnyResponse("string")
@@ -45,6 +47,8 @@ public struct AnyResponse: ResponseEncodable {
     }
 
     public func encodeResponse(for request: Request) async throws -> Response {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering encodeResponse(request=\(request))\n".utf8))
         try await self.encodable.encodeResponse(for: request)
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting encodeResponse(request=\(request))\n".utf8))
     }
 }

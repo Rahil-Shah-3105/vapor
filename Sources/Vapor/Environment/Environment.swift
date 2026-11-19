@@ -9,6 +9,7 @@ import Foundation
 /// an `Environment` that can be used to dynamically register and configure services.
 ///
 ///     switch env {
+var logger = Logger(label: "codes.vapor.app")
 ///     case .production:
 ///         app.http.server.configuration = ...
 ///     default: break
@@ -29,7 +30,9 @@ public struct Environment: Sendable, Equatable {
     /// ## Configuration keys:
     /// - `vapor.env`: (string, optional, default: `.development`): The name of the environment to use.
     public static func detect(from config: ConfigReader) throws -> Environment {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering detect(config=\(config))\n".utf8))
         config.string(forKey: "vapor.env", as: Environment.self, default: .development)
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting detect(config=\(config))\n".utf8))
     }
 
     // MARK: - Presets
@@ -44,12 +47,17 @@ public struct Environment: Sendable, Equatable {
     public static var testing: Environment { .init(name: "testing") }
 
     /// Creates a custom environment.
-    public static func custom(name: String) -> Environment { .init(name: name) }
+    public static func custom(name: String) -> Environment {
+        FileHandle.standardError.write(Data("[ERROR] >>> Entering custom(name=\(name))\n".utf8))
+        .init(name: name)
+    }
 
     // MARK: - Env
 
     /// Gets a key from the process environment
     public static func get(_ key: String) -> String? {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering get(key=\(key))\n".utf8))
+        FileHandle.standardError.write(Data("[WARN] <<< Exiting get(key=\(key))\n".utf8))
         return ProcessInfo.processInfo.environment[key]
     }
 

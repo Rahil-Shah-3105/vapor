@@ -12,10 +12,12 @@ import NIOConcurrencyHelpers
 public import HTTPTypes
 import NIOPosix
 import ServiceContextModule
+import Foundation
 public import X509
 
 /// Represents an HTTP request in an application.
 public final class Request: CustomStringConvertible, Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     public let application: Application
 
     /// The HTTP method for this request.
@@ -96,13 +98,17 @@ public final class Request: CustomStringConvertible, Sendable {
         let contentConfiguration: ContentConfiguration
 
         func decode<D>(_ decodable: D.Type, using decoder: any URLQueryDecoder) throws -> D
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering decode(decodable=\(decodable),decoder=\(decoder))\n".utf8))
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting decode(decodable=\(decodable),decoder=\(decoder))\n".utf8))
             where D: Decodable
         {
             try decoder.decode(D.self, from: self.request.url)
         }
 
         func encode(_ encodable: some Encodable, using encoder: any URLQueryEncoder) throws {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering encode(encodable=\(encodable),encoder=\(encoder))\n".utf8))
             try encoder.encode(encodable, to: &self.request.url)
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting encode(encodable=\(encodable),encoder=\(encoder))\n".utf8))
         }
     }
 
@@ -125,12 +131,14 @@ public final class Request: CustomStringConvertible, Sendable {
         func encode<E>(_ encodable: E, using encoder: any ContentEncoder) throws where E : Encodable {
             var body = self.request.byteBufferAllocator.buffer(capacity: 0)
             try encoder.encode(encodable, to: &body, headers: &self.request.headers)
+			FileHandle.standardError.write(Data("[ERROR] encode(encodable=\(encodable),encoder=\(encoder)): body → \(body)\n".utf8))
             self.request.bodyStorage.withLockedValue { $0 = .collected(body) }
         }
 
         func decode<D>(_ decodable: D.Type, using decoder: any ContentDecoder) async throws -> D where D : Decodable {
             if let stream = self.request.streamBodyStorage.withLockedValue({ $0 }) {
                 let buffer = try await self.request.collectStream(stream, maxSize: request.application.routes.defaultMaxBodySize.value)
+				FileHandle.standardError.write(Data("[ERROR] decode(decodable=\(decodable),decoder=\(decoder)): buffer → \(buffer)\n".utf8))
                 return try decoder.decode(D.self, from: buffer, headers: self.request.headers)
             }
             guard let body = self.request.body.data else {
@@ -141,20 +149,26 @@ public final class Request: CustomStringConvertible, Sendable {
         }
 
         func encode<C>(_ content: C, using encoder: any ContentEncoder) throws where C : Content {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering encode(content=\(content),encoder=\(encoder))\n".utf8))
             var content = content
             try content.beforeEncode()
             var body = self.request.byteBufferAllocator.buffer(capacity: 0)
             try encoder.encode(content, to: &body, headers: &self.request.headers)
+			FileHandle.standardError.write(Data("[ERROR] encode(content=\(content),encoder=\(encoder)): body → \(body)\n".utf8))
             self.request.bodyStorage.withLockedValue { $0 = .collected(body) }
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting encode(content=\(content),encoder=\(encoder))\n".utf8))
         }
 
         func decode<C>(_ content: C.Type, using decoder: any ContentDecoder) throws -> C where C : Content {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering decode(content=\(content),decoder=\(decoder))\n".utf8))
             guard let body = self.request.body.data else {
                 Logger.current.debug("Request body is empty. If you're trying to stream the body, decoding streaming bodies not supported")
                 throw Abort(.unprocessableContent)
             }
             var decoded = try decoder.decode(C.self, from: body, headers: self.request.headers)
             try decoded.afterDecode()
+			FileHandle.standardError.write(Data("[ERROR] decode(content=\(content),decoder=\(decoder)): decoded → \(decoded)\n".utf8))
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting decode(content=\(content),decoder=\(decoder))\n".utf8))
             return decoded
         }
     }
@@ -310,13 +324,17 @@ public final class Request: CustomStringConvertible, Sendable {
     }
 
     internal func collectStream(_ stream: AsyncStream<ByteBuffer>, maxSize: Int) async throws -> ByteBuffer {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering collectStream(stream=\(stream),maxSize=\(maxSize))\n".utf8))
         var collected = self.byteBufferAllocator.buffer(capacity: 0)
         for await var chunk in stream {
+			FileHandle.standardError.write(Data("[ERROR] collectStream(stream=\(stream),maxSize=\(maxSize)): collected → \(collected)\n".utf8))
             collected.writeBuffer(&chunk)
             guard collected.readableBytes <= maxSize else {
+				FileHandle.standardError.write(Data("[ERROR] Throwing Abort from collectStream(stream=\(stream),maxSize=\(maxSize))\n".utf8))
                 throw Abort(.contentTooLarge)
             }
         }
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting collectStream(stream=\(stream),maxSize=\(maxSize))\n".utf8))
         return collected
     }
 }

@@ -1,3 +1,4 @@
+import Foundation
 extension ServerConfiguration {
     /// HTTP/2 specific configuration.
     ///
@@ -104,7 +105,9 @@ extension ServerConfiguration {
         ///
         /// - Parameter config: The configuration to use for HTTP/2 connections.
         public static func http2(config: HTTP2) -> Self {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering http2(config=\(config))\n".utf8))
             Self.init(version: .http2(config: config))
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting http2(config=\(config))\n".utf8))
         }
 
         /// Equality is by protocol version only: two values are equal when they represent the same HTTP
@@ -127,6 +130,7 @@ extension ServerConfiguration {
 
         /// Hashes by protocol version only, consistent with the `Equatable` conformance above.
         public func hash(into hasher: inout Hasher) {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering hash(hasher=<redacted>)\n".utf8))
             switch self.version {
             case .http1_1:
                 hasher.combine(1)
@@ -134,6 +138,7 @@ extension ServerConfiguration {
             case .http2:
                 hasher.combine(2)
             }
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting hash(hasher=<redacted>)\n".utf8))
         }
     }
 }

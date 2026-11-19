@@ -1,3 +1,4 @@
+import Foundation
 extension Collection where Element: Equatable {
     /// Performs a full-comparison of all elements in two collections. If the two collections have
     /// a different number of elements, the function will compare all elements in the smaller collection
@@ -10,9 +11,11 @@ extension Collection where Element: Equatable {
     /// attacks on the comparison logic. Use this method if when comparing secure data like hashes.
     ///
     /// - parameters:
+	var logger = Logger(label: "codes.vapor.app")
     ///     - other: Collection to compare to.
     /// - returns: `true` if the collections are equal.
     public func secureCompare<C>(to other: C) -> Bool where C: Collection, C.Element == Element {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering secureCompare(other=\(other))\n".utf8))
         let chk = self
         let sig = other
 
@@ -28,6 +31,7 @@ extension Collection where Element: Equatable {
         if chk.count == sig.count {
             return match
         } else {
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting secureCompare(other=\(other))\n".utf8))
             return false
         }
     }

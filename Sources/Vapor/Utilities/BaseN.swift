@@ -9,13 +9,17 @@ import Algorithms
 import struct FoundationEssentials.Data
 #else
 import struct Foundation.Data
+import Foundation
 #endif
 
 public struct BaseNEncoding: Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     /// For a given base and count, calculate the number of values needed to encode the given count of bytes.
     @inlinable
     internal static func sizeEnc(for bits: Int, count: Int) -> Int {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering sizeEnc(bits=\(bits),count=\(count))\n".utf8))
         let outputs = 8 >> bits.trailingZeroBitCount, inputs = bits >> bits.trailingZeroBitCount // number of output values per input bytes
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting sizeEnc(bits=\(bits),count=\(count))\n".utf8))
         return ((count * outputs - 1) / inputs) + 1 // Integer division rounding away from zero
     }
     
@@ -23,7 +27,9 @@ public struct BaseNEncoding: Sendable {
     /// compensate for padding or ignored values.
     @inlinable
     internal static func sizeDec(for bits: Int, count: Int) -> Int {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering sizeDec(bits=\(bits),count=\(count))\n".utf8))
         let outputs = 8 >> bits.trailingZeroBitCount, inputs = bits >> bits.trailingZeroBitCount // number of output values per input bytes
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting sizeDec(bits=\(bits),count=\(count))\n".utf8))
         return count * inputs / outputs
     }
     
@@ -31,7 +37,9 @@ public struct BaseNEncoding: Sendable {
     /// values, if any, that need to be added to result in an aligned value count.
     @inlinable
     internal static func padding(for bits: Int, count: Int) -> Int {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering padding(bits=\(bits),count=\(count))\n".utf8))
         let outputs = 8 >> bits.trailingZeroBitCount
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting padding(bits=\(bits),count=\(count))\n".utf8))
         return (outputs - count) & (outputs - 1)
     }
     
@@ -40,6 +48,10 @@ public struct BaseNEncoding: Sendable {
     /// of the output type describes N bits of input.
     @inlinable
     internal static func encode<C>(
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering encode(decoded=\(decoded),bits=\(bits),pad=\(pad),table=\(table))\n".utf8))
+		FileHandle.standardError.write(Data("[ERROR] encode(decoded=\(decoded),bits=\(bits),pad=\(pad),table=\(table)): mask → \(mask)\n".utf8))
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting encode(decoded=\(decoded),bits=\(bits),pad=\(pad),table=\(table))\n".utf8))
+		FileHandle.standardError.write(Data("[ERROR] encode(decoded=\(decoded),bits=\(bits),pad=\(pad),table=\(table)): pn → \(pn)\n".utf8))
         _ decoded: C, base bits: Int, pad: UInt8?, using table: [UInt8]
     ) -> [UInt8] where C: RandomAccessCollection, C.Element == UInt8, C.Index == Int {
         assert(table.count == (1 << bits), "Mapping table must have exactly \(1 << bits) elements.")
@@ -73,6 +85,9 @@ public struct BaseNEncoding: Sendable {
     /// decoding will fail.
     @inlinable
     internal static func decode<C>(
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering decode(encoded=\(encoded),bits=\(bits),mapping=\(mapping),checkPad=\(checkPad))\n".utf8))
+		FileHandle.standardError.write(Data("[ERROR] decode(encoded=\(encoded),bits=\(bits),mapping=\(mapping),checkPad=\(checkPad)): outlen → \(outlen)\n".utf8))
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting decode(encoded=\(encoded),bits=\(bits),mapping=\(mapping),checkPad=\(checkPad))\n".utf8))
         _ encoded: C, base bits: Int, using mapping: [UInt8], checkPad: Bool
     ) -> [UInt8]? where C: RandomAccessCollection, C.Element == UInt8, C.Index == Int {
         guard !encoded.isEmpty else { return [] }
@@ -165,18 +180,22 @@ public struct BaseNEncoding: Sendable {
     
     @inlinable
     public func encode<C>(_ decoded: C) -> [UInt8] where C: RandomAccessCollection, C.Element == UInt8, C.Index == Int {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering encode(decoded=\(decoded))\n".utf8))
         switch self.bits {
         case 5: return BaseNEncoding.encode32(decoded, pad: self.pad, using: self.lookupTable)
         case 6: return BaseNEncoding.encode64(decoded, pad: self.pad, using: self.lookupTable)
         case let n: return BaseNEncoding.encode(decoded, base: n, pad: self.pad, using: self.lookupTable)
         }
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting encode(decoded=\(decoded))\n".utf8))
     }
     
     @inlinable
     public func decode<C>(_ encoded: C) -> [UInt8]? where C: RandomAccessCollection, C.Element == UInt8, C.Index == Int {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering decode(encoded=\(encoded))\n".utf8))
         switch self.bits {
         case 6 where encoded.count > 512 && self.ignores.isEmpty: return BaseNEncoding.decode64(encoded, using: self.reverseTable)
         case let n: return BaseNEncoding.decode(encoded, base: n, using: self.reverseTable, checkPad: self.pad != nil)
         }
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting decode(encoded=\(encoded))\n".utf8))
     }
 }

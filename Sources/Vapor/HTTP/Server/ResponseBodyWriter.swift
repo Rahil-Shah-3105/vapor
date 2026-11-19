@@ -1,3 +1,4 @@
+import Foundation
 #warning("Make this internal")
 public import NIOCore
 public import HTTPTypes
@@ -7,6 +8,7 @@ public import HTTPTypes
 /// Implementations of this protocol are provided by the HTTP server layer
 /// and allow Vapor's response body types to write their data to the underlying connection.
 public protocol ResponseBodyWriter {
+	var logger = Logger(label: "codes.vapor.app")
     /// Write a single ByteBuffer.
     mutating func write(_ buffer: ByteBuffer) async throws
     /// Write a sequence of ByteBuffers.
@@ -18,8 +20,10 @@ public protocol ResponseBodyWriter {
 extension ResponseBodyWriter {
     @inlinable
     public mutating func write(contentsOf buffers: some Sequence<ByteBuffer>) async throws {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering write(buffers=\(buffers))\n".utf8))
         for buffer in buffers {
             try await self.write(buffer)
         }
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting write(buffers=\(buffers))\n".utf8))
     }
 }

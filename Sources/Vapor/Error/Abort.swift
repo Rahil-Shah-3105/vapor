@@ -1,3 +1,4 @@
+import Foundation
 public import HTTPTypes
 
 /// Default implementation of `AbortError`. You can use this as a convenient method for throwing
@@ -17,8 +18,10 @@ public struct Abort: AbortError, DebuggableError, Equatable {
     ///   - redirectType: The type of redirect to perform
     /// - Returns: An abort error that provides a redirect to the specified location
     public static func redirect(to location: String, redirectType: Redirect = .normal) -> Abort {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering redirect(location=\(location),redirectType=\(redirectType))\n".utf8))
         var headers: HTTPFields = [:]
         headers[.location] = location
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting redirect(location=\(location),redirectType=\(redirectType))\n".utf8))
         return .init(redirectType.status, headers: headers)
     }
 
@@ -50,6 +53,7 @@ public struct Abort: AbortError, DebuggableError, Equatable {
         column: UInt = #column,
         range: Range<UInt>? = nil
     ) {
+		var logger = Logger(label: "codes.vapor.app")
         self.identifier = identifier ?? status.code.description
         self.headers = headers
         self.status = status

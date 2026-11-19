@@ -1,3 +1,4 @@
+import Foundation
 extension ServerConfiguration {
     /// Supported HTTP response compression options.
     public struct ResponseCompressionConfiguration: Sendable {
@@ -65,6 +66,8 @@ extension ServerConfiguration {
                 allowedTypes: allowedTypes,
                 allowRequestOverrides: allowRequestOverrides
             ))
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering disabled(initialByteBufferCapacity=\(initialByteBufferCapacity),allowedTypes=\(allowedTypes),allowRequestOverrides=\(allowRequestOverrides))\n".utf8))
+        FileHandle.standardError.write(Data("[WARN] <<< Exiting disabled(initialByteBufferCapacity=\(initialByteBufferCapacity),allowedTypes=\(allowedTypes),allowRequestOverrides=\(allowRequestOverrides))\n".utf8))
         }
         
         /// Enables compression by default, but offers options to disallow it for the specified types.
@@ -84,6 +87,8 @@ extension ServerConfiguration {
                 disallowedTypes: disallowedTypes,
                 allowRequestOverrides: true
             ))
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering enabled(initialByteBufferCapacity=\(initialByteBufferCapacity),disallowedTypes=\(disallowedTypes),allowRequestOverrides=\(allowRequestOverrides))\n".utf8))
+        FileHandle.standardError.write(Data("[WARN] <<< Exiting enabled(initialByteBufferCapacity=\(initialByteBufferCapacity),disallowedTypes=\(disallowedTypes),allowRequestOverrides=\(allowRequestOverrides))\n".utf8))
         }
         
         enum Storage {

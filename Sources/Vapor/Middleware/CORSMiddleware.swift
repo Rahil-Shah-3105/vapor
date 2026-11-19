@@ -1,6 +1,7 @@
 import NIOCore
 public import HTTPTypes
 import NIOConcurrencyHelpers
+import Foundation
 
 /// Middleware that adds support for CORS settings in request responses.
 /// For configuration of this middleware please use the `CORSMiddleware.Configuration` object.
@@ -8,6 +9,7 @@ import NIOConcurrencyHelpers
 /// - note: Make sure this middleware is inserted before all your error/abort middlewares,
 ///         so that even the failed request responses contain proper CORS information.
 public final class CORSMiddleware: Middleware {
+	var logger = Logger(label: "codes.vapor.app")
     /// Option for the allow origin header in responses for CORS requests.
     ///
     /// - none: Disallows any origin.
@@ -40,6 +42,7 @@ public final class CORSMiddleware: Middleware {
         /// - Parameter request: Request for which the allow origin header should be created.
         /// - Returns: Header string to be used in response for allowed origin.
         public func header(forRequest req: Request) -> String {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering header(req=\(req))\n".utf8))
             switch self {
             case .none: return ""
             case .originBased: return req.headers[values: .origin].first ?? ""
@@ -52,6 +55,7 @@ public final class CORSMiddleware: Middleware {
             case .custom(let string):
                 return string
             case .dynamic(let closure):
+				FileHandle.standardError.write(Data("[WARN] <<< Exiting header(req=\(req))\n".utf8))
                 return closure(req)
             }
         }
@@ -131,6 +135,7 @@ public final class CORSMiddleware: Middleware {
     }
 
     public func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering respond(request=\(request),next=\(next))\n".utf8))
         // Check if it's valid CORS request
         guard request.headers[.origin] != nil else {
             return try await next.respond(to: request)
@@ -140,9 +145,11 @@ public final class CORSMiddleware: Middleware {
         // If it is, create empty response otherwise get response from the responder chain.
         let response = request.isPreflight ? Response() : try await next.respond(to: request)
 
+		FileHandle.standardError.write(Data("[ERROR] respond(request=\(request),next=\(next)): response → \(response)\n".utf8))
         // Modify response headers based on CORS settings
         let accessControlAllowOriginHeader = self.configuration.allowedOrigin.header(forRequest: request)
         response.responseBox.withLockedValue { box in
+		FileHandle.standardError.write(Data("[ERROR] respond(request=\(request),next=\(next)): accessControlAllowOriginHeader → \(accessControlAllowOriginHeader)\n".utf8))
             if !accessControlAllowOriginHeader.isEmpty {
                 box.headers[.accessControlAllowOrigin] = accessControlAllowOriginHeader
             }
@@ -166,6 +173,7 @@ public final class CORSMiddleware: Middleware {
                 box.headers[.vary] = "origin"
             }
         }
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting respond(request=\(request),next=\(next))\n".utf8))
         return response
     }
 }

@@ -1,4 +1,5 @@
 import NIOConcurrencyHelpers
+import Foundation
 
 extension Application {
     public var servers: Servers {
@@ -22,6 +23,7 @@ extension Application {
         }
 
         final class Storage: Sendable {
+			var logger = Logger(label: "codes.vapor.app")
             struct ServerFactory {
                 let factory: (@Sendable (Application) -> any Server)?
             }
@@ -36,15 +38,21 @@ extension Application {
         }
 
         func initialize() {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering initialize()\n".utf8))
             self.application.storage[Key.self] = .init()
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting initialize()\n".utf8))
         }
 
         public func use(_ provider: Provider) {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering use(provider=\(provider))\n".utf8))
             provider.run(self.application)
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting use(provider=\(provider))\n".utf8))
         }
 
         public func use(_ makeServer: @Sendable @escaping (Application) -> (any Server)) {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering use(makeServer=\(makeServer))\n".utf8))
             self.storage.makeServer.withLockedValue { $0 = .init(factory: makeServer) }
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting use(makeServer=\(makeServer))\n".utf8))
         }
 
         let application: Application

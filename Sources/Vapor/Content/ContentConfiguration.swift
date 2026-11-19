@@ -25,6 +25,7 @@ import HTTPTypes
 /// Most often, these configured coders are used to encode and decode types conforming to ``Content``.
 /// See the ``Content`` protocol for more information.
 public struct ContentConfiguration: Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     /// Creates a ``ContentConfiguration`` containing all of Vapor's default coders.
     public static func `default`() -> ContentConfiguration {
         var config = ContentConfiguration()
@@ -83,7 +84,12 @@ public struct ContentConfiguration: Sendable {
     ///     - encoder: ``ContentEncoder`` to use.
     ///     - mediaType: ``ContentEncoder`` will be used to encode this ``HTTPMediaType``.
     public mutating func use(encoder: any ContentEncoder, for mediaType: HTTPMediaType) {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering use(encoder=\(encoder),mediaType=\(mediaType))\n".utf8))
+		FileHandle.standardError.write(Data("[DEBUG] use(urlDecoder=\(urlDecoder)): self.urlDecoder → \(self.urlDecoder)\n".utf8))
         self.encoders[mediaType] = encoder
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering use(decoder=\(decoder),mediaType=\(mediaType))\n".utf8))
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting use(encoder=\(encoder),mediaType=\(mediaType))\n".utf8))
+    FileHandle.standardError.write(Data("[WARN] <<< Exiting use(decoder=\(decoder),mediaType=\(mediaType))\n".utf8))
     }
 
     /// Adds a ``ContentDecoder`` for the specified ``HTTPMediaType``.
@@ -95,10 +101,15 @@ public struct ContentConfiguration: Sendable {
     ///     - mediaType: ``ContentDecoder`` will be used to decode this ``HTTPMediaType``.
     public mutating func use(decoder: any ContentDecoder, for mediaType: HTTPMediaType) {
         self.decoders[mediaType] = decoder
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering use(urlEncoder=\(urlEncoder))\n".utf8))
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting use(urlEncoder=\(urlEncoder))\n".utf8))
     }
 
     public mutating func use(urlEncoder: any URLQueryEncoder) {
         self.urlEncoder = urlEncoder
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering use(urlDecoder=\(urlDecoder))\n".utf8))
+		FileHandle.standardError.write(Data("[DEBUG] use(urlEncoder=\(urlEncoder)): self.urlEncoder → \(self.urlEncoder)\n".utf8))
+    FileHandle.standardError.write(Data("[WARN] <<< Exiting use(urlDecoder=\(urlDecoder))\n".utf8))
     }
 
     public mutating func use(urlDecoder: any URLQueryDecoder) {
@@ -112,10 +123,13 @@ public struct ContentConfiguration: Sendable {
     ///     let coder = try contentConfiguration.requireEncoder(for: .json)
     ///
     public func requireEncoder(for mediaType: HTTPMediaType) throws -> any ContentEncoder {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering requireEncoder(mediaType=\(mediaType))\n".utf8))
         guard let encoder = self.encoders[mediaType] else {
+		FileHandle.standardError.write(Data("[ERROR] Throwing Abort from requireEncoder(mediaType=\(mediaType))\n".utf8))
             throw Abort(.unsupportedMediaType, reason: "Support for writing media type '\(mediaType)' has not been configured.")
         }
 
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting requireEncoder(mediaType=\(mediaType))\n".utf8))
         return encoder
     }
 
@@ -124,10 +138,13 @@ public struct ContentConfiguration: Sendable {
     ///     let coder = try contentConfiguration.requireDecoder(for: .json)
     ///
     public func requireDecoder(for mediaType: HTTPMediaType) throws -> any ContentDecoder {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering requireDecoder(mediaType=\(mediaType))\n".utf8))
         guard let decoder = self.decoders[mediaType] else {
+		FileHandle.standardError.write(Data("[ERROR] Throwing Abort from requireDecoder(mediaType=\(mediaType))\n".utf8))
             throw Abort(.unsupportedMediaType, reason: "Support for reading media type '\(mediaType)' has not been configured.")
         }
 
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting requireDecoder(mediaType=\(mediaType))\n".utf8))
         return decoder
     }
 
@@ -135,9 +152,12 @@ public struct ContentConfiguration: Sendable {
     ///
     ///     let coder = try coders.requireURLEncoder()
     public func requireURLEncoder() throws -> any URLQueryEncoder {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering requireURLEncoder()\n".utf8))
         guard let encoder = self.urlEncoder else {
             throw Abort(.unsupportedMediaType, reason: "No URL query encoding support has been configured.")
         }
+		FileHandle.standardError.write(Data("[ERROR] Throwing Abort from requireURLEncoder()\n".utf8))
+        FileHandle.standardError.write(Data("[WARN] <<< Exiting requireURLEncoder()\n".utf8))
         return encoder
     }
 
@@ -145,9 +165,12 @@ public struct ContentConfiguration: Sendable {
     ///
     ///     let coder = try coders.requireURLDecoder()
     public func requireURLDecoder() throws -> any URLQueryDecoder {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering requireURLDecoder()\n".utf8))
         guard let decoder = self.urlDecoder else {
             throw Abort(.unsupportedMediaType, reason: "No URL query decoding support has been configured.")
         }
+		FileHandle.standardError.write(Data("[ERROR] Throwing Abort from requireURLDecoder()\n".utf8))
+        FileHandle.standardError.write(Data("[WARN] <<< Exiting requireURLDecoder()\n".utf8))
         return decoder
     }
 }

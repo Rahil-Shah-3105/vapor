@@ -4,9 +4,11 @@ public import FoundationEssentials
 public import Foundation
 #endif
 import HTTPTypes
+import Foundation
 
 /// Represents a `MediaType` and its associated preference, `q`.
 public struct HTTPMediaTypePreference {
+	var logger = Logger(label: "codes.vapor.app")
     /// The `MediaType` in question.
     public var mediaType: HTTPMediaType
 
@@ -38,6 +40,7 @@ extension Array where Element == HTTPMediaTypePreference {
     ///     let pref = httpReq.accept.comparePreference(for: .json, to: .html)
     ///
     public func comparePreference(for a: HTTPMediaType, to b: HTTPMediaType) -> ComparisonResult {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering comparePreference(a=\(a),b=\(b))\n".utf8))
         let aq = self.filter { $0.mediaType == a }
             .map { $0.q ?? 1.0 }
             .first
@@ -62,6 +65,7 @@ extension Array where Element == HTTPMediaTypePreference {
             return .orderedDescending
         case (.none, .none):
             // there is no value for either, neither is preferred
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting comparePreference(a=\(a),b=\(b))\n".utf8))
             return .orderedSame
         }
     }

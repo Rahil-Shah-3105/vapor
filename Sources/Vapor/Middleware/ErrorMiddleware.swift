@@ -9,6 +9,7 @@ import Logging
 
 /// Captures all errors and transforms them into an internal server error HTTP response.
 public final class ErrorMiddleware: Middleware {
+	var logger = Logger(label: "codes.vapor.app")
     /// Structure of `ErrorMiddleware` default response.
     internal struct ErrorResponse: Codable {
         /// Always `true` to indicate this is a non-typical JSON response.
@@ -87,9 +88,12 @@ public final class ErrorMiddleware: Middleware {
     }
 
     public func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering respond(request=\(request),next=\(next))\n".utf8))
         do {
             return try await next.respond(to: request)
         } catch {
+			FileHandle.standardError.write(Data("[ERROR] Exception in respond(request=\(request),next=\(next)): \(error)\n".utf8))
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting respond(request=\(request),next=\(next))\n".utf8))
             return self.closure(request, error)
         }
     }

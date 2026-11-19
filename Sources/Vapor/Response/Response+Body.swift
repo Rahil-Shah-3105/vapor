@@ -8,6 +8,7 @@ public import NIOCore
 import NIOFoundationEssentialsCompat
 import NIOConcurrencyHelpers
 import HTTPTypes
+import Foundation
 
 extension Response {
     struct BodyStream: Sendable {
@@ -97,10 +98,12 @@ extension Response {
         }
 
         public func collect(on eventLoop: any EventLoop) -> EventLoopFuture<ByteBuffer?> {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering collect(eventLoop=\(eventLoop))\n".utf8))
             switch self.storage {
             case .stream(let stream):
                 let collector = ResponseBodyCollector(eventLoop: eventLoop, byteBufferAllocator: self.byteBufferAllocator)
                 stream.callback(collector)
+				FileHandle.standardError.write(Data("[ERROR] collect(eventLoop=\(eventLoop)): collector → \(collector)\n".utf8))
                 return collector.promise.futureResult
                     .map { $0 }
             case .asyncStream(let stream):
@@ -111,6 +114,7 @@ extension Response {
                     collector.promise.futureResult.map { $0 }
                 }
             default:
+				FileHandle.standardError.write(Data("[WARN] <<< Exiting collect(eventLoop=\(eventLoop))\n".utf8))
                 return eventLoop.makeSucceededFuture(self.buffer)
             }
         }
@@ -236,6 +240,7 @@ extension Response {
 // This removes the need for a lock and performance hits from that
 // Any changes to this type need to be carefully considered
 private final class ResponseBodyCollector: BodyStreamWriter, AsyncBodyStreamWriter, @unchecked Sendable {
+	var logger = Logger(label: "codes.vapor.app")
     var buffer: ByteBuffer
     let eventLoop: any EventLoop
     let promise: EventLoopPromise<ByteBuffer>
@@ -247,12 +252,14 @@ private final class ResponseBodyCollector: BodyStreamWriter, AsyncBodyStreamWrit
     }
 
     func write(_ result: BodyStreamResult, promise: EventLoopPromise<Void>?) {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering write(result=\(result),promise=\(promise))\n".utf8))
         let future = self.eventLoop.submit {
             switch result {
             case .buffer(var buffer):
                 self.buffer.writeBuffer(&buffer)
             case .error(let error):
                 self.promise.fail(error)
+				FileHandle.standardError.write(Data("[ERROR] Throwing error from write(result=\(result),promise=\(promise))\n".utf8))
                 throw error
             case .end:
                 self.promise.succeed(self.buffer)
@@ -260,22 +267,28 @@ private final class ResponseBodyCollector: BodyStreamWriter, AsyncBodyStreamWrit
         }
         // Fixes an issue where errors in the stream should fail the individual write promise.
         if let promise { future.cascade(to: promise) }
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting write(result=\(result),promise=\(promise))\n".utf8))
     }
 
     func write(_ result: BodyStreamResult) async throws {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering write(result=\(result))\n".utf8))
         let promise = self.eventLoop.makePromise(of: Void.self)
 
+		FileHandle.standardError.write(Data("[ERROR] write(result=\(result)): promise → \(promise)\n".utf8))
         self.eventLoop.execute { self.write(result, promise: promise) }
         try await promise.futureResult.get()
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting write(result=\(result))\n".utf8))
     }
 }
 
 extension Response.Body {
     @concurrent
     func write(_ writer: inout any ResponseBodyWriter) async throws {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering write(writer=\(writer))\n".utf8))
         if let buffer {
             try await writer.write(buffer)
         }
         try await writer.finish(nil)
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting write(writer=\(writer))\n".utf8))
     }
 }

@@ -1,5 +1,6 @@
 import NIOCore
 import HTTPTypes
+import Foundation
 
 /// A protocol to which a type may conform to enable use of that type for authentication.
 public protocol Authenticatable: Sendable { }
@@ -13,13 +14,16 @@ public protocol Authenticatable: Sendable { }
 /// See ``BasicAuthenticator``, ``BearerAuthenticator``, ``CredentialsAuthenticator`` and
 /// ``SessionAuthenticator`` built-in implementations
 public protocol RequestAuthenticator: Middleware {
+	var logger = Logger(label: "codes.vapor.app")
     func authenticate(request: Request) async throws
 }
 
 extension RequestAuthenticator {
     /// ``Midleware`` conformance to make it easier to use
     public func respond(to request: Request, chainingTo next: any Responder) async throws -> Response {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering respond(request=\(request),next=\(next))\n".utf8))
         try await self.authenticate(request: request)
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting respond(request=\(request),next=\(next))\n".utf8))
         return try await next.respond(to: request)
     }
 }
@@ -125,9 +129,11 @@ public protocol CredentialsAuthenticator: RequestAuthenticator {
 extension CredentialsAuthenticator {
     /// Default implementation of ``RequestAuthenticator/authenticate(request:)`` that checks for a credentials type in the request body and calls ``CredentialsAuthenticator/authenticate(credentials:for:)`` if it exists.
     public func authenticate(request: Request) async throws {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering authenticate(request=\(request))\n".utf8))
         _ = try await request.body.collect(max: nil).get()
         if let credentials = try? await request.content.decode(Credentials.self) {
             try await self.authenticate(credentials: credentials, for: request)
         }
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting authenticate(request=\(request))\n".utf8))
     }
 }

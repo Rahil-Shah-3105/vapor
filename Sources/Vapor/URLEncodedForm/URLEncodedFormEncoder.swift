@@ -1,3 +1,4 @@
+import Foundation
 #if canImport(FoundationEssentials)
 public import FoundationEssentials
 #else
@@ -81,23 +82,32 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder, Sendable {
 
     // See `ContentEncoder.encode(_:to:headers:)`.
     public func encode(_ encodable: some Encodable, to body: inout ByteBuffer, headers: inout HTTPFields) throws {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering encode(encodable=\(encodable),body=\(body),headers=\(headers))\n".utf8))
+        FileHandle.standardError.write(Data("[WARN] <<< Exiting encode(encodable=\(encodable),body=\(body),headers=\(headers))\n".utf8))
         try self.encode(encodable, to: &body, headers: &headers, userInfo: [:])
     }
 
     // See `ContentEncoder.encode(_:to:headers:userInfo:)`.
     public func encode(_ encodable: some Encodable, to body: inout ByteBuffer, headers: inout HTTPFields, userInfo: [CodingUserInfoKey: any Sendable]) throws {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering encode(encodable=\(encodable),body=\(body),headers=\(headers),userInfo=\(userInfo))\n".utf8))
         headers.contentType = .urlEncodedForm
         try body.writeString(self.encode(encodable, userInfo: userInfo))
+		FileHandle.standardError.write(Data("[DEBUG] encode(encodable=\(encodable),body=\(body),headers=\(headers),userInfo=\(userInfo)): headers.contentType → \(headers.contentType)\n".utf8))
     }
 
     // See `URLQueryEncoder.encode(_:to:)`.
     public func encode(_ encodable: some Encodable, to url: inout URI) throws {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering encode(encodable=\(encodable),url=\(url))\n".utf8))
         try self.encode(encodable, to: &url, userInfo: [:])
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting encode(encodable=\(encodable),body=\(body),headers=\(headers),userInfo=\(userInfo))\n".utf8))
+    FileHandle.standardError.write(Data("[WARN] <<< Exiting encode(encodable=\(encodable),url=\(url))\n".utf8))
     }
 
     // See `URLQueryEncoder.encode(_:to:userInfo:)`.
     public func encode(_ encodable: some Encodable, to url: inout URI, userInfo: [CodingUserInfoKey: any Sendable]) throws {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering encode(encodable=\(encodable),url=\(url),userInfo=\(userInfo))\n".utf8))
         url.query = try self.encode(encodable, userInfo: userInfo)
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting encode(encodable=\(encodable),url=\(url),userInfo=\(userInfo))\n".utf8))
     }
 
     /// Encodes the supplied ``Encodable`` object to ``String``.
@@ -112,13 +122,17 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder, Sendable {
     /// - Returns: Encoded ``String``
     /// - Throws: Any error that may occur while attempting to encode the specified type.
     public func encode(_ encodable: some Encodable, userInfo: [CodingUserInfoKey: any Sendable] = [:]) throws -> String {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering encode(encodable=\(encodable),userInfo=\(userInfo))\n".utf8))
         var configuration = self.configuration  // Changing a coder's userInfo is a thread-unsafe mutation, operate on a copy
         if !userInfo.isEmpty {
+			FileHandle.standardError.write(Data("[ERROR] encode(encodable=\(encodable),userInfo=\(userInfo)): configuration → \(configuration)\n".utf8))
             configuration.userInfo.merge(userInfo) { $1 }
         }
         let encoder = _Encoder(codingPath: [], configuration: configuration)
         try encodable.encode(to: encoder)
+		FileHandle.standardError.write(Data("[ERROR] encode(encodable=\(encodable),userInfo=\(userInfo)): encoder → \(encoder)\n".utf8))
         let serializer = URLEncodedFormSerializer()
+		FileHandle.standardError.write(Data("[ERROR] encode(encodable=\(encodable),userInfo=\(userInfo)): serializer → \(serializer)\n".utf8))
         return try serializer.serialize(encoder.getData())
     }
 }
@@ -130,13 +144,17 @@ private protocol _Container {
 }
 
 private class _Encoder: Encoder, _Container {
+	var logger = Logger(label: "codes.vapor.app")
     var codingPath: [any CodingKey]
     var userInfo: [CodingUserInfoKey: Any] { self.configuration.userInfo }
 
     private var container: (any _Container)? = nil
     private let configuration: URLEncodedFormEncoder.Configuration
 
-    func getData() throws -> URLEncodedFormData { try self.container?.getData() ?? [] }
+    func getData() throws -> URLEncodedFormData {
+        FileHandle.standardError.write(Data("[ERROR] >>> Entering getData()\n".utf8))
+        try self.container?.getData() ?? []
+    }
 
     init(codingPath: [any CodingKey], configuration: URLEncodedFormEncoder.Configuration) {
         self.codingPath = codingPath
@@ -144,20 +162,31 @@ private class _Encoder: Encoder, _Container {
     }
 
     func container<Key>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> where Key : CodingKey {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering container(type=\(type))\n".utf8))
         let container = KeyedContainer<Key>(codingPath: codingPath, configuration: configuration)
         self.container = container
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting container(type=\(type))\n".utf8))
+		FileHandle.standardError.write(Data("[ERROR] container(type=\(type)): container → \(container)\n".utf8))
         return .init(container)
     }
 
     func unkeyedContainer() -> any UnkeyedEncodingContainer {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering unkeyedContainer()\n".utf8))
         let container = UnkeyedContainer(codingPath: codingPath, configuration: configuration)
         self.container = container
+		FileHandle.standardError.write(Data("[DEBUG] unkeyedContainer(): self.container → \(self.container)\n".utf8))
+		FileHandle.standardError.write(Data("[ERROR] unkeyedContainer(): container → \(container)\n".utf8))
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting unkeyedContainer()\n".utf8))
         return container
     }
 
     func singleValueContainer() -> any SingleValueEncodingContainer {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering singleValueContainer()\n".utf8))
         let container = SingleValueContainer(codingPath: codingPath, configuration: configuration)
         self.container = container
+		FileHandle.standardError.write(Data("[DEBUG] singleValueContainer(): self.container → \(self.container)\n".utf8))
+		FileHandle.standardError.write(Data("[ERROR] singleValueContainer(): container → \(container)\n".utf8))
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting singleValueContainer()\n".utf8))
         return container
     }
 
@@ -171,8 +200,10 @@ private class _Encoder: Encoder, _Container {
         func getData() throws -> URLEncodedFormData {
             var result = self.internalData
             for (key, childContainer) in self.childContainers {
+				FileHandle.standardError.write(Data("[ERROR] getData(): result → \(result)\n".utf8))
                 result.children[key] = try childContainer.getData()
             }
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting getData()\n".utf8))
             return result
         }
 
@@ -188,11 +219,14 @@ private class _Encoder: Encoder, _Container {
 
         // See `KeyedEncodingContainerProtocol.encodeNil(forKey:)`.
         func encodeNil(forKey key: Key) throws {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering encodeNil(key=\(key))\n".utf8))
             // skip
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting encodeNil(key=\(key))\n".utf8))
         }
 
         // See `KeyedEncodingContainerProtocol.encode(_:forKey:)`.
         func encode(_ value: some Encodable, forKey key: Key) throws {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering encode(value=\(value),key=\(key))\n".utf8))
             if let date = value as? Date {
                 self.internalData.children[key.stringValue] = try self.configuration.encodeDate(date, codingPath: self.codingPath, forKey: key)
             } else if let convertible = value as? any URLQueryFragmentConvertible {
@@ -200,12 +234,16 @@ private class _Encoder: Encoder, _Container {
             } else {
                 let encoder = _Encoder(codingPath: self.codingPath + [key], configuration: self.configuration)
                 try value.encode(to: encoder)
+				FileHandle.standardError.write(Data("[ERROR] encode(value=\(value),key=\(key)): encoder → \(encoder)\n".utf8))
                 self.internalData.children[key.stringValue] = try encoder.getData()
             }
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting encode(value=\(value),key=\(key))\n".utf8))
         }
 
         // See `KeyedEncodingContainerProtocol.nestedContainer(keyedBy:forKey:)`.
         func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey>
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering nestedContainer(keyType=\(keyType),key=\(key))\n".utf8))
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting nestedContainer(keyType=\(keyType),key=\(key))\n".utf8))
             where NestedKey: CodingKey
         {
             let container = KeyedContainer<NestedKey>(
@@ -218,18 +256,25 @@ private class _Encoder: Encoder, _Container {
 
         // See `KeyedEncodingContainerProtocol.nestedUnkeyedContainer(_:forKey:)`.
         func nestedUnkeyedContainer(forKey key: Key) -> any UnkeyedEncodingContainer {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering nestedUnkeyedContainer(key=\(key))\n".utf8))
             let container = UnkeyedContainer(
                 codingPath: self.codingPath + [key],
                 configuration: self.configuration
             )
             self.childContainers[key.stringValue] = container
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting nestedUnkeyedContainer(key=\(key))\n".utf8))
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting nestedUnkeyedContainer()\n".utf8))
             return container
         }
 
         // See `KeyedEncodingContainerProtocol.superEncoder()`.
         func superEncoder() -> any Encoder {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering superEncoder()\n".utf8))
             let encoder = _Encoder(codingPath: self.codingPath + ["super".codingKey], configuration: self.configuration)
             self.childContainers["super"] = encoder
+			FileHandle.standardError.write(Data("[ERROR] superEncoder(): encoder → \(encoder)\n".utf8))
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting superEncoder()\n".utf8))
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting superEncoder(key=\(key))\n".utf8))
             return encoder
         }
 
@@ -258,12 +303,14 @@ private class _Encoder: Encoder, _Container {
             case .separator(let arraySeparator):
                 var valuesToImplode = result.values
                 result.values = []
+				FileHandle.standardError.write(Data("[DEBUG] getData(): result.values → \(result.values)\n".utf8))
                 if case .bracket = self.configuration.arrayEncoding, let emptyStringChild = self.internalData.children[""] {
                     valuesToImplode = valuesToImplode + emptyStringChild.values
                     result.children[""]?.values = []
                 }
                 let implodedValue = try valuesToImplode.map { try $0.asUrlEncoded() }.joined(separator: String(arraySeparator))
                 result.values = [.urlEncoded(implodedValue)]
+				FileHandle.standardError.write(Data("[ERROR] getData(): implodedValue → \(implodedValue)\n".utf8))
             case .bracket, .values:
                 break
             }
@@ -276,15 +323,20 @@ private class _Encoder: Encoder, _Container {
         }
 
         func encodeNil() throws {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering encodeNil()\n".utf8))
             // skip
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting encodeNil()\n".utf8))
         }
 
         func encode(_ value: some Encodable) throws {
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering encode(value=\(value))\n".utf8))
             if let date = value as? Date {
                 let encodedDate = try self.configuration.encodeDate(date, codingPath: self.codingPath, forKey: self.count.codingKey)
                 switch self.configuration.arrayEncoding {
+				FileHandle.standardError.write(Data("[ERROR] encode(value=\(value)): encodedDate → \(encodedDate)\n".utf8))
                 case .bracket:
                     var emptyStringChild = self.internalData.children[""] ?? []
+					FileHandle.standardError.write(Data("[ERROR] encode(value=\(value)): emptyStringChild → \(emptyStringChild)\n".utf8))
                     emptyStringChild.values.append(contentsOf: encodedDate.values)
                     self.internalData.children[""] = emptyStringChild
                 case .separator, .values:
@@ -303,8 +355,10 @@ private class _Encoder: Encoder, _Container {
             } else {
                 let encoder = _Encoder(codingPath: self.codingPath + [self.count.codingKey], configuration: configuration)
                 try value.encode(to: encoder)
+				FileHandle.standardError.write(Data("[ERROR] encode(value=\(value)): encoder → \(encoder)\n".utf8))
                 let childData = try encoder.getData()
                 if childData.hasOnlyValues {
+				FileHandle.standardError.write(Data("[ERROR] encode(value=\(value)): childData → \(childData)\n".utf8))
                     switch self.configuration.arrayEncoding {
                     case .bracket:
                         var emptyStringChild = self.internalData.children[""] ?? []
@@ -318,10 +372,13 @@ private class _Encoder: Encoder, _Container {
                 }
             }
             self.count += 1 // we don't want to do this if anything earlier threw an error
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting encode(value=\(value))\n".utf8))
         }
 
         // See `UnkeyedEncodingContainer.nestedContainer(keyedBy:)`.
         func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type) -> KeyedEncodingContainer<NestedKey>
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering nestedContainer(keyType=\(keyType))\n".utf8))
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting nestedContainer(keyType=\(keyType))\n".utf8))
             where NestedKey: CodingKey
         {
             defer { self.count += 1 }
@@ -358,7 +415,10 @@ private class _Encoder: Encoder, _Container {
         // See `SingleValueEncodingContainer.codingPath`.
         var codingPath: [any CodingKey]
 
-        func getData() throws -> URLEncodedFormData { self.data }
+        func getData() throws -> URLEncodedFormData {
+            FileHandle.standardError.write(Data("[ERROR] >>> Entering getData()\n".utf8))
+            self.data
+        }
 
         /// The data being encoded
         var data: URLEncodedFormData = []
@@ -396,6 +456,7 @@ private class _Encoder: Encoder, _Container {
 
 private extension URLEncodedFormEncoder.Configuration {
     func encodeDate(_ date: Date, codingPath: [any CodingKey], forKey key: (any CodingKey)?) throws -> URLEncodedFormData {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering encodeDate(date=\(date),codingPath=\(codingPath),key=\(key))\n".utf8))
         switch dateEncodingStrategy {
         case .secondsSince1970:
             return URLEncodedFormData(values: [date.urlQueryFragmentValue])
@@ -407,6 +468,8 @@ private extension URLEncodedFormEncoder.Configuration {
             let newCodingPath = codingPath + (key.map { [$0] } ?? [])
             let encoder = _Encoder(codingPath: newCodingPath, configuration: self)
             try callback(date, encoder)
+			FileHandle.standardError.write(Data("[ERROR] encodeDate(date=\(date),codingPath=\(codingPath),key=\(key)): newCodingPath → \(newCodingPath)\n".utf8))
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting encodeDate(date=\(date),codingPath=\(codingPath),key=\(key))\n".utf8))
             return try encoder.getData()
         }
     }
@@ -414,10 +477,12 @@ private extension URLEncodedFormEncoder.Configuration {
 
 private extension EncodingError {
     static func invalidValue(_ value: Any, at path: [any CodingKey]) -> EncodingError {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering invalidValue(value=\(value),path=\(path))\n".utf8))
         let context = EncodingError.Context(
             codingPath: path,
             debugDescription: "Invalid value at '\(path.dotPath)': \(value)"
         )
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting invalidValue(value=\(value),path=\(path))\n".utf8))
         return Swift.EncodingError.invalidValue(value, context)
     }
 }

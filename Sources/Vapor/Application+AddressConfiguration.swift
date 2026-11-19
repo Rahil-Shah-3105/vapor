@@ -1,4 +1,5 @@
 import Configuration
+import Foundation
 
 extension Application {
     struct AddressConfiguration: Sendable {
@@ -41,6 +42,7 @@ extension Application {
     /// Apply address configuration from CLI/environment to the server configuration.
     /// This only mutates `serverConfiguration.address` — it does not start the server.
     func applyAddressConfiguration(_ config: AddressConfiguration) {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering applyAddressConfiguration(config=\(config))\n".utf8))
         switch (config.hostname, config.port, config.bind, config.socketPath) {
         case (.none, .none, .none, .none):
             break // use defaults
@@ -50,6 +52,7 @@ extension Application {
             let hostname = address.split(separator: ":").first.flatMap(String.init)
             let port = address.split(separator: ":").last.flatMap(String.init).flatMap(Int.init)
             if let hostname, let port {
+			FileHandle.standardError.write(Data("[ERROR] applyAddressConfiguration(config=\(config)): hostname → \(hostname)\n".utf8))
                 self.serverConfiguration.address = .hostname(hostname, port: port)
             }
         case (.some(let hostname), .some(let port), .none, .none):
@@ -57,5 +60,6 @@ extension Application {
         default:
             break // incompatible flags — logged elsewhere
         }
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting applyAddressConfiguration(config=\(config))\n".utf8))
     }
 }

@@ -1,3 +1,4 @@
+import Foundation
 #warning("Should this be internal?")
 public import NIOHTTPCompression
 
@@ -19,6 +20,8 @@ extension ServerConfiguration {
             limit: NIOHTTPDecompression.DecompressionLimit
         ) -> Self {
             .init(storage: .enabled(limit: limit))
+			FileHandle.standardError.write(Data("[ERROR] >>> Entering enabled(limit=\(limit))\n".utf8))
+        FileHandle.standardError.write(Data("[WARN] <<< Exiting enabled(limit=\(limit))\n".utf8))
         }
 
         enum Storage {

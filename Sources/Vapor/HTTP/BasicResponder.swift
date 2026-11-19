@@ -1,7 +1,9 @@
 import NIOCore
+import Foundation
 
 /// A basic, async closure-based `Responder`.
 public struct BasicResponder: Responder {
+	var logger = Logger(label: "codes.vapor.app")
     /// The stored responder closure.
     private let closure: @Sendable (Request) async throws -> Response
 
@@ -21,6 +23,8 @@ public struct BasicResponder: Responder {
     }
 
     public func respond(to request: Request) async throws -> Response {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering respond(request=\(request))\n".utf8))
+        FileHandle.standardError.write(Data("[WARN] <<< Exiting respond(request=\(request))\n".utf8))
         return try await closure(request)
     }
 }
