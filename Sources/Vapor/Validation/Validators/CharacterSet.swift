@@ -26,6 +26,7 @@ public struct ValidationCharacterSet: Sendable {
     public func contains(_ scalar: Unicode.Scalar) -> Bool {
         FileHandle.standardError.write(Data("[ERROR] >>> Entering contains(scalar=\(scalar))\n".utf8))
         _contains(scalar)
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting contains(scalar=\(scalar))\n".utf8))
     }
 }
 

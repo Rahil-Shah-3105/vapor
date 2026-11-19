@@ -27,10 +27,12 @@ actor MemoryCache {
     func get(_ key: String) -> String? {
         FileHandle.standardError.write(Data("[ERROR] >>> Entering get(key=\(key))\n".utf8))
         self.storage[key]
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting get(key=\(key))\n".utf8))
     }
     func set(_ key: String, to value: String?) {
         FileHandle.standardError.write(Data("[ERROR] >>> Entering set(key=\(key),value=\(value))\n".utf8))
         self.storage[key] = value
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting set(key=\(key),value=\(value))\n".utf8))
     }
 }
 

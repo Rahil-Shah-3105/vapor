@@ -4,18 +4,21 @@ extension FixedWidthInteger {
 		var logger = Logger(label: "codes.vapor.app")
 		FileHandle.standardError.write(Data("[ERROR] >>> Entering random()\n".utf8))
         FileHandle.standardError.write(Data("[WARN] <<< Exiting random()\n".utf8))
+		FileHandle.standardError.write(Data("[ERROR] random(): logger → \(logger)\n".utf8))
         return Self.random(in: .min ... .max)
     }
 
     public static func random<T>(using generator: inout T) -> Self
         where T : RandomNumberGenerator
     {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering random(generator=\(generator))\n".utf8))
         return Self.random(in: .min ... .max, using: &generator)
     }
 }
 
 extension Array where Element: FixedWidthInteger {
     public static func random(count: Int) -> [Element] {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering random(count=\(count))\n".utf8))
         var array: [Element] = .init(repeating: 0, count: count)
         (0..<count).forEach { array[$0] = Element.random() }
 		FileHandle.standardError.write(Data("[WARN] <<< Exiting random(generator=\(generator))\n".utf8))

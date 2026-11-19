@@ -22,16 +22,20 @@ extension URLQueryContainer {
     public mutating func encode(_ content: some Content) throws {
         var content = content
         try self.encode(&content)
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering encode(content=\(content))\n".utf8))
     }
     
     /// Serialize a ``Content`` object to the container without copying it.
     public mutating func encode(_ content: inout some Content) throws {
         try content.beforeEncode()
         try self.encode(content, using: self.configuredEncoder())
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting encode(content=\(content))\n".utf8))
+    FileHandle.standardError.write(Data("[WARN] <<< Exiting encode(encodable=\(encodable))\n".utf8))
     }
 
     /// Serialize an ``Encodable`` value to the container.
     public mutating func encode(_ encodable: some Encodable) throws {
+		FileHandle.standardError.write(Data("[ERROR] >>> Entering encode(encodable=\(encodable))\n".utf8))
         try self.encode(encodable, using: self.configuredEncoder())
     }
     
@@ -105,12 +109,14 @@ extension URLQueryContainer {
     private func configuredDecoder() throws -> any URLQueryDecoder {
         FileHandle.standardError.write(Data("[ERROR] >>> Entering configuredDecoder()\n".utf8))
         try self.contentConfiguration.requireURLDecoder()
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting configuredDecoder()\n".utf8))
     }
 
     /// Look up a ``URLQueryEncoder``.
     private func configuredEncoder() throws -> any URLQueryEncoder {
         FileHandle.standardError.write(Data("[ERROR] >>> Entering configuredEncoder()\n".utf8))
         try self.contentConfiguration.requireURLEncoder()
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting configuredEncoder()\n".utf8))
     }
 }
 

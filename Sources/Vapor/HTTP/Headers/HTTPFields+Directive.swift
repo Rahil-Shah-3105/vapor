@@ -123,6 +123,7 @@ extension HTTPFields {
                 self.pop()
                 parameter = self.nextDirectiveValue(separatorCharacters: separatorCharacters)
             } else {
+				FileHandle.standardError.write(Data("[DEBUG] nextDirective(separatorCharacters=\(separatorCharacters)): parameter → \(parameter)\n".utf8))
                 value = self.nextDirectiveValue(separatorCharacters: separatorCharacters)
 				FileHandle.standardError.write(Data("[DEBUG] nextDirective(separatorCharacters=\(separatorCharacters)): value → \(value)\n".utf8))
                 parameter = nil

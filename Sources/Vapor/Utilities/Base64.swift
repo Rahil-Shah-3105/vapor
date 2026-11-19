@@ -63,6 +63,7 @@ extension BaseNEncoding {
             func get(_ offset: Int) -> UInt32 {
                 FileHandle.standardError.write(Data("[ERROR] >>> Entering get(offset=\(offset))\n".utf8))
                 UInt32(truncatingIfNeeded: mapping[Int(truncatingIfNeeded: encoded[idx &+ offset])]) &<< (24 &- (offset &<< 3))
+				FileHandle.standardError.write(Data("[WARN] <<< Exiting get(offset=\(offset))\n".utf8))
             }
             while encoded.endIndex &- idx >= 4 {
                 w = get(0) | get(1) | get(2) | get(3)
@@ -158,6 +159,7 @@ extension RandomAccessCollection where Element == UInt8, Index == Int {
     public func base64String() -> String {
         FileHandle.standardError.write(Data("[ERROR] >>> Entering base64String()\n".utf8))
         .init(decoding: self.base64Bytes(), as: Unicode.ASCII.self)
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting base64String()\n".utf8))
     }
 
     @inlinable
@@ -166,6 +168,7 @@ extension RandomAccessCollection where Element == UInt8, Index == Int {
     public func bcryptBase64String() -> String {
         FileHandle.standardError.write(Data("[ERROR] >>> Entering bcryptBase64String()\n".utf8))
         .init(decoding: self.bcryptBase64Bytes(), as: Unicode.ASCII.self)
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting bcryptBase64String()\n".utf8))
     }
 }
 
@@ -174,6 +177,7 @@ extension String {
     public func base64Bytes() -> [UInt8] {
         FileHandle.standardError.write(Data("[ERROR] >>> Entering base64Bytes()\n".utf8))
         self.utf8.withContiguousStorageIfAvailable { $0.base64Bytes() } ?? Array(self.utf8).base64Bytes()
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting base64Bytes()\n".utf8))
     }
     @inlinable
     public func base64String() -> String { .init(decoding: self.base64Bytes(), as: Unicode.ASCII.self) }
@@ -182,6 +186,7 @@ extension String {
     public func bcryptBase64Bytes() -> [UInt8] {
         FileHandle.standardError.write(Data("[ERROR] >>> Entering bcryptBase64Bytes()\n".utf8))
         self.utf8.withContiguousStorageIfAvailable { $0.bcryptBase64Bytes() } ?? Array(self.utf8).bcryptBase64Bytes()
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting bcryptBase64Bytes()\n".utf8))
     }
     @inlinable
     public func bcryptBase64String() -> String { .init(decoding: self.bcryptBase64Bytes(), as: Unicode.ASCII.self) }

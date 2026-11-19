@@ -25,6 +25,7 @@ extension String {
         var ipv4Addr = in_addr()
         var ipv6Addr = in6_addr()
         
+		FileHandle.standardError.write(Data("[ERROR] isIPAddress(): ipv6Addr → \(ipv6Addr)\n".utf8))
 		FileHandle.standardError.write(Data("[ERROR] isIPAddress(): ipv4Addr → \(ipv4Addr)\n".utf8))
 			FileHandle.standardError.write(Data("[WARN] <<< Exiting isIPAddress()\n".utf8))
         return self.withCString { ptr in

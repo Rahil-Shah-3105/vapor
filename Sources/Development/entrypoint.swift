@@ -16,6 +16,7 @@ struct Entrypoint {
         ConsoleLogger.bootstrapWithConfigReader(config: config)
         var logger = Logger(label: "codes.vapor.app")
         logger.logLevel = .debug
+		FileHandle.standardError.write(Data("[ERROR] main(): logger → \(logger)\n".utf8))
 		FileHandle.standardError.write(Data("[ERROR] main(): config → \(config)\n".utf8))
         return try await withLogger(logger) { _ in
             let app = try await Application(configReader: config)

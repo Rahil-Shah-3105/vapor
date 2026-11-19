@@ -60,6 +60,7 @@ public final class MetricsMiddleware: Middleware {
             let response = try await next.respond(to: request)
             responseOrError = .response(response)
             httpResponseStatusCode = response.status.code.description
+			FileHandle.standardError.write(Data("[DEBUG] respond(request=\(request),next=\(next)): responseOrError → \(responseOrError)\n".utf8))
 			FileHandle.standardError.write(Data("[ERROR] respond(request=\(request),next=\(next)): response → \(response)\n".utf8))
         } catch {
 			FileHandle.standardError.write(Data("[ERROR] Exception in respond(request=\(request),next=\(next)): \(error)\n".utf8))

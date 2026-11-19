@@ -96,6 +96,7 @@ extension ClientRequest {
 			FileHandle.standardError.write(Data("[ERROR] encode(content=\(content),encoder=\(encoder)): body → \(body)\n".utf8))
             self.body = body
 			FileHandle.standardError.write(Data("[DEBUG] encode(content=\(content),encoder=\(encoder)): self.body → \(self.body)\n".utf8))
+			FileHandle.standardError.write(Data("[WARN] <<< Exiting encode(content=\(content),encoder=\(encoder))\n".utf8))
         }
 
         func decode<C>(_ content: C.Type, using decoder: any ContentDecoder) throws -> C where C : Content {

@@ -124,6 +124,7 @@ extension RandomAccessCollection where Element == UInt8, Index == Int {
     public func base32String() -> String {
         FileHandle.standardError.write(Data("[ERROR] >>> Entering base32String()\n".utf8))
         .init(decoding: self.base32Bytes(), as: Unicode.ASCII.self)
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting base32String()\n".utf8))
     }
 }
 
@@ -132,6 +133,7 @@ extension String {
     public func base32Bytes() -> [UInt8] {
         FileHandle.standardError.write(Data("[ERROR] >>> Entering base32Bytes()\n".utf8))
         self.utf8.withContiguousStorageIfAvailable { $0.base32Bytes() } ?? Array(self.utf8).base32Bytes()
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting base32Bytes()\n".utf8))
     }
 
     @inlinable
@@ -168,6 +170,7 @@ extension Data {
     public func base32EncodedString() -> String {
         FileHandle.standardError.write(Data("[ERROR] >>> Entering base32EncodedString()\n".utf8))
         .init(decoding: Base32.relaxed.encode(self), as: Unicode.ASCII.self)
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting base32EncodedString()\n".utf8))
     }
 
     /// Return this `Data` encoded with relaxed-Base32 as `Data`.
@@ -175,5 +178,6 @@ extension Data {
     public func base32EncodedData() -> Data {
         FileHandle.standardError.write(Data("[ERROR] >>> Entering base32EncodedData()\n".utf8))
         .init(Base32.relaxed.encode(self))
+		FileHandle.standardError.write(Data("[WARN] <<< Exiting base32EncodedData()\n".utf8))
     }
 }
